@@ -1,87 +1,130 @@
 ---
-import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import BaseHead from '../../components/BaseHead.astro';
 import Footer from '../../components/Footer.astro';
 import FormattedDate from '../../components/FormattedDate.astro';
 import Header from '../../components/Header.astro';
-import { SITE_DESCRIPTION, SITE_TITLE } from '../../consts';
+import { SITE_TITLE } from '../../consts';
 
-const posts = (await getCollection('blog')).sort(
+const publishedPosts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
+const categories = Array.from(new Set(publishedPosts.map((post) => post.data.category)));
+const recentTags = Array.from(new Set(publishedPosts.flatMap((post) => post.data.tags))).slice(0, 18);
 ---
 
 <!doctype html>
 <html lang="en">
 	<head>
-		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+		<BaseHead
+			title={`Blog | ${SITE_TITLE}`}
+			description="Writing-focused blog from MVP Media on privacy-first after-dark photography, session prep, and creative direction."
+		/>
 		<style>
-			main {
-				width: 960px;
+			.blog-layout {
+				display: grid;
+				grid-template-columns: minmax(0, 1fr) 290px;
+				gap: 1.2rem;
 			}
-			ul {
+			.blog-main {
+				display: grid;
+				gap: 0.9rem;
+			}
+			.blog-intro,
+			.post-row,
+			.blog-sidebar {
+				background: linear-gradient(145deg, var(--surface), var(--surface-elevated));
+				border: 1px solid var(--stroke);
+				border-radius: var(--radius);
+			}
+			.blog-intro {
+				padding: 1.1rem;
+			}
+			.post-list {
+				list-style: none;
+				padding: 0;
+				margin: 0;
+				display: grid;
+				gap: 0.8rem;
+			}
+			.post-row {
+				padding: 1rem;
+				display: grid;
+				gap: 0.6rem;
+			}
+			.post-meta {
 				display: flex;
 				flex-wrap: wrap;
-				gap: 2rem;
-				list-style-type: none;
+				gap: 0.55rem;
+				font-size: 0.74rem;
+				text-transform: uppercase;
+				letter-spacing: 0.06em;
+				color: var(--text-muted);
+			}
+			.post-row h2 {
 				margin: 0;
-				padding: 0;
+				font-size: 1.2rem;
 			}
-			ul li {
-				width: calc(50% - 1rem);
-			}
-			ul li * {
+			.post-row h2 a {
 				text-decoration: none;
-				transition: 0.2s ease;
+				color: var(--text-primary);
 			}
-			ul li:first-child {
-				width: 100%;
-				margin-bottom: 1rem;
-				text-align: center;
+			.post-row h2 a:hover {
+				color: var(--brand-strong);
 			}
-			ul li:first-child img {
-				width: 100%;
+			.post-tags {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.35rem;
 			}
-			ul li:first-child .title {
-				font-size: 2.369rem;
+			.post-tags a {
+				text-decoration: none;
+				font-size: 0.72rem;
+				padding: 0.22rem 0.5rem;
+				border-radius: 999px;
+				border: 1px solid var(--stroke);
+				color: var(--text-muted);
 			}
-			ul li img {
-				margin-bottom: 0.5rem;
-				border-radius: 12px;
+			.post-tags a:hover {
+				color: var(--text-primary);
+				background: rgba(157, 135, 95, 0.2);
 			}
-			ul li a {
-				display: block;
+			.read-link {
+				width: fit-content;
+				text-decoration: none;
+				font-weight: 700;
 			}
-			.title {
+			.blog-sidebar {
+				position: sticky;
+				top: 5.4rem;
+				height: fit-content;
+				padding: 0.95rem;
+				display: grid;
+				gap: 0.95rem;
+			}
+			.blog-sidebar h3 {
+				font-size: 0.86rem;
+				text-transform: uppercase;
+				letter-spacing: 0.07em;
 				margin: 0;
-				color: rgb(var(--black));
-				line-height: 1;
+				color: var(--text-muted);
 			}
-			.date {
+			.blog-sidebar ul {
+				list-style: none;
+				padding: 0;
 				margin: 0;
-				color: rgb(var(--gray));
+				display: grid;
+				gap: 0.35rem;
 			}
-			ul li a:hover h4,
-			ul li a:hover .date {
-				color: rgb(var(--accent));
+			.blog-sidebar a {
+				text-decoration: none;
 			}
-			ul a:hover img {
-				box-shadow: var(--box-shadow);
-			}
-			@media (max-width: 720px) {
-				ul {
-					gap: 0.5em;
+			@media (max-width: 980px) {
+				.blog-layout {
+					grid-template-columns: 1fr;
 				}
-				ul li {
-					width: 100%;
-					text-align: center;
-				}
-				ul li:first-child {
-					margin-bottom: 0;
-				}
-				ul li:first-child .title {
-					font-size: 1.563em;
+				.blog-sidebar {
+					position: static;
 				}
 			}
 		</style>
@@ -89,24 +132,51 @@ const posts = (await getCollection('blog')).sort(
 	<body>
 		<Header />
 		<main>
-			<section>
-				<ul>
-					{
-						posts.map((post) => (
-							<li>
-								<a href={`/blog/${post.id}/`}>
-									{post.data.heroImage && (
-										<Image width={720} height={360} src={post.data.heroImage} alt="" />
-									)}
-									<h4 class="title">{post.data.title}</h4>
-									<p class="date">
-										<FormattedDate date={post.data.pubDate} />
-									</p>
-								</a>
-							</li>
-						))
-					}
-				</ul>
+			<section class="blog-layout">
+				<div class="blog-main">
+					<div class="blog-intro">
+						<p class="eyebrow">Journal</p>
+						<h1>MVP Media Blog</h1>
+						<p>Writing-led insights on after-dark direction, privacy standards, and client prep.</p>
+					</div>
+					<ul class="post-list">
+						{
+							publishedPosts.map((post) => (
+								<li class="post-row">
+									<div class="post-meta">
+										<span>{post.data.featured ? 'Featured' : 'Article'}</span>
+										<span>{post.data.category.replaceAll('-', ' ')}</span>
+										<span><FormattedDate date={post.data.pubDate} /></span>
+									</div>
+									<h2><a href={`/blog/${post.id}/`}>{post.data.title}</a></h2>
+									<p>{post.data.description}</p>
+									<div class="post-tags">
+										{post.data.tags.map((tag) => <a href={`/blog/tag/${tag.toLowerCase()}/`}>#{tag}</a>)}
+									</div>
+									<a class="read-link" href={`/blog/${post.id}/`}>Read article</a>
+								</li>
+							))
+						}
+					</ul>
+				</div>
+				<aside class="blog-sidebar">
+					<div>
+						<h3>Categories</h3>
+						<ul>
+							{categories.map((category) => <li><a href={`/blog/category/${category}/`}>{category.replaceAll('-', ' ')}</a></li>)}
+						</ul>
+					</div>
+					<div>
+						<h3>Tags</h3>
+						<ul>
+							{recentTags.map((tag) => <li><a href={`/blog/tag/${tag.toLowerCase()}/`}>#{tag}</a></li>)}
+						</ul>
+					</div>
+					<div>
+						<h3>Feed</h3>
+						<p><a href="/rss.xml">Subscribe via RSS</a></p>
+					</div>
+				</aside>
 			</section>
 		</main>
 		<Footer />

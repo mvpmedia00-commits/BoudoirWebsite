@@ -1,0 +1,17 @@
+---
+// This is a placeholder media hub component. Replace with your own logic or connect to a CMS or Cloudinary for dynamic media.
+const media = [
+  { type: 'image', src: '/assets/photo1.jpg' },
+  { type: 'video', src: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+];
+---
+
+<div class="space-y-6">
+  {media.map((item) => (
+    item.type === 'image' ? (
+      <img src={item.src} alt="Media" class="rounded shadow" loading="lazy" />
+    ) : (
+      <iframe src={item.src} class="w-full aspect-video rounded shadow" allowfullscreen></iframe>
+    )
+  ))}
+</div>

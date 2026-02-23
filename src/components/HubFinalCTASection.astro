@@ -1,0 +1,75 @@
+---
+import Founder from '../assets/blog-placeholder-about.jpg';
+---
+
+<section class="hub-section final">
+  <div class="band">
+    <h2>Mach's besser als die Konkurrenz - mit uns.</h2>
+    <a class="cta" href="/booking">Jetzt starten</a>
+  </div>
+
+  <div class="founder">
+    <img src={Founder.src} alt="Matthew Phillips" loading="lazy" />
+    <p class="name">Matthew Phillips</p>
+    <p class="role">Founder, MVP Media</p>
+    <h3>Lass uns durchstarten!</h3>
+    <p class="copy">Wenn du Ergebnisse statt Ausreden willst, starten wir dein Projekt strukturiert und ohne Reibung.</p>
+    <a class="cta" href="/booking">Projekt anfragen</a>
+  </div>
+</section>
+
+<style>
+  .final { margin: 1rem 0 0; }
+  .band {
+    background: linear-gradient(135deg, #1a1a1a, #0e0e0e);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 24px;
+    padding: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  h2 {
+    margin: 0;
+    color: #fff;
+    font-size: clamp(1.6rem, 4vw, 2.8rem);
+    line-height: 1.05;
+    max-width: 15ch;
+  }
+  .cta {
+    width: fit-content;
+    text-decoration: none;
+    color: #171717;
+    background: #ff8da1;
+    padding: 0.6rem 0.95rem;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+  .founder {
+    margin-top: 1rem;
+    background: #101010;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 24px;
+    padding: 1.4rem 1rem;
+    text-align: center;
+  }
+  .founder img {
+    width: 84px;
+    height: 84px;
+    object-fit: cover;
+    border-radius: 999px;
+    border: 3px solid #ff8da1;
+    margin: 0 auto 0.55rem;
+  }
+  .name { margin: 0; color: #fff; font-weight: 700; }
+  .role { margin: 0.15rem 0 0.8rem; color: #a6a6a6; font-size: 0.85rem; }
+  h3 { margin: 0 0 0.5rem; color: #fff; font-size: 1.8rem; }
+  .copy { margin: 0 auto 0.85rem; max-width: 52ch; color: #b2b2b2; }
+  @media (max-width: 760px) {
+    .band { flex-direction: column; align-items: flex-start; }
+  }
+</style>

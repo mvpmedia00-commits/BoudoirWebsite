@@ -1,0 +1,325 @@
+---
+import BaseHead from '../../components/BaseHead.astro';
+import { listLeads } from '../../lib/pocketbase';
+
+const ADMIN_TOKEN = import.meta.env.ADMIN_DASH_TOKEN;
+const providedToken = Astro.url.searchParams.get('token');
+
+if (!ADMIN_TOKEN || providedToken !== ADMIN_TOKEN) {
+	return Astro.redirect('/');
+}
+
+let leads: Array<Record<string, unknown>> = [];
+let loadError = '';
+
+try {
+	leads = await listLeads(200);
+} catch (error) {
+	loadError = error instanceof Error ? error.message : 'Failed to load leads.';
+}
+
+const nicheOptions = Array.from(new Set(leads.map((lead) => String(lead.niche ?? 'general')))).sort();
+const sourceOptions = Array.from(new Set(leads.map((lead) => String(lead.source ?? 'direct-page')))).sort();
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title="Lead Feed | MVP Media" description="Private feed for all lead submissions." noIndex={true} />
+	</head>
+	<body>
+		<main class="feed-page">
+			<h1>Lead Feed</h1>
+
+			{
+				loadError ? (
+					<p class="error">{loadError}</p>
+				) : (
+					<>
+						<div class="controls">
+							<label>
+								Filter by niche
+								<select id="nicheFilter">
+									<option value="all">All</option>
+									{nicheOptions.map((niche) => <option value={niche}>{niche}</option>)}
+								</select>
+							</label>
+							<label>
+								Filter by source
+								<select id="sourceFilter">
+									<option value="all">All</option>
+									{sourceOptions.map((source) => <option value={source}>{source}</option>)}
+								</select>
+							</label>
+							<label>
+								Filter by status
+								<select id="statusFilter">
+									<option value="all">All</option>
+									<option value="new">new</option>
+									<option value="contacted">contacted</option>
+									<option value="booked">booked</option>
+								</select>
+							</label>
+							<label>
+								Search
+								<input id="textFilter" type="search" placeholder="name, email, message..." />
+							</label>
+						</div>
+
+						<div class="feed-list" id="feedList">
+							{leads.map((lead) => {
+								const status = String(lead.status ?? 'new');
+								const niche = String(lead.niche ?? 'general');
+								return (
+									<details class="feed-item" data-lead-item data-niche={niche} data-source={String(lead.source ?? 'direct-page')} data-status={status} data-search={`${String(lead.name ?? '')} ${String(lead.email ?? '')} ${String(lead.message ?? '')}`.toLowerCase()}>
+										<summary>
+											<div>
+												<p class="name">{String(lead.name ?? 'Unknown')}</p>
+												<p>{String(lead.email ?? '')}</p>
+												<p class="meta">{niche} • {String(lead.source ?? 'direct-page')}</p>
+											</div>
+											<div class="right">
+												<p>{new Date(String(lead.created ?? Date.now())).toLocaleDateString()}</p>
+												<span class:list={['badge', status]}>{status}</span>
+											</div>
+										</summary>
+
+										<div class="details-body">
+											<p><strong>Message:</strong> {String(lead.message ?? 'No message provided.')}</p>
+											<p><strong>Budget:</strong> {lead.budget ? `$${lead.budget}` : 'Not provided'}</p>
+											<p><strong>Source:</strong> {String(lead.source ?? 'direct-page')}</p>
+											<p><strong>UTM:</strong> {String(lead.utm_source ?? '-')} / {String(lead.utm_medium ?? '-')} / {String(lead.utm_campaign ?? '-')}</p>
+											<p><strong>Referrer:</strong> {String(lead.referrer ?? '-')}</p>
+
+											<div class="actions">
+												<label>
+													Status
+													<select data-status data-id={String(lead.id ?? '')}>
+														<option selected={status === 'new'} value="new">new</option>
+														<option selected={status === 'contacted'} value="contacted">contacted</option>
+														<option selected={status === 'booked'} value="booked">booked</option>
+													</select>
+												</label>
+
+												<label class="notes-wrap">
+													Quick notes
+													<textarea data-notes data-id={String(lead.id ?? '')} rows={3}>{String(lead.notes ?? '')}</textarea>
+												</label>
+												<button type="button" class="save-note" data-save-notes data-id={String(lead.id ?? '')}>Save Notes</button>
+											</div>
+										</div>
+									</details>
+								);
+							})}
+						</div>
+					</>
+				)
+			}
+		</main>
+	</body>
+</html>
+
+<script>
+	const filter = document.getElementById('nicheFilter');
+	const sourceFilter = document.getElementById('sourceFilter');
+	const statusFilter = document.getElementById('statusFilter');
+	const textFilter = document.getElementById('textFilter');
+	const items = document.querySelectorAll('[data-lead-item]');
+
+	const applyFilters = () => {
+		const nicheSelected = filter instanceof HTMLSelectElement ? filter.value : 'all';
+		const sourceSelected = sourceFilter instanceof HTMLSelectElement ? sourceFilter.value : 'all';
+		const statusSelected = statusFilter instanceof HTMLSelectElement ? statusFilter.value : 'all';
+		const term = textFilter instanceof HTMLInputElement ? textFilter.value.trim().toLowerCase() : '';
+		items.forEach((item) => {
+			const nicheMatch = nicheSelected === 'all' || item.dataset.niche === nicheSelected;
+			const sourceMatch = sourceSelected === 'all' || item.dataset.source === sourceSelected;
+			const statusMatch = statusSelected === 'all' || item.dataset.status === statusSelected;
+			const textMatch = !term || (item.dataset.search || '').includes(term);
+			item.style.display = nicheMatch && sourceMatch && statusMatch && textMatch ? 'block' : 'none';
+		});
+	};
+
+	filter?.addEventListener('change', applyFilters);
+	sourceFilter?.addEventListener('change', applyFilters);
+	statusFilter?.addEventListener('change', applyFilters);
+	textFilter?.addEventListener('input', applyFilters);
+
+	document.querySelectorAll('select[data-status]').forEach((selectNode) => {
+		const select = selectNode;
+		select.dataset.previous = select.value;
+		select.addEventListener('change', async () => {
+			const id = select.dataset.id;
+			if (!id) return;
+			const previous = select.dataset.previous || 'new';
+			const next = select.value;
+			try {
+				const response = await fetch('/api/leads', {
+					method: 'PATCH',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ id, status: next })
+				});
+				if (!response.ok) throw new Error('Failed to save');
+				select.dataset.previous = next;
+				select.closest('[data-lead-item]')?.setAttribute('data-status', next);
+				const badge = select.closest('.details-body')?.previousElementSibling?.querySelector('.badge');
+				if (badge instanceof HTMLElement) {
+					badge.textContent = next;
+					badge.className = `badge ${next}`;
+				}
+			} catch {
+				select.value = previous;
+			}
+		});
+	});
+
+	document.querySelectorAll('button[data-save-notes]').forEach((buttonNode) => {
+		const button = buttonNode;
+		button.addEventListener('click', async () => {
+			const id = button.dataset.id;
+			if (!id) return;
+			const textarea = document.querySelector(`textarea[data-notes][data-id="${id}"]`);
+			if (!(textarea instanceof HTMLTextAreaElement)) return;
+			const previous = button.textContent;
+			button.disabled = true;
+			button.textContent = 'Saving...';
+			try {
+				const response = await fetch('/api/leads', {
+					method: 'PATCH',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ id, notes: textarea.value })
+				});
+				if (!response.ok) throw new Error('Failed to save');
+				button.textContent = 'Saved';
+				setTimeout(() => {
+					button.textContent = previous || 'Save Notes';
+				}, 1000);
+			} catch {
+				button.textContent = 'Retry Save';
+			} finally {
+				button.disabled = false;
+			}
+		});
+	});
+</script>
+
+<style>
+	.feed-page {
+		background: #030303;
+		min-height: 100vh;
+		color: #f8f8f8;
+		padding: 2rem;
+	}
+	.controls {
+		margin-bottom: 0.8rem;
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 0.7rem;
+	}
+	.controls label,
+	.actions label {
+		display: grid;
+		gap: 0.35rem;
+		font-size: 0.85rem;
+		color: #c6c6c6;
+	}
+	.feed-list {
+		display: grid;
+		gap: 0.7rem;
+	}
+	.feed-item {
+		border: 1px solid #2b2b2b;
+		border-radius: 0.9rem;
+		padding: 0;
+		background: #121212;
+	}
+	summary {
+		list-style: none;
+		cursor: pointer;
+		display: flex;
+		justify-content: space-between;
+		gap: 1rem;
+		padding: 1rem;
+	}
+	summary::-webkit-details-marker {
+		display: none;
+	}
+	.details-body {
+		padding: 0 1rem 1rem;
+		display: grid;
+		gap: 0.6rem;
+	}
+	.actions {
+		display: grid;
+		gap: 0.6rem;
+	}
+	.notes-wrap {
+		max-width: 680px;
+	}
+	.name {
+		font-size: 1.1rem;
+		font-weight: 700;
+		margin: 0;
+	}
+	p {
+		margin: 0.2rem 0;
+		color: #c8c8c8;
+	}
+	.meta {
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		font-size: 0.78rem;
+	}
+	.error {
+		color: #ff8c8c;
+	}
+	select,
+	input[type='search'],
+	textarea {
+		margin-top: 0.1rem;
+		background: #0a0a0a;
+		color: #f3f3f3;
+		border: 1px solid #353535;
+		padding: 0.4rem 0.5rem;
+		border-radius: 0.4rem;
+		font: inherit;
+	}
+	.save-note {
+		width: fit-content;
+		background: #f1dfbe;
+		color: #111;
+		border: 0;
+		padding: 0.45rem 0.7rem;
+		border-radius: 0.45rem;
+		font-weight: 700;
+	}
+	.badge {
+		display: inline-block;
+		padding: 0.2rem 0.5rem;
+		border-radius: 999px;
+		font-size: 0.72rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		margin-top: 0.35rem;
+		background: #2a2a2a;
+	}
+	.badge.new {
+		background: #545454;
+	}
+	.badge.contacted {
+		background: #2e5f8d;
+	}
+	.badge.booked {
+		background: #2f7b45;
+	}
+	@media (max-width: 900px) {
+		.controls {
+			grid-template-columns: 1fr 1fr;
+		}
+	}
+	@media (max-width: 560px) {
+		.controls {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

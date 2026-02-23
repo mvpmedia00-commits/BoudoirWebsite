@@ -10,11 +10,14 @@ interface Props {
 	title: string;
 	description: string;
 	image?: ImageMetadata;
+	noIndex?: boolean;
+	keywords?: string;
+	jsonLd?: Record<string, unknown> | null;
 }
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
-const { title, description, image = FallbackImage } = Astro.props;
+const { title, description, image = FallbackImage, noIndex = false, keywords = '', jsonLd = null } = Astro.props;
 ---
 
 <!-- Global Metadata -->
@@ -42,6 +45,8 @@ const { title, description, image = FallbackImage } = Astro.props;
 <title>{title}</title>
 <meta name="title" content={title} />
 <meta name="description" content={description} />
+{keywords && <meta name="keywords" content={keywords} />}
+{noIndex && <meta name="robots" content="noindex,nofollow" />}
 
 <!-- Open Graph / Facebook -->
 <meta property="og:type" content="website" />
@@ -56,3 +61,24 @@ const { title, description, image = FallbackImage } = Astro.props;
 <meta property="twitter:title" content={title} />
 <meta property="twitter:description" content={description} />
 <meta property="twitter:image" content={new URL(image.src, Astro.url)} />
+
+{jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+
+<script is:inline>
+	window.mvpTrack = function(payload) {
+		try {
+			var body = JSON.stringify(payload || {});
+			if (navigator.sendBeacon) {
+				var blob = new Blob([body], { type: 'application/json' });
+				navigator.sendBeacon('/api/events', blob);
+				return;
+			}
+			fetch('/api/events', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: body,
+				keepalive: true
+			});
+		} catch (_e) {}
+	};
+</script>

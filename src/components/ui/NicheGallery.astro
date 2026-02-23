@@ -1,0 +1,102 @@
+---
+import One from '../../assets/blog-placeholder-1.jpg';
+import Two from '../../assets/blog-placeholder-2.jpg';
+import Three from '../../assets/blog-placeholder-3.jpg';
+import Four from '../../assets/blog-placeholder-4.jpg';
+import Five from '../../assets/blog-placeholder-5.jpg';
+
+interface Props {
+	niche: string;
+}
+
+const { niche } = Astro.props;
+
+const fallbackCards = [
+	{ title: `${niche} session highlight`, image: One.src },
+	{ title: `${niche} detail frame`, image: Two.src },
+	{ title: `${niche} hero composition`, image: Three.src },
+	{ title: `${niche} ambient portrait`, image: Four.src },
+	{ title: `${niche} closing shot`, image: Five.src }
+];
+---
+
+<div class="niche-gallery" data-niche-gallery data-niche={niche}>
+	{fallbackCards.map((card) => (
+		<figure>
+			<img src={card.image} alt={card.title} loading="lazy" />
+			<figcaption>{card.title}</figcaption>
+		</figure>
+	))}
+</div>
+
+<script>
+	const galleries = document.querySelectorAll('[data-niche-gallery]');
+
+	const renderGallery = (root, items) => {
+		if (!Array.isArray(items) || items.length === 0) return;
+		root.innerHTML = '';
+		items.forEach((item) => {
+			const figure = document.createElement('figure');
+			const img = document.createElement('img');
+			img.src = item.thumb_url || item.media_url;
+			img.alt = item.title || 'Gallery media';
+			img.loading = 'lazy';
+			const caption = document.createElement('figcaption');
+			caption.textContent = item.title || 'Untitled';
+			figure.append(img, caption);
+			root.appendChild(figure);
+		});
+	};
+
+	galleries.forEach(async (rootNode) => {
+		const root = rootNode;
+		const niche = root.dataset.niche || '';
+		try {
+			const response = await fetch(`/api/media?niche=${encodeURIComponent(niche)}&limit=12`, {
+				headers: { Accept: 'application/json' }
+			});
+			if (!response.ok) return;
+			const data = await response.json();
+			renderGallery(root, data.items || []);
+		} catch {
+			// Keep fallback content rendered server-side.
+		}
+	});
+</script>
+
+<style>
+	.niche-gallery {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 0.8rem;
+	}
+	figure {
+		margin: 0;
+		border: 1px solid var(--stroke);
+		border-radius: 0.9rem;
+		overflow: hidden;
+		background: #fff;
+	}
+	img {
+		width: 100%;
+		height: 240px;
+		object-fit: cover;
+		border-radius: 0;
+	}
+	figcaption {
+		font-size: 0.86rem;
+		padding: 0.6rem 0.75rem;
+		color: var(--text-muted);
+		text-transform: capitalize;
+	}
+	@media (max-width: 900px) {
+		.niche-gallery {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+	@media (max-width: 560px) {
+		.niche-gallery {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

@@ -1,0 +1,150 @@
+---
+interface Props {
+	redirectTo?: string;
+}
+
+const { redirectTo = '/gallery' } = Astro.props;
+---
+
+<div class="age-gate" data-age-gate hidden>
+	<div class="age-gate-overlay"></div>
+	<div class="age-gate-dialog" role="dialog" aria-modal="true" aria-labelledby="age-gate-title">
+		<p class="age-gate-kicker">18+ Access</p>
+		<h2 id="age-gate-title">This portfolio category is intended for adults only.</h2>
+		<p>
+			This content presents professional boudoir, artistic nude, and body-art work in a respectful editorial context.
+			Please confirm that you are 18 or older to continue.
+		</p>
+		<div class="age-gate-actions">
+			<button type="button" id="continueBtn" class="btn btn-solid" data-age-gate-accept>Continue</button>
+			<a class="btn btn-ghost" href={redirectTo} data-age-gate-decline>Leave</a>
+		</div>
+	</div>
+</div>
+
+<script>
+	const KEY = 'age_gate_ack_v1';
+	const LEGACY_KEY = 'ageVerified';
+
+	const readAck = () => {
+		try {
+			if (window.localStorage.getItem(LEGACY_KEY) === 'true') return true;
+		} catch {
+			// ignore
+		}
+		try {
+			if (window.sessionStorage.getItem(KEY) === 'true') return true;
+		} catch {
+			// ignore
+		}
+		try {
+			if (window.localStorage.getItem(KEY) === 'true') return true;
+		} catch {
+			// ignore
+		}
+		return false;
+	};
+
+	const persistAck = () => {
+		try {
+			window.localStorage.setItem(LEGACY_KEY, 'true');
+		} catch {
+			// ignore
+		}
+		try {
+			window.sessionStorage.setItem(KEY, 'true');
+		} catch {
+			// ignore
+		}
+		try {
+			window.localStorage.setItem(KEY, 'true');
+		} catch {
+			// ignore
+		}
+	};
+
+	const gate = document.querySelector('[data-age-gate]');
+	if (gate instanceof HTMLElement) {
+		const accepted = readAck();
+		if (!accepted) {
+			gate.hidden = false;
+			document.body.classList.add('age-gate-open');
+		}
+
+		const acceptButton = document.getElementById('continueBtn');
+		const declineLink = gate.querySelector('[data-age-gate-decline]');
+		const hideGate = () => {
+			gate.hidden = true;
+			document.body.classList.remove('age-gate-open');
+		};
+		const continueAccess = () => {
+			persistAck();
+			hideGate();
+			window.location.reload();
+		};
+
+		acceptButton?.addEventListener('click', (event) => {
+			event.preventDefault();
+			continueAccess();
+		});
+		declineLink?.addEventListener('click', () => {
+			document.body.classList.remove('age-gate-open');
+		});
+		if (acceptButton instanceof HTMLElement && !accepted) {
+			acceptButton.focus();
+		}
+	}
+</script>
+
+<style>
+	.age-gate {
+		position: fixed;
+		inset: 0;
+		z-index: 320;
+		display: grid;
+		place-items: center;
+		padding: 1rem;
+	}
+	.age-gate-overlay {
+		position: absolute;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.8);
+		z-index: 0;
+	}
+	.age-gate-dialog {
+		position: relative;
+		z-index: 2;
+		width: min(620px, 100%);
+		background: #111;
+		border: 1px solid rgba(213, 190, 150, 0.36);
+		padding: 1.25rem;
+		display: grid;
+		gap: 0.8rem;
+	}
+	.age-gate-kicker {
+		margin: 0;
+		text-transform: uppercase;
+		letter-spacing: 0.12em;
+		font-size: 0.68rem;
+		color: #d5be96;
+	}
+	.age-gate-dialog h2 {
+		margin: 0;
+		font-family: 'Cormorant Garamond', 'Times New Roman', serif;
+		font-size: clamp(1.5rem, 4vw, 2.4rem);
+		line-height: 1.02;
+	}
+	.age-gate-dialog p {
+		margin: 0;
+		color: #b9b9b9;
+		line-height: 1.6;
+	}
+	.age-gate-actions {
+		display: flex;
+		gap: 0.75rem;
+		flex-wrap: wrap;
+	}
+	body.age-gate-open {
+		overflow: hidden;
+	}
+</style>

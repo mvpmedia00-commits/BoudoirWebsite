@@ -8,7 +8,7 @@ import Header from '../components/Header.astro';
 
 type Props = CollectionEntry<'blog'>['data'];
 
-const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
+const { title, description, pubDate, updatedDate, heroImage, category, tags } = Astro.props;
 ---
 
 <html lang="en">
@@ -16,41 +16,100 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 		<BaseHead title={title} description={description} />
 		<style>
 			main {
-				width: calc(100% - 2em);
-				max-width: 100%;
-				margin: 0;
+				padding-top: 1.4rem;
 			}
-			.hero-image {
-				width: 100%;
+			.article-wrap {
+				max-width: 860px;
+				margin: 0 auto;
+				background: linear-gradient(145deg, var(--surface), var(--surface-elevated));
+				border: 1px solid var(--stroke);
+				border-radius: var(--radius);
+				overflow: hidden;
 			}
 			.hero-image img {
-				display: block;
-				margin: 0 auto;
-				border-radius: 12px;
-				box-shadow: var(--box-shadow);
+				width: 100%;
+				border-radius: 0;
+				aspect-ratio: 16 / 8;
+				object-fit: cover;
 			}
 			.prose {
-				width: 720px;
-				max-width: calc(100% - 2em);
-				margin: auto;
-				padding: 1em;
-				color: rgb(var(--gray-dark));
+				max-width: 760px;
+				margin: 0 auto;
+				padding: 1.3rem 1rem 1.8rem;
 			}
 			.title {
-				margin-bottom: 1em;
-				padding: 1em 0;
-				text-align: center;
-				line-height: 1;
+				margin-bottom: 1rem;
+				padding-bottom: 0.9rem;
+				border-bottom: 1px solid var(--stroke);
 			}
 			.title h1 {
-				margin: 0 0 0.5em 0;
+				margin: 0.4rem 0 0;
+				line-height: 1.06;
 			}
 			.date {
-				margin-bottom: 0.5em;
-				color: rgb(var(--gray));
+				font-size: 0.82rem;
+				text-transform: uppercase;
+				letter-spacing: 0.07em;
+				color: var(--text-muted);
+				display: grid;
+				gap: 0.2rem;
+			}
+			.meta-links {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.45rem;
+				margin-top: 0.65rem;
+			}
+			.meta-links a {
+				display: inline-block;
+				padding: 0.25rem 0.55rem;
+				border: 1px solid var(--stroke);
+				border-radius: 999px;
+				font-size: 0.72rem;
+				text-transform: uppercase;
+				letter-spacing: 0.06em;
+				text-decoration: none;
+				color: var(--text-muted);
+			}
+			.meta-links a:hover {
+				color: var(--text-primary);
+				background: rgba(157, 135, 95, 0.2);
 			}
 			.last-updated-on {
 				font-style: italic;
+			}
+			.article-content {
+				font-size: 1.03rem;
+				line-height: 1.72;
+				color: var(--text-muted);
+			}
+			.article-content :global(p) {
+				margin: 0 0 1.05rem;
+			}
+			.article-content :global(h2),
+			.article-content :global(h3),
+			.article-content :global(h4) {
+				margin-top: 1.4rem;
+				margin-bottom: 0.6rem;
+				line-height: 1.2;
+			}
+			.article-content :global(ul),
+			.article-content :global(ol) {
+				margin: 0 0 1rem;
+				padding-left: 1.25rem;
+			}
+			.article-content :global(blockquote) {
+				margin: 1.25rem 0;
+				padding: 0.8rem 1rem;
+				border-left: 2px solid var(--brand-deep);
+				background: rgba(255, 255, 255, 0.02);
+				border-radius: 0 10px 10px 0;
+			}
+			.article-content :global(pre) {
+				overflow-x: auto;
+				padding: 0.9rem;
+				border-radius: 10px;
+				background: rgba(0, 0, 0, 0.35);
 			}
 		</style>
 	</head>
@@ -58,26 +117,31 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 	<body>
 		<Header />
 		<main>
-			<article>
+			<article class="article-wrap">
 				<div class="hero-image">
-					{heroImage && <Image width={1020} height={510} src={heroImage} alt="" />}
+					{heroImage && <Image width={1440} height={720} src={heroImage} alt={title} />}
 				</div>
 				<div class="prose">
 					<div class="title">
 						<div class="date">
-							<FormattedDate date={pubDate} />
+							<div><FormattedDate date={pubDate} /></div>
 							{
 								updatedDate && (
 									<div class="last-updated-on">
-										Last updated on <FormattedDate date={updatedDate} />
+										Updated <FormattedDate date={updatedDate} />
 									</div>
 								)
 							}
 						</div>
+						<div class="meta-links">
+							<a href={`/blog/category/${category}/`}>{category.replaceAll('-', ' ')}</a>
+							{tags?.map((tag) => <a href={`/blog/tag/${tag.toLowerCase()}/`}>#{tag}</a>)}
+						</div>
 						<h1>{title}</h1>
-						<hr />
 					</div>
-					<slot />
+					<div class="article-content">
+						<slot />
+					</div>
 				</div>
 			</article>
 		</main>

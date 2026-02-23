@@ -1,0 +1,112 @@
+[
+  {
+    "id": "pbc_leads",
+    "name": "leads",
+    "type": "base",
+    "system": false,
+    "schema": [
+      { "id": "fld_name", "name": "name", "type": "text", "required": true },
+      { "id": "fld_email", "name": "email", "type": "email", "required": true },
+      {
+        "id": "fld_niche",
+        "name": "niche",
+        "type": "select",
+        "required": true,
+        "options": {
+          "maxSelect": 1,
+          "values": [
+            "boudoir",
+            "artistic-nude",
+            "afterdark"
+          ]
+        }
+      },
+      { "id": "fld_budget", "name": "budget", "type": "number", "required": false, "options": { "min": 0 } },
+      { "id": "fld_message", "name": "message", "type": "text", "required": false },
+      { "id": "fld_source", "name": "source", "type": "text", "required": false },
+      { "id": "fld_utm_source", "name": "utm_source", "type": "text", "required": false },
+      { "id": "fld_utm_medium", "name": "utm_medium", "type": "text", "required": false },
+      { "id": "fld_utm_campaign", "name": "utm_campaign", "type": "text", "required": false },
+      { "id": "fld_referrer", "name": "referrer", "type": "text", "required": false },
+      { "id": "fld_notes", "name": "notes", "type": "text", "required": false },
+      {
+        "id": "fld_status",
+        "name": "status",
+        "type": "select",
+        "required": true,
+        "options": { "maxSelect": 1, "values": ["new", "contacted", "booked"] }
+      }
+    ],
+    "listRule": "@request.auth.id != ''",
+    "viewRule": "@request.auth.id != ''",
+    "createRule": "@request.auth.id != ''",
+    "updateRule": "@request.auth.id != ''",
+    "deleteRule": "@request.auth.id != ''"
+  },
+  {
+    "id": "pbc_media_items",
+    "name": "media_items",
+    "type": "base",
+    "system": false,
+    "schema": [
+      { "id": "fld_media_title", "name": "title", "type": "text", "required": true },
+      { "id": "fld_media_description", "name": "description", "type": "text", "required": false },
+      {
+        "id": "fld_media_station",
+        "name": "station",
+        "type": "select",
+        "required": true,
+        "options": {
+          "maxSelect": 1,
+          "values": [
+            "branding",
+            "edits",
+            "ugc",
+            "testimonials",
+            "long-form",
+            "droneshots",
+            "youtube",
+            "personal"
+          ]
+        }
+      },
+      { "id": "fld_media_niche", "name": "niche", "type": "text", "required": false },
+      {
+        "id": "fld_media_type",
+        "name": "media_type",
+        "type": "select",
+        "required": true,
+        "options": { "maxSelect": 1, "values": ["image", "video", "youtube"] }
+      },
+      { "id": "fld_media_thumb", "name": "thumb_url", "type": "url", "required": true },
+      { "id": "fld_media_url", "name": "media_url", "type": "url", "required": true },
+      { "id": "fld_media_tags", "name": "tags", "type": "text", "required": false },
+      { "id": "fld_media_order", "name": "order", "type": "number", "required": false, "options": { "min": 0 } },
+      { "id": "fld_media_public", "name": "is_public", "type": "bool", "required": true }
+    ],
+    "listRule": "is_public = true || @request.auth.id != ''",
+    "viewRule": "is_public = true || @request.auth.id != ''",
+    "createRule": "@request.auth.id != ''",
+    "updateRule": "@request.auth.id != ''",
+    "deleteRule": "@request.auth.id != ''"
+  },
+  {
+    "id": "pbc_events",
+    "name": "events",
+    "type": "base",
+    "system": false,
+    "schema": [
+      { "id": "fld_event_name", "name": "event_name", "type": "text", "required": true },
+      { "id": "fld_event_page", "name": "page", "type": "text", "required": true },
+      { "id": "fld_event_source", "name": "source", "type": "text", "required": false },
+      { "id": "fld_event_niche", "name": "niche", "type": "text", "required": false },
+      { "id": "fld_event_element", "name": "element", "type": "text", "required": false },
+      { "id": "fld_event_meta", "name": "meta", "type": "text", "required": false }
+    ],
+    "listRule": "@request.auth.id != ''",
+    "viewRule": "@request.auth.id != ''",
+    "createRule": "",
+    "updateRule": "@request.auth.id != ''",
+    "deleteRule": "@request.auth.id != ''"
+  }
+]

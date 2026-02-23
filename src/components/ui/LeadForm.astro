@@ -1,0 +1,126 @@
+---
+interface Props {
+	niche: string;
+	source?: string;
+}
+
+const { niche, source = '' } = Astro.props;
+---
+
+<form class="lead-form" data-lead-form data-niche={niche} data-source={source}>
+	<input name="name" placeholder="Full Name" required />
+	<input name="email" type="email" placeholder="Email Address" required />
+	<input name="budget" type="number" min="0" placeholder="Budget (USD)" />
+	<textarea name="message" placeholder="Tell us about your project..." rows={5}></textarea>
+	<button type="submit">Get My Quote</button>
+	<p class="lead-feedback" data-feedback aria-live="polite"></p>
+</form>
+
+<script>
+	document.querySelectorAll('[data-lead-form]').forEach((formNode) => {
+		const form = formNode;
+		const feedback = form.querySelector('[data-feedback]');
+		form.addEventListener('submit', async (event) => {
+			event.preventDefault();
+			const button = form.querySelector('button[type="submit"]');
+			const data = new FormData(form);
+			const payload = {
+				name: data.get('name'),
+				email: data.get('email'),
+				budget: data.get('budget') ? Number(data.get('budget')) : null,
+				message: data.get('message'),
+				niche: form.dataset.niche,
+				source: form.dataset.source || (() => {
+					const path = window.location.pathname;
+					if (path === '/') return 'homepage';
+					if (path === '/booking') return 'booking-page';
+					if (path.startsWith('/land/')) return `${path.split('/')[2] || 'landing'}-page`;
+					return 'direct-page';
+				})(),
+				utm_source: new URLSearchParams(window.location.search).get('utm_source') || '',
+				utm_medium: new URLSearchParams(window.location.search).get('utm_medium') || '',
+				utm_campaign: new URLSearchParams(window.location.search).get('utm_campaign') || '',
+				referrer: document.referrer || ''
+			};
+
+			button.disabled = true;
+			button.textContent = 'Sending...';
+			feedback.textContent = '';
+
+			try {
+				const response = await fetch('/api/leads', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(payload)
+				});
+
+				if (!response.ok) {
+					throw new Error('Submission failed');
+				}
+
+				const tracker = window['mvpTrack'];
+				if (typeof tracker === 'function') {
+					tracker({
+						event_name: 'lead_submit',
+						page: window.location.pathname,
+						source: payload.source,
+						niche: String(payload.niche || ''),
+						element: 'lead_form'
+					});
+				}
+
+				form.reset();
+				feedback.textContent = 'Got it. We will reach out within 24 hours.';
+				feedback.classList.add('ok');
+			} catch {
+				feedback.textContent = 'Could not send right now. Please try again in a moment.';
+				feedback.classList.remove('ok');
+			} finally {
+				button.disabled = false;
+				button.textContent = 'Get My Quote';
+			}
+		});
+	});
+</script>
+
+<style>
+	.lead-form {
+		display: grid;
+		gap: 0.8rem;
+		background: #111;
+		border: 1px solid #2a2a2a;
+		border-radius: 1rem;
+		padding: 1.4rem;
+	}
+	input,
+	textarea {
+		border: 1px solid #343434;
+		border-radius: 0.7rem;
+		background: #070707;
+		color: #f4f4f4;
+		padding: 0.8rem 0.9rem;
+		font: inherit;
+	}
+	button {
+		border: 0;
+		border-radius: 0.7rem;
+		background: #fff;
+		color: #111;
+		font-weight: 700;
+		padding: 0.9rem 1rem;
+		cursor: pointer;
+	}
+	button:disabled {
+		opacity: 0.65;
+		cursor: wait;
+	}
+	.lead-feedback {
+		font-size: 0.95rem;
+		color: #f4d2d2;
+		min-height: 1.2rem;
+		margin: 0;
+	}
+	.lead-feedback.ok {
+		color: #8bef9f;
+	}
+</style>

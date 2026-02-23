@@ -1,0 +1,133 @@
+---
+import BaseHead from '../../components/BaseHead.astro';
+import Footer from '../../components/Footer.astro';
+import Header from '../../components/Header.astro';
+import LeadForm from '../../components/ui/LeadForm.astro';
+import NicheGallery from '../../components/ui/NicheGallery.astro';
+import VideoPlayer from '../../components/ui/VideoPlayer.astro';
+import Poster from '../../assets/blog-placeholder-2.jpg';
+import { NICHE_SLUGS, getNicheBySlug } from '../../lib/niches';
+
+export function getStaticPaths() {
+	return NICHE_SLUGS.map((slug) => ({
+		params: { slug }
+	}));
+}
+
+const slug = Astro.params.slug ?? '';
+const niche = getNicheBySlug(slug);
+
+if (!niche) {
+	return Astro.redirect('/');
+}
+
+const hasAdultAccess = Astro.cookies.get('mvp_adult_access')?.value === 'granted';
+const requiresGate = niche.isMature === true;
+const isAllowed = !requiresGate || hasAdultAccess;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title={`${niche.title} | MVP Media`}
+			description={niche.description}
+			image={Poster}
+			noIndex={requiresGate}
+		/>
+	</head>
+	<body>
+		<Header />
+		<main>
+			{
+				isAllowed ? (
+					<>
+						<section class="niche-hero">
+							<div>
+								<h1>{niche.title}</h1>
+								<p>{niche.hero}</p>
+							</div>
+							<VideoPlayer src="https://cdn.coverr.co/videos/coverr-a-city-at-night-1579/1080p.mp4" poster={Poster.src} />
+						</section>
+
+						<section class="niche-section">
+							<h2>Featured Work</h2>
+							<NicheGallery niche={niche.slug} />
+						</section>
+
+						<section class="niche-section two-col">
+							<div>
+								<h2>Why This Matters</h2>
+								<ul>
+									<li><strong>Experience:</strong> Clear session planning from first message to final gallery.</li>
+									<li><strong>Comfort:</strong> Direction that keeps your session relaxed, private, and efficient.</li>
+									<li><strong>Results:</strong> Cinematic boudoir images with premium finishing and discretion.</li>
+								</ul>
+								<p class="trust">Trusted by adult clients nationwide for discreet, luxury boudoir work.</p>
+							</div>
+							<div>
+								<h2>Get a Quote</h2>
+								<LeadForm niche={niche.slug} source={`${niche.slug}-page`} />
+							</div>
+						</section>
+					</>
+				) : (
+					<section class="gate">
+						<p class="eyebrow">Private Access</p>
+						<h1>Mature Artistic Portfolio</h1>
+						<p>
+							This section contains mature, non-explicit portrait work intended for adults who request it.
+							Continue only if you are 18+ and intentionally reviewing this service.
+						</p>
+						<a class="btn btn-solid" href={`/api/adult-access?returnTo=/land/${niche.slug}`}>I am 18+ and want to continue</a>
+						<a class="btn btn-ghost" href="/">Return to Homepage</a>
+					</section>
+				)
+			}
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<style>
+	main {
+		padding-top: 1.4rem;
+	}
+	.niche-hero {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1rem;
+		margin-bottom: 1.4rem;
+	}
+	.niche-section {
+		margin-bottom: 1.4rem;
+	}
+	.two-col {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1rem;
+	}
+	ul {
+		margin: 0 0 1rem;
+		padding-left: 1.2rem;
+		display: grid;
+		gap: 0.55rem;
+	}
+	li {
+		color: var(--text-muted);
+	}
+	.trust {
+		margin: 0;
+		color: var(--text-primary);
+		font-weight: 700;
+	}
+	.gate .btn {
+		width: fit-content;
+	}
+	@media (max-width: 900px) {
+		.niche-hero,
+		.two-col {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

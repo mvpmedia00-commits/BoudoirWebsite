@@ -1,0 +1,75 @@
+---
+interface Props {
+	src: string;
+	poster?: string;
+}
+
+const { src, poster } = Astro.props;
+const videoId = `video-${Math.random().toString(36).slice(2)}`;
+---
+
+<div class="video-wrap" data-video-wrap={videoId}>
+	{poster && <img class="poster" src={poster} alt="" aria-hidden="true" />}
+	<video
+		id={videoId}
+		src={src}
+		muted
+		playsinline
+		loop
+		preload="metadata"
+		poster={poster}
+		aria-label="Portfolio reel preview"
+	></video>
+</div>
+
+<script>
+	document.querySelectorAll('[data-video-wrap]').forEach((node) => {
+		const video = node.querySelector('video');
+		const poster = node.querySelector('.poster');
+		if (!(video instanceof HTMLVideoElement)) return;
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting) {
+						void video.play().catch(() => {});
+					} else {
+						video.pause();
+					}
+				});
+			},
+			{ threshold: 0.5 }
+		);
+
+		video.addEventListener('playing', () => {
+			if (poster instanceof HTMLElement) poster.style.opacity = '0';
+		});
+
+		observer.observe(video);
+	});
+</script>
+
+<style>
+	.video-wrap {
+		position: relative;
+		overflow: hidden;
+		border-radius: 1rem;
+		border: 1px solid var(--stroke);
+		background: #000;
+	}
+	video,
+	.poster {
+		width: 100%;
+		aspect-ratio: 16 / 9;
+		object-fit: cover;
+		display: block;
+	}
+	.poster {
+		position: absolute;
+		inset: 0;
+		filter: blur(18px);
+		transform: scale(1.08);
+		transition: opacity 280ms ease;
+		pointer-events: none;
+	}
+</style>
