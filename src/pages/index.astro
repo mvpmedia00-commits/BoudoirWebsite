@@ -10,6 +10,51 @@ import WorkFour from '../assets/blog-placeholder-4.jpg';
 import WorkFive from '../assets/blog-placeholder-5.jpg';
 import WorkAbout from '../assets/blog-placeholder-about.jpg';
 
+type HeroMediaColumn = {
+	reverse?: boolean;
+	items: string[];
+};
+
+const rawHeroMediaColumns: HeroMediaColumn[] = [
+	{
+		items: [
+			'https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771778844/grok-video-b1e546eb-43ae-4c20-9334-53847268f6f0_lj5m91.mp4',
+			'https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771783064/grok-video-9235aa62-6fdd-4f45-bd14-ebb3fd08ae08_vrrjjo.mp4',
+			'https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771783074/grok-video-90ae5076-b9d3-4b9b-a7e0-015658114076_1_b0ucez.mp4'
+		]
+	},
+	{
+		reverse: true,
+		items: [
+			'https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771780425/grok-video-b6dc0a9c-926f-47cd-bd74-288c65925979_xclx4p.mp4',
+			'https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771783064/grok-video-ad3c66dd-7957-4c7b-b49e-afa366007980_fjp7bx.mp4',
+			'https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771780675/grok-video-e37a5a66-37c9-4e0a-9efb-7acdf0e92ed1_mlpgmf.mp4'
+		]
+	},
+	{
+		items: [
+			'https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771784294/grok-video-a77ba723-ed82-47fb-a44c-da394706ef53_zsw8ku.mp4',
+			'https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771788759/grok-video-98796eaa-50b7-43b8-ad25-7712f95fefb7_1_b29nwo.mp4',
+			'https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771789682/grok-video-615b8d45-bf96-464e-a1ec-9af35c32e448_1_zc25xe.mp4'
+		]
+	},
+	{
+		reverse: true,
+		items: [
+			'https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771778842/grok-video-7f5538a0-9516-462e-bc15-c1ff8d65729d_ja5w2s.mp4',
+			'https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771788591/grok-video-27858631-03b8-406f-bde2-16ea3742d393_nqtvab.mp4',
+			'https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771789106/grok-video-9564afee-04d3-4d2a-af37-8fd002e6a40e_nejhyj.mp4'
+		]
+	}
+];
+
+const heroMediaColumns = rawHeroMediaColumns.map((column) => ({
+	...column,
+	items: [...column.items, ...column.items]
+}));
+
+const getVideoPoster = (src: string) => src.replace(',vc_auto', '').replace('.mp4', '.jpg');
+
 const homeSchema = {
 	'@context': 'https://schema.org',
 	// ...add schema properties here...
@@ -22,6 +67,7 @@ const homeSchema = {
 	<head>
 		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
 		<link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+		<link rel="preload" as="image" href={getVideoPoster(heroMediaColumns[0].items[0])} />
 		<script type="application/ld+json" set:html={JSON.stringify(homeSchema)} />
 	</head>
 	<body>
@@ -29,46 +75,34 @@ const homeSchema = {
 		<main class="homepage">
 			<section class="hero">
 				<div class="hero-media-wall" aria-hidden="true">
-					<div class="hero-media-col">
-						<div class="hero-media-track">
-							<video src="https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771778844/grok-video-b1e546eb-43ae-4c20-9334-53847268f6f0_lj5m91.mp4" autoplay muted loop playsinline preload="auto" poster="https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill/v1771778844/grok-video-b1e546eb-43ae-4c20-9334-53847268f6f0_lj5m91.jpg" data-hero-prime></video>
-							<video src="https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771783064/grok-video-9235aa62-6fdd-4f45-bd14-ebb3fd08ae08_vrrjjo.mp4" autoplay muted loop playsinline preload="metadata"></video>
-							<video src="https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771783074/grok-video-90ae5076-b9d3-4b9b-a7e0-015658114076_1_b0ucez.mp4" autoplay muted loop playsinline preload="metadata"></video>
-							<video src="https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771778844/grok-video-b1e546eb-43ae-4c20-9334-53847268f6f0_lj5m91.mp4" autoplay muted loop playsinline preload="none" aria-hidden="true"></video>
-							<video src="https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771783064/grok-video-9235aa62-6fdd-4f45-bd14-ebb3fd08ae08_vrrjjo.mp4" autoplay muted loop playsinline preload="none" aria-hidden="true"></video>
-							<video src="https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771783074/grok-video-90ae5076-b9d3-4b9b-a7e0-015658114076_1_b0ucez.mp4" autoplay muted loop playsinline preload="none" aria-hidden="true"></video>
-						</div>
-					</div>
-					<div class="hero-media-col reverse">
-						<div class="hero-media-track">
-							<video src="https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771780425/grok-video-b6dc0a9c-926f-47cd-bd74-288c65925979_xclx4p.mp4" autoplay muted loop playsinline preload="auto" poster="https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill/v1771780425/grok-video-b6dc0a9c-926f-47cd-bd74-288c65925979_xclx4p.jpg" data-hero-prime></video>
-							<video src="https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771783064/grok-video-ad3c66dd-7957-4c7b-b49e-afa366007980_fjp7bx.mp4" autoplay muted loop playsinline preload="metadata"></video>
-							<video src="https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771780675/grok-video-e37a5a66-37c9-4e0a-9efb-7acdf0e92ed1_mlpgmf.mp4" autoplay muted loop playsinline preload="metadata"></video>
-							<video src="https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771780425/grok-video-b6dc0a9c-926f-47cd-bd74-288c65925979_xclx4p.mp4" autoplay muted loop playsinline preload="none" aria-hidden="true"></video>
-							<video src="https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771783064/grok-video-ad3c66dd-7957-4c7b-b49e-afa366007980_fjp7bx.mp4" autoplay muted loop playsinline preload="none" aria-hidden="true"></video>
-							<video src="https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771780675/grok-video-e37a5a66-37c9-4e0a-9efb-7acdf0e92ed1_mlpgmf.mp4" autoplay muted loop playsinline preload="none" aria-hidden="true"></video>
-						</div>
-					</div>
-					<div class="hero-media-col">
-						<div class="hero-media-track">
-							<video src="https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771784294/grok-video-a77ba723-ed82-47fb-a44c-da394706ef53_zsw8ku.mp4" autoplay muted loop playsinline preload="auto" poster="https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill/v1771784294/grok-video-a77ba723-ed82-47fb-a44c-da394706ef53_zsw8ku.jpg" data-hero-prime></video>
-							<video src="https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771788759/grok-video-98796eaa-50b7-43b8-ad25-7712f95fefb7_1_b29nwo.mp4" autoplay muted loop playsinline preload="metadata"></video>
-							<video src="https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771789682/grok-video-615b8d45-bf96-464e-a1ec-9af35c32e448_1_zc25xe.mp4" autoplay muted loop playsinline preload="metadata"></video>
-							<video src="https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771784294/grok-video-a77ba723-ed82-47fb-a44c-da394706ef53_zsw8ku.mp4" autoplay muted loop playsinline preload="none" aria-hidden="true"></video>
-							<video src="https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771788759/grok-video-98796eaa-50b7-43b8-ad25-7712f95fefb7_1_b29nwo.mp4" autoplay muted loop playsinline preload="none" aria-hidden="true"></video>
-							<video src="https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771789682/grok-video-615b8d45-bf96-464e-a1ec-9af35c32e448_1_zc25xe.mp4" autoplay muted loop playsinline preload="none" aria-hidden="true"></video>
-						</div>
-					</div>
-					<div class="hero-media-col reverse">
-						<div class="hero-media-track">
-							<video src="https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771778842/grok-video-7f5538a0-9516-462e-bc15-c1ff8d65729d_ja5w2s.mp4" autoplay muted loop playsinline preload="auto" poster="https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill/v1771778842/grok-video-7f5538a0-9516-462e-bc15-c1ff8d65729d_ja5w2s.jpg" data-hero-prime></video>
-							<video src="https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771788591/grok-video-27858631-03b8-406f-bde2-16ea3742d393_nqtvab.mp4" autoplay muted loop playsinline preload="metadata"></video>
-							<video src="https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771789106/grok-video-9564afee-04d3-4d2a-af37-8fd002e6a40e_nejhyj.mp4" autoplay muted loop playsinline preload="metadata"></video>
-							<video src="https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771778842/grok-video-7f5538a0-9516-462e-bc15-c1ff8d65729d_ja5w2s.mp4" autoplay muted loop playsinline preload="none" aria-hidden="true"></video>
-							<video src="https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771788591/grok-video-27858631-03b8-406f-bde2-16ea3742d393_nqtvab.mp4" autoplay muted loop playsinline preload="none" aria-hidden="true"></video>
-							<video src="https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771789106/grok-video-9564afee-04d3-4d2a-af37-8fd002e6a40e_nejhyj.mp4" autoplay muted loop playsinline preload="none" aria-hidden="true"></video>
-						</div>
-					</div>
+					{
+						heroMediaColumns.map((column) => (
+							<div class:list={['hero-media-col', { reverse: column.reverse }]}>
+								<div class="hero-media-track">
+									{
+										column.items.map((src, index) => {
+											const isPrime = index === 0;
+											const isDeferred = !isPrime;
+											return (
+												<video
+													src={isDeferred ? undefined : src}
+													data-src={isDeferred ? src : undefined}
+													autoplay
+													muted
+													loop
+													playsinline
+													preload={isPrime ? 'metadata' : 'none'}
+													poster={getVideoPoster(src)}
+													data-hero-prime={isPrime ? 'true' : undefined}
+													aria-hidden={index >= 3 ? 'true' : undefined}
+												></video>
+											);
+										})
+									}
+								</div>
+							</div>
+						))
+					}
 				</div>
 				<div class="hero-noise"></div>
 				<div class="hero-glow hero-glow-left"></div>
@@ -81,7 +115,7 @@ const homeSchema = {
 						<p class="hero-location">New York and Destination Commissions</p>
 
 						<div class="hero-title-video-box">
-							<img class="hero-title-video" src={WorkAbout.src} alt="" loading="eager" />
+							<img class="hero-title-video" src={WorkAbout.src} alt="" loading="eager" decoding="async" fetchpriority="high" />
 							<div class="hero-title-overlay"></div>
 							<h1>Bold. Intimate. Cinematic.</h1>
 						</div>
@@ -370,9 +404,42 @@ const homeSchema = {
 		const primeVideos = Array.from(heroWall.querySelectorAll('video[data-hero-prime]')).filter(
 			(el) => el instanceof HTMLVideoElement
 		);
+		const deferredVideos = Array.from(heroWall.querySelectorAll('video[data-src]')).filter(
+			(el) => el instanceof HTMLVideoElement
+		);
+
+		const hydrateVideo = (video) => {
+			if (!(video instanceof HTMLVideoElement)) return;
+			if (video.dataset.hydrated === 'true') return;
+			const src = video.dataset.src;
+			if (!src) return;
+			video.src = src;
+			video.dataset.hydrated = 'true';
+			video.load();
+		};
+
+		const hydrateDeferredVideos = () => {
+			if (!deferredVideos.length) return;
+			let cursor = 0;
+			const runBatch = () => {
+				const batch = deferredVideos.slice(cursor, cursor + 2);
+				batch.forEach((video) => hydrateVideo(video));
+				cursor += batch.length;
+				if (cursor < deferredVideos.length) {
+					window.setTimeout(runBatch, 180);
+				}
+			};
+			const scheduleBatch = () => window.requestAnimationFrame(runBatch);
+			if ('requestIdleCallback' in window) {
+				window.requestIdleCallback(scheduleBatch, { timeout: 1200 });
+				return;
+			}
+			window.setTimeout(scheduleBatch, 120);
+		};
 
 		if (!primeVideos.length) {
 			heroWall.classList.remove('is-loading');
+			hydrateDeferredVideos();
 		} else {
 			let pending = primeVideos.length;
 			let released = false;
@@ -381,6 +448,7 @@ const homeSchema = {
 				released = true;
 				heroWall.classList.remove('is-loading');
 				window.clearTimeout(timeoutId);
+				hydrateDeferredVideos();
 			};
 			const markReady = () => {
 				pending -= 1;
@@ -465,6 +533,10 @@ const homeSchema = {
 		border-radius: 10px;
 		border: 1px solid rgba(255, 255, 255, 0.15);
 		opacity: 0.85;
+	}
+	.post-hero-info > section {
+		content-visibility: auto;
+		contain-intrinsic-size: 760px;
 	}
 	.hero-noise {
 		position: absolute;
