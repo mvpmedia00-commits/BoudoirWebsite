@@ -1,0 +1,26 @@
+---
+import BaseHead from '../../components/BaseHead.astro';
+import Footer from '../../components/Footer.astro';
+import Header from '../../components/Header.astro';
+import GalleryCanvas from '../../components/gallery/GalleryCanvas.astro';
+import AgeGate from '../../components/AgeGate.astro';
+import { SITE_TITLE } from '../../consts';
+import { hasAdultAccess } from '../../lib/auth';
+import { getGalleryCategory, getGalleryItemsByCategory } from '../../data/galleryMedia';
+
+const category = getGalleryCategory('body-paint');
+const items = getGalleryItemsByCategory(category.slug);
+const isAllowed = !category.sensitive || hasAdultAccess(Astro.cookies);
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={`${category.label} | ${SITE_TITLE}`} description={category.description} noIndex={category.sensitive} />
+	</head>
+	<body>
+		<Header />
+		{isAllowed ? <GalleryCanvas title={category.label} description={category.description} items={items} /> : <AgeGate redirectTo="/gallery" returnTo={Astro.url.pathname} />}
+		<Footer />
+	</body>
+</html>

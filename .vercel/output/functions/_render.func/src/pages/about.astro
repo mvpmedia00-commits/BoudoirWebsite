@@ -1,0 +1,50 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import Portrait from '../assets/blog-placeholder-about.jpg';
+import { SITE_TITLE } from '../consts';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={`About | ${SITE_TITLE}`} description="Meet Matthew Phillips, photographer behind MVP Media." />
+	</head>
+	<body>
+		<Header />
+		<main>
+			<section class="about-grid">
+				<img src={Portrait.src} alt="Lead photographer holding camera during a shoot." loading="lazy" />
+				<div>
+					<p class="eyebrow">Meet the Photographer</p>
+					<h1>Hi, I am Matthew Phillips.</h1>
+					<p>
+						I built MVP Media to deliver premium photography with clear direction, consistent quality, and a
+						discreet professional process from inquiry to final delivery.
+					</p>
+					<p>
+						My work is dedicated to after dark boudoir and private adult portrait sessions. Every project begins
+						with strategy and ends with intentional images delivered with discretion.
+					</p>
+				</div>
+			</section>
+
+			<section class="values">
+				<article>
+					<h2>Guided Experience</h2>
+					<p>You never have to wonder what to do next. I guide pacing, poses, and timeline flow.</p>
+				</article>
+				<article>
+					<h2>True-to-Life Color</h2>
+					<p>Clean cinematic grading that holds up over time and across platforms.</p>
+				</article>
+				<article>
+					<h2>Story-First Delivery</h2>
+					<p>Final galleries are structured for narrative flow, social use, and marketing assets.</p>
+				</article>
+			</section>
+		</main>
+		<Footer />
+	</body>
+</html>

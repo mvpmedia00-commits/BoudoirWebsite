@@ -1,0 +1,109 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import BaseHead from '../../../components/BaseHead.astro';
+import Footer from '../../../components/Footer.astro';
+import FormattedDate from '../../../components/FormattedDate.astro';
+import Header from '../../../components/Header.astro';
+
+export async function getStaticPaths() {
+	const posts = await getCollection('blog', ({ data }) => !data.draft);
+	const tags = Array.from(new Set(posts.flatMap((post) => post.data.tags)));
+	return tags.map((tag) => ({ params: { tag: tag.toLowerCase() } }));
+}
+
+const { tag } = Astro.params;
+const posts = (await getCollection(
+	'blog',
+	({ data }) => !data.draft && data.tags.map((entry) => entry.toLowerCase()).includes(String(tag))
+)).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+if (!tag || posts.length === 0) {
+	return Astro.redirect('/blog');
+}
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={`#${tag} | MVP Media Blog`} description={`Posts tagged ${tag} from MVP Media.`} />
+		<style>
+			.posts {
+				display: grid;
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+				gap: 1rem;
+			}
+			.post-card {
+				text-decoration: none;
+				background: linear-gradient(145deg, var(--surface), var(--surface-elevated));
+				border: 1px solid var(--stroke);
+				border-radius: var(--radius);
+				overflow: hidden;
+			}
+			.post-card img {
+				width: 100%;
+				aspect-ratio: 16/10;
+				object-fit: cover;
+				border-radius: 0;
+			}
+			.post-content {
+				padding: 0.9rem;
+			}
+			.meta {
+				display: flex;
+				justify-content: space-between;
+				font-size: 0.75rem;
+				text-transform: uppercase;
+				color: var(--text-muted);
+				margin-bottom: 0.45rem;
+			}
+			.tag-list {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.35rem;
+			}
+			.tag-list span {
+				font-size: 0.7rem;
+				padding: 0.2rem 0.5rem;
+				border-radius: 999px;
+				border: 1px solid var(--stroke);
+			}
+			@media (max-width: 760px) {
+				.posts {
+					grid-template-columns: 1fr;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<section class="section-header">
+				<p class="eyebrow">Tag</p>
+				<h1>#{tag}</h1>
+				<p><a href="/blog">Back to all posts</a></p>
+			</section>
+			<section class="posts">
+				{
+					posts.map((post) => (
+						<a class="post-card" href={`/blog/${post.id}/`}>
+							{post.data.heroImage && <Image width={900} height={560} src={post.data.heroImage} alt={post.data.title} />}
+							<div class="post-content">
+								<div class="meta">
+									<span>{post.data.category.replaceAll('-', ' ')}</span>
+									<span><FormattedDate date={post.data.pubDate} /></span>
+								</div>
+								<h2>{post.data.title}</h2>
+								<p>{post.data.description}</p>
+								<div class="tag-list">
+									{post.data.tags.map((entry) => <span>#{entry}</span>)}
+								</div>
+							</div>
+						</a>
+					))
+				}
+			</section>
+		</main>
+		<Footer />
+	</body>
+</html>

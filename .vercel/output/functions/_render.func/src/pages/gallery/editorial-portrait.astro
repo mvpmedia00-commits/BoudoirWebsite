@@ -1,0 +1,23 @@
+---
+import BaseHead from '../../components/BaseHead.astro';
+import Footer from '../../components/Footer.astro';
+import Header from '../../components/Header.astro';
+import GalleryCanvas from '../../components/gallery/GalleryCanvas.astro';
+import { SITE_TITLE } from '../../consts';
+import { getGalleryCategory, getGalleryItemsByCategory } from '../../data/galleryMedia';
+
+const category = getGalleryCategory('editorial-portrait');
+const items = getGalleryItemsByCategory(category.slug);
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={`${category.label} | ${SITE_TITLE}`} description={category.description} />
+	</head>
+	<body>
+		<Header />
+		<GalleryCanvas title={category.label} description={category.description} items={items} />
+		<Footer />
+	</body>
+</html>
