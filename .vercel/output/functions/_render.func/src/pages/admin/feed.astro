@@ -1,21 +1,21 @@
 ---
 import BaseHead from '../../components/BaseHead.astro';
 import { listLeads } from '../../lib/pocketbase';
-import { hasAdminSession } from '../../lib/auth';
 
-export const prerender = false;
+const ADMIN_TOKEN = import.meta.env.ADMIN_DASH_TOKEN;
+const providedToken = Astro.url.searchParams.get('token');
 
-const isAuthed = hasAdminSession(Astro.cookies);
+if (!ADMIN_TOKEN || providedToken !== ADMIN_TOKEN) {
+	return Astro.redirect('/');
+}
 
 let leads: Array<Record<string, unknown>> = [];
 let loadError = '';
 
-if (isAuthed) {
-	try {
-		leads = await listLeads(200);
-	} catch (error) {
-		loadError = error instanceof Error ? error.message : 'Failed to load leads.';
-	}
+try {
+	leads = await listLeads(200);
+} catch (error) {
+	loadError = error instanceof Error ? error.message : 'Failed to load leads.';
 }
 
 const nicheOptions = Array.from(new Set(leads.map((lead) => String(lead.niche ?? 'general')))).sort();
@@ -29,112 +29,89 @@ const sourceOptions = Array.from(new Set(leads.map((lead) => String(lead.source 
 	</head>
 	<body>
 		<main class="feed-page">
+			<h1>Lead Feed</h1>
+
 			{
-				!isAuthed ? (
-					<section class="login-shell">
-						<p class="eyebrow">Private Access</p>
-						<h1>Lead Feed</h1>
-						<p>Enter the admin access token to review and update inquiries.</p>
-						<form id="admin-login-form" class="login-form">
-							<label>
-								Access Token
-								<input id="admin-token" type="password" autocomplete="current-password" required />
-							</label>
-							<p id="admin-login-error" class="error"></p>
-							<button type="submit" class="save-note">Unlock Feed</button>
-						</form>
-					</section>
+				loadError ? (
+					<p class="error">{loadError}</p>
 				) : (
 					<>
-						<div class="page-head">
-							<h1>Lead Feed</h1>
-							<button id="admin-logout" type="button" class="ghost-action">Log Out</button>
+						<div class="controls">
+							<label>
+								Filter by niche
+								<select id="nicheFilter">
+									<option value="all">All</option>
+									{nicheOptions.map((niche) => <option value={niche}>{niche}</option>)}
+								</select>
+							</label>
+							<label>
+								Filter by source
+								<select id="sourceFilter">
+									<option value="all">All</option>
+									{sourceOptions.map((source) => <option value={source}>{source}</option>)}
+								</select>
+							</label>
+							<label>
+								Filter by status
+								<select id="statusFilter">
+									<option value="all">All</option>
+									<option value="new">new</option>
+									<option value="contacted">contacted</option>
+									<option value="booked">booked</option>
+								</select>
+							</label>
+							<label>
+								Search
+								<input id="textFilter" type="search" placeholder="name, email, message..." />
+							</label>
 						</div>
 
-						{
-							loadError ? (
-								<p class="error">{loadError}</p>
-							) : (
-								<>
-									<div class="controls">
-										<label>
-											Filter by niche
-											<select id="nicheFilter">
-												<option value="all">All</option>
-												{nicheOptions.map((niche) => <option value={niche}>{niche}</option>)}
-											</select>
-										</label>
-										<label>
-											Filter by source
-											<select id="sourceFilter">
-												<option value="all">All</option>
-												{sourceOptions.map((source) => <option value={source}>{source}</option>)}
-											</select>
-										</label>
-										<label>
-											Filter by status
-											<select id="statusFilter">
-												<option value="all">All</option>
-												<option value="new">new</option>
-												<option value="contacted">contacted</option>
-												<option value="booked">booked</option>
-											</select>
-										</label>
-										<label>
-											Search
-											<input id="textFilter" type="search" placeholder="name, email, message..." />
-										</label>
-									</div>
+						<div class="feed-list" id="feedList">
+							{leads.map((lead) => {
+								const status = String(lead.status ?? 'new');
+								const niche = String(lead.niche ?? 'general');
+								return (
+									<details class="feed-item" data-lead-item data-niche={niche} data-source={String(lead.source ?? 'direct-page')} data-status={status} data-search={`${String(lead.name ?? '')} ${String(lead.email ?? '')} ${String(lead.message ?? '')}`.toLowerCase()}>
+										<summary>
+											<div>
+												<p class="name">{String(lead.name ?? 'Unknown')}</p>
+												<p>{String(lead.email ?? '')}</p>
+												<p class="meta">{niche} • {String(lead.source ?? 'direct-page')}</p>
+											</div>
+											<div class="right">
+												<p>{new Date(String(lead.created ?? Date.now())).toLocaleDateString()}</p>
+												<span class:list={['badge', status]}>{status}</span>
+											</div>
+										</summary>
 
-									<div class="feed-list" id="feedList">
-										{leads.map((lead) => {
-											const status = String(lead.status ?? 'new');
-											const niche = String(lead.niche ?? 'general');
-											return (
-												<details class="feed-item" data-lead-item data-niche={niche} data-source={String(lead.source ?? 'direct-page')} data-status={status} data-search={`${String(lead.name ?? '')} ${String(lead.email ?? '')} ${String(lead.message ?? '')}`.toLowerCase()}>
-													<summary>
-														<div>
-															<p class="name">{String(lead.name ?? 'Unknown')}</p>
-															<p>{String(lead.email ?? '')}</p>
-															<p class="meta">{niche} • {String(lead.source ?? 'direct-page')}</p>
-														</div>
-														<div class="right">
-															<p>{new Date(String(lead.created ?? Date.now())).toLocaleDateString()}</p>
-															<span class:list={['badge', status]}>{status}</span>
-														</div>
-													</summary>
+										<div class="details-body">
+											<p><strong>Message:</strong> {String(lead.message ?? 'No message provided.')}</p>
+											<p><strong>Budget:</strong> {lead.budget ? `$${lead.budget}` : 'Not provided'}</p>
+											<p><strong>Source:</strong> {String(lead.source ?? 'direct-page')}</p>
+											<p><strong>UTM:</strong> {String(lead.utm_source ?? '-')} / {String(lead.utm_medium ?? '-')} / {String(lead.utm_campaign ?? '-')}</p>
+											<p><strong>Referrer:</strong> {String(lead.referrer ?? '-')}</p>
 
-													<div class="details-body">
-														<p><strong>Message:</strong> {String(lead.message ?? 'No message provided.')}</p>
-														<p><strong>Budget:</strong> {lead.budget ? `$${lead.budget}` : 'Not provided'}</p>
-														<p><strong>Source:</strong> {String(lead.source ?? 'direct-page')}</p>
-														<p><strong>UTM:</strong> {String(lead.utm_source ?? '-')} / {String(lead.utm_medium ?? '-')} / {String(lead.utm_campaign ?? '-')}</p>
-														<p><strong>Referrer:</strong> {String(lead.referrer ?? '-')}</p>
+											<div class="actions">
+												<label>
+													Status
+													<select data-status data-id={String(lead.id ?? '')}>
+														<option selected={status === 'new'} value="new">new</option>
+														<option selected={status === 'contacted'} value="contacted">contacted</option>
+														<option selected={status === 'booked'} value="booked">booked</option>
+													</select>
+												</label>
 
-														<div class="actions">
-															<label>
-																Status
-																<select data-status data-id={String(lead.id ?? '')}>
-																	<option selected={status === 'new'} value="new">new</option>
-																	<option selected={status === 'contacted'} value="contacted">contacted</option>
-																	<option selected={status === 'booked'} value="booked">booked</option>
-																</select>
-															</label>
-
-															<label class="notes-wrap">
-																Quick notes
-																<textarea data-notes data-id={String(lead.id ?? '')} rows={3}>{String(lead.notes ?? '')}</textarea>
-															</label>
-															<button type="button" class="save-note" data-save-notes data-id={String(lead.id ?? '')}>Save Notes</button>
-														</div>
-													</div>
-												</details>
-											);
-										})}
-									</div>
-								</>
-							)
-						}
+												<label class="notes-wrap">
+													Quick notes
+													<textarea data-notes data-id={String(lead.id ?? '')} rows={3}>{String(lead.notes ?? '')}</textarea>
+												</label>
+												<button type="button" class="save-note" data-save-notes data-id={String(lead.id ?? '')}>Save Notes</button>
+											</div>
+										</div>
+									</details>
+								);
+							})}
+						</div>
 					</>
 				)
 			}
@@ -143,45 +120,6 @@ const sourceOptions = Array.from(new Set(leads.map((lead) => String(lead.source 
 </html>
 
 <script>
-	const loginForm = document.getElementById('admin-login-form');
-	loginForm?.addEventListener('submit', async (event) => {
-		event.preventDefault();
-		const tokenField = document.getElementById('admin-token');
-		const submitButton = loginForm.querySelector('button[type="submit"]');
-		const errorNode = document.getElementById('admin-login-error');
-
-		if (!(tokenField instanceof HTMLInputElement) || !(submitButton instanceof HTMLButtonElement)) return;
-
-		submitButton.disabled = true;
-		submitButton.textContent = 'Unlocking...';
-		if (errorNode) errorNode.textContent = '';
-
-		try {
-			const response = await fetch('/api/admin-session', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ token: tokenField.value })
-			});
-			const data = await response.json().catch(() => ({}));
-			if (!response.ok) {
-				throw new Error(typeof data.error === 'string' ? data.error : 'Could not unlock the lead feed.');
-			}
-			window.location.reload();
-		} catch (error) {
-			if (errorNode) {
-				errorNode.textContent = error instanceof Error ? error.message : 'Could not unlock the lead feed.';
-			}
-		} finally {
-			submitButton.disabled = false;
-			submitButton.textContent = 'Unlock Feed';
-		}
-	});
-
-	document.getElementById('admin-logout')?.addEventListener('click', async () => {
-		await fetch('/api/admin-session', { method: 'DELETE' });
-		window.location.reload();
-	});
-
 	const filter = document.getElementById('nicheFilter');
 	const sourceFilter = document.getElementById('sourceFilter');
 	const statusFilter = document.getElementById('statusFilter');
@@ -272,27 +210,6 @@ const sourceOptions = Array.from(new Set(leads.map((lead) => String(lead.source 
 		color: #f8f8f8;
 		padding: 2rem;
 	}
-	.page-head {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 1rem;
-		flex-wrap: wrap;
-		margin-bottom: 0.8rem;
-	}
-	.login-shell {
-		max-width: 460px;
-		margin: 3rem auto 0;
-		padding: 1.2rem;
-		border: 1px solid #2b2b2b;
-		border-radius: 1rem;
-		background: #121212;
-	}
-	.login-form {
-		display: grid;
-		gap: 0.8rem;
-		margin-top: 1rem;
-	}
 	.controls {
 		margin-bottom: 0.8rem;
 		display: grid;
@@ -375,16 +292,6 @@ const sourceOptions = Array.from(new Set(leads.map((lead) => String(lead.source 
 		padding: 0.45rem 0.7rem;
 		border-radius: 0.45rem;
 		font-weight: 700;
-	}
-	.ghost-action {
-		width: fit-content;
-		border: 1px solid #353535;
-		background: transparent;
-		color: #f3f3f3;
-		padding: 0.45rem 0.7rem;
-		border-radius: 0.45rem;
-		font: inherit;
-		cursor: pointer;
 	}
 	.badge {
 		display: inline-block;

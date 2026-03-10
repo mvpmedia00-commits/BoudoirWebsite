@@ -2,13 +2,8 @@
 import BaseHead from '../../components/BaseHead.astro';
 import Footer from '../../components/Footer.astro';
 import Header from '../../components/Header.astro';
-import { hasVaultSession } from '../../lib/auth';
 
-export const prerender = false;
-
-if (hasVaultSession(Astro.cookies)) {
-	return Astro.redirect('/vault/library');
-}
+const vaultCode = String(import.meta.env.PUBLIC_VAULT_CODE ?? 'mvp-after-dark');
 ---
 
 <!doctype html>
@@ -60,7 +55,7 @@ if (hasVaultSession(Astro.cookies)) {
 				<p class="eyebrow">Private Access</p>
 				<h1>Members Vault</h1>
 				<p>Enter your passcode to unlock private collections and member-only editorial drops.</p>
-				<form id="vault-access-form">
+				<form id="vault-access-form" data-vault-code={vaultCode}>
 					<label for="vault-code">Access Code</label>
 					<input id="vault-code" name="vault-code" type="password" required autocomplete="off" />
 					<p id="vault-error" class="error"></p>
@@ -75,40 +70,28 @@ if (hasVaultSession(Astro.cookies)) {
 		<script is:inline>
 			const form = document.getElementById('vault-access-form');
 			const errorEl = document.getElementById('vault-error');
+			const key = 'mvp_vault_access';
+			const expectedCodeRaw = form instanceof HTMLFormElement ? form.dataset.vaultCode || '' : '';
+			const expectedCode = expectedCodeRaw.trim().toLowerCase();
 
-			form?.addEventListener('submit', async (event) => {
+			if (localStorage.getItem(key) === 'granted') {
+				window.location.href = '/vault/library';
+			}
+
+			form?.addEventListener('submit', (event) => {
 				event.preventDefault();
 				const codeInput = document.getElementById('vault-code');
-				const submitButton = form.querySelector('button[type="submit"]');
-				const entered = codeInput instanceof HTMLInputElement ? codeInput.value.trim() : '';
-
-				if (!(submitButton instanceof HTMLButtonElement)) return;
-
-				submitButton.disabled = true;
-				submitButton.textContent = 'Unlocking...';
-				if (errorEl) errorEl.textContent = '';
-
-				try {
-					const response = await fetch('/api/vault-session', {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({ code: entered })
-					});
-
-					const data = await response.json().catch(() => ({}));
-					if (!response.ok) {
-						throw new Error(typeof data.error === 'string' ? data.error : 'Access code is not valid.');
-					}
-
-					window.location.href = '/vault/library';
-				} catch (error) {
-					if (errorEl) {
-						errorEl.textContent = error instanceof Error ? error.message : 'Could not unlock the vault right now.';
-					}
-				} finally {
-					submitButton.disabled = false;
-					submitButton.textContent = 'Unlock Vault';
+				const entered = codeInput instanceof HTMLInputElement ? codeInput.value.trim().toLowerCase() : '';
+				if (!expectedCode) {
+					if (errorEl) errorEl.textContent = 'Vault is not configured yet. Set PUBLIC_VAULT_CODE in .env and restart.';
+					return;
 				}
+				if (entered !== expectedCode) {
+					if (errorEl) errorEl.textContent = 'Access code is not valid. Try again.';
+					return;
+				}
+				localStorage.setItem(key, 'granted');
+				window.location.href = '/vault/library';
 			});
 		</script>
 	</body>

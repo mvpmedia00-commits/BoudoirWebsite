@@ -1,5 +1,4 @@
-import { h as hasAdminSession } from '../../chunks/auth_BQBBuG7a.mjs';
-import { u as updateLead, a as createLead } from '../../chunks/pocketbase_D_R3pIkz.mjs';
+import { u as updateLead, a as createLead } from '../../chunks/pocketbase_CQz5--Ye.mjs';
 export { renderers } from '../../renderers.mjs';
 
 const prerender = false;
@@ -28,11 +27,8 @@ const POST = async ({ request }) => {
     return new Response(JSON.stringify({ error: message }), { status: 500 });
   }
 };
-const PATCH = async ({ cookies, request }) => {
+const PATCH = async ({ request }) => {
   try {
-    if (!hasAdminSession(cookies)) {
-      return new Response(JSON.stringify({ error: "Unauthorized." }), { status: 401 });
-    }
     const body = await request.json();
     if (!body.id || !body.status && typeof body.notes !== "string") {
       return new Response(JSON.stringify({ error: "Missing id and patch fields." }), { status: 400 });

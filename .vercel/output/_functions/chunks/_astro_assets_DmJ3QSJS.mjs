@@ -1,5 +1,5 @@
 import { j as joinPaths, i as isRemotePath } from './path_tbLlI_c1.mjs';
-import { A as AstroError, E as ExpectedImage, L as LocalImageUsedWrongly, M as MissingImageDimension, t as UnsupportedImageFormat, I as IncompatibleDescriptorOptions, v as UnsupportedImageConversion, w as toStyleString, x as NoImageMetadata, y as FailedToFetchRemoteImageDimensions, z as ExpectedImageOptions, B as ExpectedNotESMImage, C as InvalidImageService, e as createAstro, c as createComponent, G as ImageMissingAlt, m as maybeRenderHead, b as addAttribute, H as spreadAttributes, d as renderTemplate, J as ExperimentalFontsNotEnabled, K as FontFamilyNotFound, u as unescapeHTML } from './astro/server_CA-1NlPe.mjs';
+import { A as AstroError, E as ExpectedImage, L as LocalImageUsedWrongly, M as MissingImageDimension, t as UnsupportedImageFormat, I as IncompatibleDescriptorOptions, v as UnsupportedImageConversion, w as toStyleString, x as NoImageMetadata, y as FailedToFetchRemoteImageDimensions, z as ExpectedImageOptions, B as ExpectedNotESMImage, C as InvalidImageService, e as createAstro, c as createComponent, G as ImageMissingAlt, m as maybeRenderHead, b as addAttribute, H as spreadAttributes, d as renderTemplate, J as ExperimentalFontsNotEnabled, K as FontFamilyNotFound, u as unescapeHTML } from './astro/server_BWvinCl0.mjs';
 import { D as DEFAULT_OUTPUT_FORMAT, a as VALID_SUPPORTED_FORMATS, b as DEFAULT_HASH_PROPS } from './consts_Bd-1c2lz.mjs';
 import { i as isRemoteAllowed, t as typeHandlers, a as types } from './index_BL6Pqka4.mjs';
 import * as mime from 'mrmime';
@@ -479,7 +479,7 @@ async function getConfiguredImageService() {
   if (!globalThis?.astroAsset?.imageService) {
     const { default: service } = await import(
       // @ts-expect-error
-      './sharp_UfiIg_5W.mjs'
+      './sharp_BbG8447K.mjs'
     ).catch((e) => {
       const error = new AstroError(InvalidImageService);
       error.cause = e;
@@ -634,7 +634,7 @@ async function getImage$1(options, imageConfig) {
   };
 }
 
-const $$Astro$2 = createAstro("https://mvpmedia.studio");
+const $$Astro$2 = createAstro("https://example.com");
 const $$Image = createComponent(async ($$result, $$props, $$slots) => {
   const Astro2 = $$result.createAstro($$Astro$2, $$props, $$slots);
   Astro2.self = $$Image;
@@ -663,7 +663,7 @@ const $$Image = createComponent(async ($$result, $$props, $$slots) => {
   return renderTemplate`${maybeRenderHead()}<img${addAttribute(image.src, "src")}${spreadAttributes(attributes)}${addAttribute(className, "class")}>`;
 }, "C:/projects/NEW photo booth/afraid-antimatter/node_modules/astro/components/Image.astro", void 0);
 
-const $$Astro$1 = createAstro("https://mvpmedia.studio");
+const $$Astro$1 = createAstro("https://example.com");
 const $$Picture = createComponent(async ($$result, $$props, $$slots) => {
   const Astro2 = $$result.createAstro($$Astro$1, $$props, $$slots);
   Astro2.self = $$Picture;
@@ -773,7 +773,7 @@ function checkWeight(input, target) {
   return input === target;
 }
 
-const $$Astro = createAstro("https://mvpmedia.studio");
+const $$Astro = createAstro("https://example.com");
 const $$Font = createComponent(($$result, $$props, $$slots) => {
   const Astro2 = $$result.createAstro($$Astro, $$props, $$slots);
   Astro2.self = $$Font;

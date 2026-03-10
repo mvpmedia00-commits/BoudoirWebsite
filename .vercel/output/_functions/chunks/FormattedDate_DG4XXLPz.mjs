@@ -1,8 +1,8 @@
-import { e as createAstro, c as createComponent, m as maybeRenderHead, b as addAttribute, d as renderTemplate } from './astro/server_CA-1NlPe.mjs';
+import { e as createAstro, c as createComponent, m as maybeRenderHead, b as addAttribute, d as renderTemplate } from './astro/server_BWvinCl0.mjs';
 import 'piccolore';
 import 'clsx';
 
-const $$Astro = createAstro("https://mvpmedia.studio");
+const $$Astro = createAstro("https://example.com");
 const $$FormattedDate = createComponent(($$result, $$props, $$slots) => {
   const Astro2 = $$result.createAstro($$Astro, $$props, $$slots);
   Astro2.self = $$FormattedDate;

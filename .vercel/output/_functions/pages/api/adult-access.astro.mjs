@@ -1,10 +1,15 @@
-import { n as normalizeReturnTo, a as grantAdultAccess } from '../../chunks/auth_BQBBuG7a.mjs';
 export { renderers } from '../../renderers.mjs';
 
 const prerender = false;
 const GET = async ({ cookies, url, redirect }) => {
-  const returnTo = normalizeReturnTo(url.searchParams.get("returnTo"), "/");
-  grantAdultAccess(cookies);
+  const returnTo = url.searchParams.get("returnTo") || "/";
+  cookies.set("mvp_adult_access", "granted", {
+    path: "/",
+    httpOnly: true,
+    sameSite: "lax",
+    secure: true,
+    maxAge: 60 * 60 * 24 * 30
+  });
   return redirect(returnTo);
 };
 

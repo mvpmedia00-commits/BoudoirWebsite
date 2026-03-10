@@ -1,9 +1,9 @@
-import { e as createAstro, c as createComponent, m as maybeRenderHead, b as addAttribute, f as renderScript, d as renderTemplate } from './astro/server_CA-1NlPe.mjs';
+import { e as createAstro, c as createComponent, m as maybeRenderHead, b as addAttribute, g as renderScript, d as renderTemplate } from './astro/server_BWvinCl0.mjs';
 import 'piccolore';
 import 'clsx';
 /* empty css                           */
 
-const $$Astro = createAstro("https://mvpmedia.studio");
+const $$Astro = createAstro("https://example.com");
 const $$LeadForm = createComponent(async ($$result, $$props, $$slots) => {
   const Astro2 = $$result.createAstro($$Astro, $$props, $$slots);
   Astro2.self = $$LeadForm;

@@ -1,9 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /admin/
-Disallow: /vault/
-Disallow: /gallery/boudoir
-Disallow: /gallery/artistic-nude
-Disallow: /gallery/body-paint
-
-Sitemap: https://mvpmedia.studio/sitemap-index.xml

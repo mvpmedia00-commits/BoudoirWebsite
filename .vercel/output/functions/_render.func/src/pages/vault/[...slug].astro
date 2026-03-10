@@ -1,24 +1,20 @@
 ---
-import { getEntry, render } from 'astro:content';
+import { type CollectionEntry, getCollection, render } from 'astro:content';
 import BaseHead from '../../components/BaseHead.astro';
 import Footer from '../../components/Footer.astro';
 import FormattedDate from '../../components/FormattedDate.astro';
 import Header from '../../components/Header.astro';
-import { hasVaultSession } from '../../lib/auth';
 
-export const prerender = false;
-
-if (!hasVaultSession(Astro.cookies)) {
-	return Astro.redirect('/vault');
+export async function getStaticPaths() {
+	const entries = await getCollection('vault');
+	return entries.map((entry) => ({
+		params: { slug: entry.id },
+		props: entry,
+	}));
 }
 
-const slug = Astro.params.slug?.trim() ?? '';
-const entry = slug ? await getEntry('vault', slug) : undefined;
-
-if (!entry) {
-	return Astro.redirect('/vault/library');
-}
-
+type Props = CollectionEntry<'vault'>;
+const entry = Astro.props as Props;
 const { Content } = await render(entry);
 ---
 
@@ -67,7 +63,7 @@ const { Content } = await render(entry);
 	<body>
 		<Header />
 		<main>
-			<article class="vault-entry is-ready">
+			<article id="vault-entry" class="vault-entry">
 				<p class="eyebrow">Members Vault</p>
 				<h1>{entry.data.title}</h1>
 				<p>{entry.data.description}</p>
@@ -81,5 +77,14 @@ const { Content } = await render(entry);
 			</article>
 		</main>
 		<Footer />
+		<script is:inline>
+			const key = 'mvp_vault_access';
+			if (localStorage.getItem(key) !== 'granted') {
+				window.location.href = '/vault';
+			} else {
+				const entry = document.getElementById('vault-entry');
+				entry?.classList.add('is-ready');
+			}
+		</script>
 	</body>
 </html>

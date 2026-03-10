@@ -1,9 +1,8 @@
 ---
-import { Image } from 'astro:assets';
 import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
-import { SITE_DESCRIPTION, SITE_EMAIL, SITE_TITLE, SITE_URL } from '../consts';
+import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 import WorkOne from '../assets/blog-placeholder-1.jpg';
 import WorkTwo from '../assets/blog-placeholder-2.jpg';
 import WorkThree from '../assets/blog-placeholder-3.jpg';
@@ -54,40 +53,13 @@ const heroMediaColumns = rawHeroMediaColumns.map((column) => ({
 	items: [...column.items, ...column.items]
 }));
 
-type HeroPosterVariant = 'lead' | 'visible' | 'loop';
-
-const HERO_POSTER_WIDTHS: Record<HeroPosterVariant, number> = {
-	lead: 960,
-	visible: 760,
-	loop: 480
-};
-
-const getVideoPoster = (src: string, variant: HeroPosterVariant = 'visible') => {
-	const width = HERO_POSTER_WIDTHS[variant];
-	const match = src.match(/^(.*\/video\/upload\/)[^/]+\/(v\d+\/.+)\.mp4$/);
-	if (!match) {
-		return src.replace(',vc_auto', '').replace('.mp4', '.jpg');
-	}
-	const [, prefix, assetPath] = match;
-	return `${prefix}f_auto,q_auto:good,dpr_auto,w_${width},c_fill,so_0/${assetPath}.jpg`;
-};
+const getVideoPoster = (src: string) => src.replace(',vc_auto', '').replace('.mp4', '.jpg');
 
 const homeSchema = {
 	'@context': 'https://schema.org',
-	'@type': 'ProfessionalService',
-	name: SITE_TITLE,
-	url: SITE_URL,
-	email: SITE_EMAIL,
-	description: SITE_DESCRIPTION,
-	image: new URL(WorkAbout.src, SITE_URL).href,
-	areaServed: ['New York', 'United States'],
-	priceRange: '$$$',
-	serviceType: [
-		'Boudoir photography',
-		'Artistic nude photography',
-		'Editorial portrait photography'
-	]
+	// ...add schema properties here...
 };
+// ...existing code...
 ---
 
 <!doctype html>
@@ -95,7 +67,7 @@ const homeSchema = {
 	<head>
 		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
 		<link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
-		<link rel="preload" as="image" href={getVideoPoster(heroMediaColumns[0].items[0], 'lead')} />
+		<link rel="preload" as="image" href={getVideoPoster(heroMediaColumns[0].items[0])} />
 		<script type="application/ld+json" set:html={JSON.stringify(homeSchema)} />
 	</head>
 	<body>
@@ -104,15 +76,13 @@ const homeSchema = {
 			<section class="hero">
 				<div class="hero-media-wall" aria-hidden="true">
 					{
-						heroMediaColumns.map((column, columnIndex) => (
+						heroMediaColumns.map((column) => (
 							<div class:list={['hero-media-col', { reverse: column.reverse }]}>
 								<div class="hero-media-track">
 									{
 										column.items.map((src, index) => {
-											const isPrime = index === 0 && columnIndex < 2;
+											const isPrime = index === 0;
 											const isDeferred = !isPrime;
-											const isLoopDuplicate = index >= column.items.length / 2;
-											const posterVariant: HeroPosterVariant = isPrime ? 'lead' : isLoopDuplicate ? 'loop' : 'visible';
 											return (
 												<video
 													src={isDeferred ? undefined : src}
@@ -122,7 +92,7 @@ const homeSchema = {
 													loop
 													playsinline
 													preload={isPrime ? 'metadata' : 'none'}
-													poster={getVideoPoster(src, posterVariant)}
+													poster={getVideoPoster(src)}
 													data-hero-prime={isPrime ? 'true' : undefined}
 													aria-hidden={index >= 3 ? 'true' : undefined}
 												></video>
@@ -145,16 +115,7 @@ const homeSchema = {
 						<p class="hero-location">New York and Destination Commissions</p>
 
 						<div class="hero-title-video-box">
-							<Image
-								class="hero-title-video"
-								src={WorkAbout}
-								alt=""
-								widths={[720, 1080, 1440]}
-								sizes="(max-width: 900px) 100vw, 900px"
-								loading="eager"
-								fetchpriority="high"
-								quality={88}
-							/>
+							<img class="hero-title-video" src={WorkAbout.src} alt="" loading="eager" decoding="async" fetchpriority="high" />
 							<div class="hero-title-overlay"></div>
 							<h1>Bold. Intimate. Cinematic.</h1>
 						</div>
@@ -185,14 +146,7 @@ const homeSchema = {
 					<div class="category-grid">
 						<a class="category-card" href="/gallery/boudoir" data-track data-track-element="home_category_boudoir">
 							<div class="art-frame">
-								<Image
-									src={WorkThree}
-									alt="Boudoir category preview"
-									widths={[480, 720, 960]}
-									sizes="(max-width: 760px) 100vw, 50vw"
-									loading="lazy"
-									quality={82}
-								/>
+								<img src={WorkThree.src} alt="Boudoir category preview" loading="lazy" />
 							</div>
 							<div class="category-copy">
 								<h3>Boudoir</h3>
@@ -201,14 +155,7 @@ const homeSchema = {
 						</a>
 						<a class="category-card" href="/gallery/artistic-nude" data-track data-track-element="home_category_artistic_nude">
 							<div class="art-frame">
-								<Image
-									src={WorkFour}
-									alt="Artistic nude category preview"
-									widths={[480, 720, 960]}
-									sizes="(max-width: 760px) 100vw, 50vw"
-									loading="lazy"
-									quality={82}
-								/>
+								<img src={WorkFour.src} alt="Artistic nude category preview" loading="lazy" />
 							</div>
 							<div class="category-copy">
 								<h3>Artistic Nude</h3>
@@ -217,14 +164,7 @@ const homeSchema = {
 						</a>
 						<a class="category-card" href="/gallery/body-paint" data-track data-track-element="home_category_body_paint">
 							<div class="art-frame">
-								<Image
-									src={WorkOne}
-									alt="Body paint category preview"
-									widths={[480, 720, 960]}
-									sizes="(max-width: 760px) 100vw, 50vw"
-									loading="lazy"
-									quality={82}
-								/>
+								<img src={WorkOne.src} alt="Body paint category preview" loading="lazy" />
 							</div>
 							<div class="category-copy">
 								<h3>Body Paint</h3>
@@ -233,14 +173,7 @@ const homeSchema = {
 						</a>
 						<a class="category-card" href="/gallery/editorial-portrait" data-track data-track-element="home_category_editorial_portrait">
 							<div class="art-frame">
-								<Image
-									src={WorkFive}
-									alt="Editorial portrait category preview"
-									widths={[480, 720, 960]}
-									sizes="(max-width: 760px) 100vw, 50vw"
-									loading="lazy"
-									quality={82}
-								/>
+								<img src={WorkFive.src} alt="Editorial portrait category preview" loading="lazy" />
 							</div>
 							<div class="category-copy">
 								<h3>Editorial Portrait</h3>
@@ -272,14 +205,7 @@ const homeSchema = {
 						</article>
 						<article class="reel-card">
 							<div class="art-frame">
-								<Image
-									src={WorkTwo}
-									alt="Cinematic portrait detail"
-									widths={[480, 720, 960]}
-									sizes="(max-width: 900px) 100vw, 33vw"
-									loading="lazy"
-									quality={80}
-								/>
+								<img src={WorkTwo.src} alt="Cinematic portrait detail" loading="lazy" />
 							</div>
 							<div class="reel-copy">
 								<h3>Luxury Detail</h3>
@@ -313,36 +239,9 @@ const homeSchema = {
 						Every set is designed for atmosphere, confidence, and intention.
 					</p>
 					<div class="identity-moodboard">
-						<div class="art-frame">
-							<Image
-								src={WorkThree}
-								alt="Moody studio silhouette"
-								widths={[480, 720, 960]}
-								sizes="(max-width: 900px) 100vw, 33vw"
-								loading="lazy"
-								quality={78}
-							/>
-						</div>
-						<div class="art-frame">
-							<Image
-								src={WorkFour}
-								alt="Body paint editorial detail"
-								widths={[480, 720, 960]}
-								sizes="(max-width: 900px) 100vw, 33vw"
-								loading="lazy"
-								quality={78}
-							/>
-						</div>
-						<div class="art-frame">
-							<Image
-								src={WorkAbout}
-								alt="Cinematic close-up portrait"
-								widths={[480, 720, 960]}
-								sizes="(max-width: 900px) 100vw, 33vw"
-								loading="lazy"
-								quality={78}
-							/>
-						</div>
+						<div class="art-frame"><img src={WorkThree.src} alt="Moody studio silhouette" loading="lazy" /></div>
+						<div class="art-frame"><img src={WorkFour.src} alt="Body paint editorial detail" loading="lazy" /></div>
+						<div class="art-frame"><img src={WorkAbout.src} alt="Cinematic close-up portrait" loading="lazy" /></div>
 					</div>
 				</section>
 
@@ -390,14 +289,7 @@ const homeSchema = {
 						</article>
 					</div>
 					<div class="process-visual art-frame">
-						<Image
-							src={WorkAbout}
-							alt="Private studio session planning mood board"
-							widths={[720, 1080, 1440]}
-							sizes="(max-width: 900px) 100vw, 1240px"
-							loading="lazy"
-							quality={84}
-						/>
+						<img src={WorkAbout.src} alt="Private studio session planning mood board" loading="lazy" />
 					</div>
 				</section>
 
@@ -508,81 +400,71 @@ const homeSchema = {
 
 	const heroWall = document.querySelector('.hero-media-wall');
 	if (heroWall instanceof HTMLElement) {
-		const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-		if (prefersReducedMotion) {
-			heroWall.classList.add('is-reduced-motion');
-			heroWall.querySelectorAll('video').forEach((video) => {
-				if (!(video instanceof HTMLVideoElement)) return;
-				video.pause();
-				video.removeAttribute('autoplay');
-			});
-		} else {
-			heroWall.classList.add('is-loading');
-			const primeVideos = Array.from(heroWall.querySelectorAll('video[data-hero-prime]')).filter(
-				(el) => el instanceof HTMLVideoElement
-			);
-			const deferredVideos = Array.from(heroWall.querySelectorAll('video[data-src]')).filter(
-				(el) => el instanceof HTMLVideoElement
-			);
+		heroWall.classList.add('is-loading');
+		const primeVideos = Array.from(heroWall.querySelectorAll('video[data-hero-prime]')).filter(
+			(el) => el instanceof HTMLVideoElement
+		);
+		const deferredVideos = Array.from(heroWall.querySelectorAll('video[data-src]')).filter(
+			(el) => el instanceof HTMLVideoElement
+		);
 
-			const hydrateVideo = (video) => {
-				if (!(video instanceof HTMLVideoElement)) return;
-				if (video.dataset.hydrated === 'true') return;
-				const src = video.dataset.src;
-				if (!src) return;
-				video.src = src;
-				video.dataset.hydrated = 'true';
-				video.load();
+		const hydrateVideo = (video) => {
+			if (!(video instanceof HTMLVideoElement)) return;
+			if (video.dataset.hydrated === 'true') return;
+			const src = video.dataset.src;
+			if (!src) return;
+			video.src = src;
+			video.dataset.hydrated = 'true';
+			video.load();
+		};
+
+		const hydrateDeferredVideos = () => {
+			if (!deferredVideos.length) return;
+			let cursor = 0;
+			const runBatch = () => {
+				const batch = deferredVideos.slice(cursor, cursor + 2);
+				batch.forEach((video) => hydrateVideo(video));
+				cursor += batch.length;
+				if (cursor < deferredVideos.length) {
+					window.setTimeout(runBatch, 180);
+				}
 			};
+			const scheduleBatch = () => window.requestAnimationFrame(runBatch);
+			if ('requestIdleCallback' in window) {
+				window.requestIdleCallback(scheduleBatch, { timeout: 1200 });
+				return;
+			}
+			window.setTimeout(scheduleBatch, 120);
+		};
 
-			const hydrateDeferredVideos = () => {
-				if (!deferredVideos.length) return;
-				let cursor = 0;
-				const runBatch = () => {
-					const batch = deferredVideos.slice(cursor, cursor + 2);
-					batch.forEach((video) => hydrateVideo(video));
-					cursor += batch.length;
-					if (cursor < deferredVideos.length) {
-						window.setTimeout(runBatch, 180);
-					}
-				};
-				const scheduleBatch = () => window.requestAnimationFrame(runBatch);
-				if ('requestIdleCallback' in window) {
-					window.requestIdleCallback(scheduleBatch, { timeout: 1200 });
+		if (!primeVideos.length) {
+			heroWall.classList.remove('is-loading');
+			hydrateDeferredVideos();
+		} else {
+			let pending = primeVideos.length;
+			let released = false;
+			const release = () => {
+				if (released) return;
+				released = true;
+				heroWall.classList.remove('is-loading');
+				window.clearTimeout(timeoutId);
+				hydrateDeferredVideos();
+			};
+			const markReady = () => {
+				pending -= 1;
+				if (pending <= 0) release();
+			};
+			const timeoutId = window.setTimeout(release, 2000);
+
+			primeVideos.forEach((video) => {
+				if (video.readyState >= 2) {
+					markReady();
 					return;
 				}
-				window.setTimeout(scheduleBatch, 120);
-			};
-
-			if (!primeVideos.length) {
-				heroWall.classList.remove('is-loading');
-				hydrateDeferredVideos();
-			} else {
-				let pending = primeVideos.length;
-				let released = false;
-				const release = () => {
-					if (released) return;
-					released = true;
-					heroWall.classList.remove('is-loading');
-					window.clearTimeout(timeoutId);
-					hydrateDeferredVideos();
-				};
-				const markReady = () => {
-					pending -= 1;
-					if (pending <= 0) release();
-				};
-				const timeoutId = window.setTimeout(release, 2000);
-
-				primeVideos.forEach((video) => {
-					if (video.readyState >= 2) {
-						markReady();
-						return;
-					}
-					video.addEventListener('loadeddata', markReady, { once: true });
-					video.addEventListener('error', markReady, { once: true });
-					video.load();
-				});
-			}
+				video.addEventListener('loadeddata', markReady, { once: true });
+				video.addEventListener('error', markReady, { once: true });
+				video.load();
+			});
 		}
 	}
 </script>
@@ -639,9 +521,6 @@ const homeSchema = {
 	}
 	.hero-media-wall.is-loading .hero-media-track {
 		animation-play-state: paused;
-	}
-	.hero-media-wall.is-reduced-motion .hero-media-track {
-		animation: none;
 	}
 	.hero-media-col.reverse .hero-media-track {
 		animation-direction: reverse;

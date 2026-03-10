@@ -1,7 +1,7 @@
-import { e as createAstro, c as createComponent, d as renderTemplate, b as addAttribute, a as renderHead, r as renderComponent } from '../../chunks/astro/server_CA-1NlPe.mjs';
+import { e as createAstro, c as createComponent, d as renderTemplate, b as addAttribute, a as renderHead, r as renderComponent } from '../../chunks/astro/server_BWvinCl0.mjs';
 import 'piccolore';
-import { $ as $$BaseHead } from '../../chunks/BaseHead_BXjp2pBo.mjs';
-import { S as SITE_TITLE } from '../../chunks/consts_C6Gzotw0.mjs';
+import { $ as $$BaseHead } from '../../chunks/BaseHead_Wy0sVJGX.mjs';
+import { S as SITE_TITLE } from '../../chunks/consts_B2K2yu7A.mjs';
 import { g as getRosterEntryBySlug, R as ROSTER_SLUGS } from '../../chunks/roster_EQpwDjSn.mjs';
 /* empty css                                     */
 export { renderers } from '../../renderers.mjs';
@@ -10,7 +10,7 @@ var __freeze = Object.freeze;
 var __defProp = Object.defineProperty;
 var __template = (cooked, raw) => __freeze(__defProp(cooked, "raw", { value: __freeze(raw || cooked.slice()) }));
 var _a;
-const $$Astro = createAstro("https://mvpmedia.studio");
+const $$Astro = createAstro("https://example.com");
 function getStaticPaths() {
   return ROSTER_SLUGS.map((slug) => ({ params: { slug } }));
 }

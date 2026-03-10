@@ -1,14 +1,14 @@
-import { e as createAstro, c as createComponent, r as renderComponent, a as renderHead, b as addAttribute, d as renderTemplate } from '../../../chunks/astro/server_CA-1NlPe.mjs';
+import { e as createAstro, c as createComponent, r as renderComponent, a as renderHead, b as addAttribute, d as renderTemplate } from '../../../chunks/astro/server_BWvinCl0.mjs';
 import 'piccolore';
-import { $ as $$Image } from '../../../chunks/_astro_assets_BnuIfOGN.mjs';
-import { g as getCollection } from '../../../chunks/_astro_content_JnFDEse4.mjs';
-import { $ as $$BaseHead } from '../../../chunks/BaseHead_BXjp2pBo.mjs';
-import { $ as $$Header, a as $$Footer } from '../../../chunks/Header_BmKSZvhv.mjs';
-import { $ as $$FormattedDate } from '../../../chunks/FormattedDate_BaAnjusg.mjs';
+import { $ as $$Image } from '../../../chunks/_astro_assets_DmJ3QSJS.mjs';
+import { g as getCollection } from '../../../chunks/_astro_content_C6C8B_CO.mjs';
+import { $ as $$BaseHead } from '../../../chunks/BaseHead_Wy0sVJGX.mjs';
+import { $ as $$Header, a as $$Footer } from '../../../chunks/Header_DmMLhIda.mjs';
+import { $ as $$FormattedDate } from '../../../chunks/FormattedDate_DG4XXLPz.mjs';
 /* empty css                                            */
 export { renderers } from '../../../renderers.mjs';
 
-const $$Astro = createAstro("https://mvpmedia.studio");
+const $$Astro = createAstro("https://example.com");
 async function getStaticPaths() {
   const posts = await getCollection("blog", ({ data }) => !data.draft);
   const categories = Array.from(new Set(posts.map((post) => post.data.category)));

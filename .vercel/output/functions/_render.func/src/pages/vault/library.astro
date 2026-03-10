@@ -5,13 +5,6 @@ import BaseHead from '../../components/BaseHead.astro';
 import Footer from '../../components/Footer.astro';
 import FormattedDate from '../../components/FormattedDate.astro';
 import Header from '../../components/Header.astro';
-import { hasVaultSession } from '../../lib/auth';
-
-export const prerender = false;
-
-if (!hasVaultSession(Astro.cookies)) {
-	return Astro.redirect('/vault');
-}
 
 const entries = (await getCollection('vault')).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 ---
@@ -25,13 +18,11 @@ const entries = (await getCollection('vault')).sort((a, b) => b.data.pubDate.val
 			noIndex={true}
 		/>
 		<style>
-			.vault-toolbar {
-				display: flex;
-				justify-content: space-between;
-				gap: 1rem;
-				align-items: center;
-				margin-bottom: 1rem;
-				flex-wrap: wrap;
+			.vault-shell {
+				display: none;
+			}
+			.vault-shell.is-ready {
+				display: block;
 			}
 			.vault-grid {
 				display: grid;
@@ -76,15 +67,6 @@ const entries = (await getCollection('vault')).sort((a, b) => b.data.pubDate.val
 				border: 1px solid var(--stroke);
 				color: var(--text-muted);
 			}
-			.vault-exit {
-				border: 1px solid var(--stroke);
-				background: transparent;
-				color: var(--text-primary);
-				padding: 0.6rem 0.9rem;
-				border-radius: 999px;
-				font: inherit;
-				cursor: pointer;
-			}
 			@media (max-width: 760px) {
 				.vault-grid {
 					grid-template-columns: 1fr;
@@ -95,16 +77,11 @@ const entries = (await getCollection('vault')).sort((a, b) => b.data.pubDate.val
 	<body>
 		<Header />
 		<main>
-			<div>
+			<div id="vault-shell" class="vault-shell">
 				<section class="section-header">
-					<div class="vault-toolbar">
-						<div>
-							<p class="eyebrow">Members Vault</p>
-							<h1>Private Library</h1>
-							<p>Private collections for approved members only.</p>
-						</div>
-						<button id="vault-exit" type="button" class="vault-exit">Lock Vault</button>
-					</div>
+					<p class="eyebrow">Members Vault</p>
+					<h1>Private Library</h1>
+					<p>Private collections for approved members only.</p>
 				</section>
 				<section class="vault-grid">
 					{
@@ -132,10 +109,13 @@ const entries = (await getCollection('vault')).sort((a, b) => b.data.pubDate.val
 		</main>
 		<Footer />
 		<script is:inline>
-			document.getElementById('vault-exit')?.addEventListener('click', async () => {
-				await fetch('/api/vault-session', { method: 'DELETE' });
+			const key = 'mvp_vault_access';
+			if (localStorage.getItem(key) !== 'granted') {
 				window.location.href = '/vault';
-			});
+			} else {
+				const shell = document.getElementById('vault-shell');
+				shell?.classList.add('is-ready');
+			}
 		</script>
 	</body>
 </html>

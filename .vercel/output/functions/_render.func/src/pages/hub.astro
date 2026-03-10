@@ -12,6 +12,8 @@ import About from '../assets/blog-placeholder-about.jpg';
 import { listMediaItems } from '../lib/pocketbase';
 
 const DRIVE_VIDEO_PREVIEW = 'https://drive.google.com/file/d/1RizgFs5c6eV4A7hWAinKD7jsAl_k-xmI/preview';
+const HUB_HERO_IMAGE =
+	'https://res.cloudinary.com/dg4xwrzu9/image/upload/v1772942536/5B1A2340_hocjor.jpg';
 
 const slices = [
 	{
@@ -128,14 +130,21 @@ try {
       keywords="media production, video editing, ugc production, testimonial video, drone video"
       jsonLd={hubSchema}
     />
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+    <link rel="preload" as="image" href={HUB_HERO_IMAGE} />
   </head>
   <body>
     <Header />
     <main class="hub-main hub-page">
       <section class="hub-superhero">
-        <video class="hub-superhero-video" autoplay muted loop playsinline preload="metadata" poster={About.src}>
-          <source src="https://cdn.coverr.co/videos/coverr-a-city-at-night-1579/1080p.mp4" type="video/mp4" />
-        </video>
+        <img
+          class="hub-superhero-image"
+          src={HUB_HERO_IMAGE}
+          alt="MVP Media hero portrait"
+          loading="eager"
+          fetchpriority="high"
+          decoding="async"
+        />
         <div class="hub-superhero-overlay"></div>
         <div class="container hub-superhero-content hub-hero">
           <p class="heading">MVP Media Hub</p>
@@ -492,13 +501,14 @@ try {
     overflow: hidden;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   }
-  .hub-superhero-video {
+  .hub-superhero-image {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    opacity: 0.75;
+    object-position: center 24%;
+    opacity: 0.72;
   }
   .hub-superhero-overlay {
     position: absolute;

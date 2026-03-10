@@ -1,20 +1,21 @@
-import { e as createAstro, c as createComponent, r as renderComponent, a as renderHead, b as addAttribute, F as Fragment, d as renderTemplate, f as renderScript } from '../chunks/astro/server_CA-1NlPe.mjs';
+import { e as createAstro, c as createComponent, r as renderComponent, b as addAttribute, a as renderHead, F as Fragment, d as renderTemplate, g as renderScript } from '../chunks/astro/server_BWvinCl0.mjs';
 import 'piccolore';
-import { $ as $$BaseHead } from '../chunks/BaseHead_BXjp2pBo.mjs';
-import { $ as $$Header, a as $$Footer } from '../chunks/Header_BmKSZvhv.mjs';
-import { S as SITE_TITLE } from '../chunks/consts_C6Gzotw0.mjs';
+import { $ as $$BaseHead } from '../chunks/BaseHead_Wy0sVJGX.mjs';
+import { $ as $$Header, a as $$Footer } from '../chunks/Header_DmMLhIda.mjs';
+import { S as SITE_TITLE } from '../chunks/consts_B2K2yu7A.mjs';
 import { _ as __ASTRO_IMAGE_IMPORT_Z1F4X4R } from '../chunks/blog-placeholder-1_D1Pmb4Eu.mjs';
 import { c as __ASTRO_IMAGE_IMPORT_1NHVvs, b as __ASTRO_IMAGE_IMPORT_ZulDpU, a as __ASTRO_IMAGE_IMPORT_1inyCS, _ as __ASTRO_IMAGE_IMPORT_MGbyL } from '../chunks/blog-placeholder-5_UAO6lreG.mjs';
 import { _ as __ASTRO_IMAGE_IMPORT_Z1Yq4sn } from '../chunks/blog-placeholder-about_DKvlEyOU.mjs';
-import { b as listMediaItems } from '../chunks/pocketbase_D_R3pIkz.mjs';
+import { l as listMediaItems } from '../chunks/pocketbase_CQz5--Ye.mjs';
 /* empty css                               */
 export { renderers } from '../renderers.mjs';
 
-const $$Astro = createAstro("https://mvpmedia.studio");
+const $$Astro = createAstro("https://example.com");
 const $$Hub = createComponent(async ($$result, $$props, $$slots) => {
   const Astro2 = $$result.createAstro($$Astro, $$props, $$slots);
   Astro2.self = $$Hub;
   const DRIVE_VIDEO_PREVIEW = "https://drive.google.com/file/d/1RizgFs5c6eV4A7hWAinKD7jsAl_k-xmI/preview";
+  const HUB_HERO_IMAGE = "https://res.cloudinary.com/dg4xwrzu9/image/upload/v1772942536/5B1A2340_hocjor.jpg";
   const slices = [
     {
       id: "branding",
@@ -110,7 +111,7 @@ const $$Hub = createComponent(async ($$result, $$props, $$slots) => {
   } catch {
     hubMediaCount = 0;
   }
-  return renderTemplate`<html lang="en" data-astro-cid-ji5mkv6w> <head>${renderComponent($$result, "BaseHead", $$BaseHead, { "title": `Media Hub | ${SITE_TITLE}`, "description": "Media production hub in a vertical-first style.", "keywords": "media production, video editing, ugc production, testimonial video, drone video", "jsonLd": hubSchema, "data-astro-cid-ji5mkv6w": true })}${renderHead()}</head> <body data-astro-cid-ji5mkv6w> ${renderComponent($$result, "Header", $$Header, { "data-astro-cid-ji5mkv6w": true })} <main class="hub-main hub-page" data-astro-cid-ji5mkv6w> <section class="hub-superhero" data-astro-cid-ji5mkv6w> <video class="hub-superhero-video" autoplay muted loop playsinline preload="metadata"${addAttribute(__ASTRO_IMAGE_IMPORT_Z1Yq4sn.src, "poster")} data-astro-cid-ji5mkv6w> <source src="https://cdn.coverr.co/videos/coverr-a-city-at-night-1579/1080p.mp4" type="video/mp4" data-astro-cid-ji5mkv6w> </video> <div class="hub-superhero-overlay" data-astro-cid-ji5mkv6w></div> <div class="container hub-superhero-content hub-hero" data-astro-cid-ji5mkv6w> <p class="heading" data-astro-cid-ji5mkv6w>MVP Media Hub</p> <h1 class="hub-heading-accent" data-astro-cid-ji5mkv6w>Big Vision.<br data-astro-cid-ji5mkv6w>Cinematic Output.</h1> <p class="muted" data-astro-cid-ji5mkv6w>
+  return renderTemplate`<html lang="en" data-astro-cid-ji5mkv6w> <head>${renderComponent($$result, "BaseHead", $$BaseHead, { "title": `Media Hub | ${SITE_TITLE}`, "description": "Media production hub in a vertical-first style.", "keywords": "media production, video editing, ugc production, testimonial video, drone video", "jsonLd": hubSchema, "data-astro-cid-ji5mkv6w": true })}<link rel="preconnect" href="https://res.cloudinary.com" crossorigin><link rel="preload" as="image"${addAttribute(HUB_HERO_IMAGE, "href")}>${renderHead()}</head> <body data-astro-cid-ji5mkv6w> ${renderComponent($$result, "Header", $$Header, { "data-astro-cid-ji5mkv6w": true })} <main class="hub-main hub-page" data-astro-cid-ji5mkv6w> <section class="hub-superhero" data-astro-cid-ji5mkv6w> <img class="hub-superhero-image"${addAttribute(HUB_HERO_IMAGE, "src")} alt="MVP Media hero portrait" loading="eager" fetchpriority="high" decoding="async" data-astro-cid-ji5mkv6w> <div class="hub-superhero-overlay" data-astro-cid-ji5mkv6w></div> <div class="container hub-superhero-content hub-hero" data-astro-cid-ji5mkv6w> <p class="heading" data-astro-cid-ji5mkv6w>MVP Media Hub</p> <h1 class="hub-heading-accent" data-astro-cid-ji5mkv6w>Big Vision.<br data-astro-cid-ji5mkv6w>Cinematic Output.</h1> <p class="muted" data-astro-cid-ji5mkv6w>
 Strategy, production, and post in one workflow. Built for brands that want premium results.
 </p> <p class="muted subtle" data-astro-cid-ji5mkv6w>Media library synced: ${hubMediaCount > 0 ? `${hubMediaCount} items` : "fallback mode"}</p> <div class="superhero-actions" data-astro-cid-ji5mkv6w> <a class="btn-primary" href="#hub-start" data-astro-cid-ji5mkv6w>Explore Hub</a> <a class="btn-secondary" href="#youtube-station" data-astro-cid-ji5mkv6w>YouTube Station</a> </div> </div> </section> <div class="hub-container" data-astro-cid-ji5mkv6w> <section class="hero-slice" id="hub-start" data-astro-cid-ji5mkv6w> <div class="container hero-grid" data-astro-cid-ji5mkv6w> <div class="reveal" data-stagger="0" data-astro-cid-ji5mkv6w> <p class="heading" data-astro-cid-ji5mkv6w>Video Agency</p> <h1 data-astro-cid-ji5mkv6w>Vertical<br data-astro-cid-ji5mkv6w>First</h1> <p class="lead" data-astro-cid-ji5mkv6w>A media team with zero tolerance for average work.</p> <p class="muted" data-astro-cid-ji5mkv6w>
 We produce video content for clients who want more than standard. Strategy-led, platform-ready, and focused on impact.

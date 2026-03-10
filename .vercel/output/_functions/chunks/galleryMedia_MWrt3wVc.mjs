@@ -71,13 +71,10 @@ const rawBaseSet = [
     description: "Clean subject-led composition with natural light control and premium grading."
   }
 ];
-const toCloudinaryVariant = (url, width, height, quality = "good") => url.includes("/image/upload/") ? url.replace(
-  "/image/upload/",
-  `/image/upload/f_auto,q_auto:${quality},dpr_auto,w_${width},h_${height},c_fill/`
-) : url;
+const toCloudinaryOptimized = (url) => url.includes("/image/upload/") ? url.replace("/image/upload/", "/image/upload/f_auto,q_auto,w_900,c_fill/") : url;
 const baseSet = rawBaseSet.map((item) => ({
   ...item,
-  image: item.image
+  image: toCloudinaryOptimized(item.image)
 }));
 const cols = 8;
 const gapX = 180;
@@ -96,12 +93,9 @@ const galleryItems = Array.from({ length: 96 }, (_, idx) => {
   const height = [240, 280, 300, 260][idx % 4];
   const x = startX + col * gapX + (row % 2 === 0 ? 0 : 32);
   const y = startY + row * gapY + (col % 2 === 0 ? 0 : 14);
-  const previewWidth = Math.max(width * 2, 480);
-  const previewHeight = Math.max(height * 2, 640);
   return {
     id: `img-${number}`,
-    image: toCloudinaryVariant(base.image, previewWidth, previewHeight),
-    lightboxImage: toCloudinaryVariant(base.image, 1600, 2200),
+    image: base.image,
     title: `${base.title} ${number}`,
     description: base.description,
     category,

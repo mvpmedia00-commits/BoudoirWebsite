@@ -1,5 +1,4 @@
 ---
-import { Image } from 'astro:assets';
 import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
@@ -14,24 +13,24 @@ import ImgAbout from '../assets/blog-placeholder-about.jpg';
 
 const categoryVisuals = {
 	boudoir: {
-		image: ImgThree,
+		image: ImgThree.src,
 		mood: 'Warm editorial silhouettes and confident direction.'
 	},
 	'artistic-nude': {
-		image: ImgFour,
+		image: ImgFour.src,
 		mood: 'Fine-art composition focused on form, light, and shape.'
 	},
 	'body-paint': {
-		image: ImgOne,
+		image: ImgOne.src,
 		mood: 'Color-washed texture and body-art storytelling.'
 	},
 	'editorial-portrait': {
-		image: ImgFive,
+		image: ImgFive.src,
 		mood: 'Brand-safe portraiture with cinematic styling and polish.'
 	}
 } as const;
 
-const featuredStrip = [ImgOne, ImgTwo, ImgThree, ImgFour, ImgFive, ImgAbout];
+const featuredStrip = [ImgOne.src, ImgTwo.src, ImgThree.src, ImgFour.src, ImgFive.src, ImgAbout.src];
 ---
 
 <!doctype html>
@@ -46,16 +45,7 @@ const featuredStrip = [ImgOne, ImgTwo, ImgThree, ImgFour, ImgFive, ImgAbout];
 		<Header />
 		<main class="gallery-index">
 			<section class="gallery-atmosphere">
-				<Image
-					class="atmosphere-still"
-					src={ImgAbout}
-					alt=""
-					widths={[768, 1280, 1600]}
-					sizes="100vw"
-					loading="eager"
-					fetchpriority="high"
-					quality={88}
-				/>
+				<img class="atmosphere-still" src={ImgAbout.src} alt="" loading="eager" />
 				<div class="gallery-atmosphere-overlay"></div>
 				<div class="gallery-lead fade-up">
 					<p class="eyebrow">Curated For The Bold</p>
@@ -72,14 +62,7 @@ const featuredStrip = [ImgOne, ImgTwo, ImgThree, ImgFour, ImgFive, ImgAbout];
 				{GALLERY_CATEGORIES.map((category) => (
 					<a class="category-card" href={`/gallery/${category.slug}`}>
 						<div class="category-media">
-							<Image
-								src={categoryVisuals[category.slug].image}
-								alt={`${category.label} teaser`}
-								widths={[480, 720, 960]}
-								sizes="(max-width: 760px) 100vw, 50vw"
-								loading="lazy"
-								quality={82}
-							/>
+							<img src={categoryVisuals[category.slug].image} alt={`${category.label} teaser`} loading="lazy" />
 							<div class="category-wash"></div>
 						</div>
 						<div class="category-content">
@@ -95,12 +78,8 @@ const featuredStrip = [ImgOne, ImgTwo, ImgThree, ImgFour, ImgFive, ImgAbout];
 
 			<section class="featured-strip fade-up" aria-label="Featured Work Preview">
 				<div class="featured-track">
-					{featuredStrip.map((src) => (
-						<Image src={src} alt="Featured work teaser" width={440} sizes="220px" loading="lazy" quality={70} />
-					))}
-					{featuredStrip.map((src) => (
-						<Image src={src} alt="Featured work teaser" width={440} sizes="220px" loading="lazy" quality={70} />
-					))}
+					{featuredStrip.map((src) => <img src={src} alt="Featured work teaser" loading="lazy" />)}
+					{featuredStrip.map((src) => <img src={src} alt="Featured work teaser" loading="lazy" />)}
 				</div>
 			</section>
 

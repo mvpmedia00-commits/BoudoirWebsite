@@ -4,7 +4,7 @@ import pLimit from 'p-limit';
 import { z } from 'zod';
 import { r as removeBase, i as isRemotePath, p as prependForwardSlash } from './path_tbLlI_c1.mjs';
 import { V as VALID_INPUT_FORMATS } from './consts_Bd-1c2lz.mjs';
-import { A as AstroError, U as UnknownContentCollectionError, c as createComponent, R as RenderUndefinedEntryError, u as unescapeHTML, d as renderTemplate, h as renderUniqueStylesheet, i as renderScriptElement, j as createHeadAndContent, r as renderComponent } from './astro/server_CA-1NlPe.mjs';
+import { A as AstroError, U as UnknownContentCollectionError, c as createComponent, R as RenderUndefinedEntryError, u as unescapeHTML, d as renderTemplate, h as renderUniqueStylesheet, i as renderScriptElement, j as createHeadAndContent, r as renderComponent } from './astro/server_BWvinCl0.mjs';
 import 'piccolore';
 import * as devalue from 'devalue';
 
@@ -66,7 +66,7 @@ class ImmutableDataStore {
    */
   static async fromModule() {
     try {
-      const data = await import('./_astro_data-layer-content_BSeCr26s.mjs');
+      const data = await import('./_astro_data-layer-content_CecjJ05k.mjs');
       if (data.default instanceof Map) {
         return ImmutableDataStore.fromMap(data.default);
       }
@@ -98,7 +98,7 @@ function dataStoreSingleton() {
 }
 const globalDataStore = dataStoreSingleton();
 
-const __vite_import_meta_env__ = {"ASSETS_PREFIX": undefined, "BASE_URL": "/", "DEV": false, "MODE": "production", "PROD": true, "SITE": "https://mvpmedia.studio", "SSR": true};
+const __vite_import_meta_env__ = {"ASSETS_PREFIX": undefined, "BASE_URL": "/", "DEV": false, "MODE": "production", "PROD": true, "SITE": "https://example.com", "SSR": true};
 function createCollectionToGlobResultMap({
   globResult,
   contentDir
@@ -140,7 +140,7 @@ function createGetCollection({
     } else if (collection in dataCollectionToEntryMap) {
       type = "data";
     } else if (store.hasCollection(collection)) {
-      const { default: imageAssetMap } = await import('./content-assets_DoLQdO40.mjs');
+      const { default: imageAssetMap } = await import('./content-assets_-VyrgxKA.mjs');
       const result = [];
       for (const rawEntry of store.values(collection)) {
         const data = updateImageReferencesInData(rawEntry.data, rawEntry.filePath, imageAssetMap);
@@ -220,94 +220,11 @@ function emulateLegacyEntry({ legacyId, ...entry }) {
     render: () => renderEntry(legacyEntry)
   };
 }
-function createGetEntry({
-  getEntryImport,
-  getRenderEntryImport,
-  collectionNames,
-  liveCollections
-}) {
-  return async function getEntry(collectionOrLookupObject, lookup) {
-    let collection, lookupId;
-    if (typeof collectionOrLookupObject === "string") {
-      collection = collectionOrLookupObject;
-      if (!lookup)
-        throw new AstroError({
-          ...UnknownContentCollectionError,
-          message: "`getEntry()` requires an entry identifier as the second argument."
-        });
-      lookupId = lookup;
-    } else {
-      collection = collectionOrLookupObject.collection;
-      lookupId = "id" in collectionOrLookupObject ? collectionOrLookupObject.id : collectionOrLookupObject.slug;
-    }
-    if (collection in liveCollections) {
-      throw new AstroError({
-        ...UnknownContentCollectionError,
-        message: `Collection "${collection}" is a live collection. Use getLiveEntry() instead of getEntry().`
-      });
-    }
-    if (typeof lookupId === "object") {
-      throw new AstroError({
-        ...UnknownContentCollectionError,
-        message: `The entry identifier must be a string. Received object.`
-      });
-    }
-    const store = await globalDataStore.get();
-    if (store.hasCollection(collection)) {
-      const entry2 = store.get(collection, lookupId);
-      if (!entry2) {
-        console.warn(`Entry ${collection} → ${lookupId} was not found.`);
-        return;
-      }
-      const { default: imageAssetMap } = await import('./content-assets_DoLQdO40.mjs');
-      entry2.data = updateImageReferencesInData(entry2.data, entry2.filePath, imageAssetMap);
-      if (entry2.legacyId) {
-        return emulateLegacyEntry({ ...entry2, collection });
-      }
-      return {
-        ...entry2,
-        collection
-      };
-    }
-    if (!collectionNames.has(collection)) {
-      console.warn(
-        `The collection ${JSON.stringify(collection)} does not exist. Please ensure it is defined in your content config.`
-      );
-      return void 0;
-    }
-    const entryImport = await getEntryImport(collection, lookupId);
-    if (typeof entryImport !== "function") return void 0;
-    const entry = await entryImport();
-    if (entry._internal.type === "content") {
-      return {
-        id: entry.id,
-        slug: entry.slug,
-        body: entry.body,
-        collection: entry.collection,
-        data: entry.data,
-        async render() {
-          return render({
-            collection: entry.collection,
-            id: entry.id,
-            renderEntryImport: await getRenderEntryImport(collection, lookupId)
-          });
-        }
-      };
-    } else if (entry._internal.type === "data") {
-      return {
-        id: entry.id,
-        collection: entry.collection,
-        data: entry.data
-      };
-    }
-    return void 0;
-  };
-}
 const CONTENT_LAYER_IMAGE_REGEX = /__ASTRO_IMAGE_="([^"]+)"/g;
 async function updateImageReferencesInBody(html, fileName) {
-  const { default: imageAssetMap } = await import('./content-assets_DoLQdO40.mjs');
+  const { default: imageAssetMap } = await import('./content-assets_-VyrgxKA.mjs');
   const imageObjects = /* @__PURE__ */ new Map();
-  const { getImage } = await import('./_astro_assets_BnuIfOGN.mjs').then(n => n._);
+  const { getImage } = await import('./_astro_assets_DmJ3QSJS.mjs').then(n => n._);
   for (const [_full, imagePath] of html.matchAll(CONTENT_LAYER_IMAGE_REGEX)) {
     try {
       const decodedImagePath = JSON.parse(imagePath.replaceAll("&#x22;", '"'));
@@ -369,7 +286,7 @@ async function renderEntry(entry) {
   }
   if (entry.deferredRender) {
     try {
-      const { default: contentModules } = await import('./content-modules_mxX3Lgi8.mjs');
+      const { default: contentModules } = await import('./content-modules_Cx-4hjqz.mjs');
       const renderEntryImport = contentModules.get(entry.filePath);
       return render({
         collection: "",
@@ -484,7 +401,7 @@ const dataCollectionToEntryMap = createCollectionToGlobResultMap({
 	globResult: dataEntryGlob,
 	contentDir,
 });
-const collectionToEntryMap = createCollectionToGlobResultMap({
+createCollectionToGlobResultMap({
 	globResult: { ...contentEntryGlob, ...dataEntryGlob },
 	contentDir,
 });
@@ -492,7 +409,7 @@ const collectionToEntryMap = createCollectionToGlobResultMap({
 let lookupMap = {};
 lookupMap = {};
 
-const collectionNames = new Set(Object.keys(lookupMap));
+new Set(Object.keys(lookupMap));
 
 function createGlobLookup(glob) {
 	return async (collection, lookupId) => {
@@ -518,11 +435,4 @@ const getCollection = createGetCollection({
 	liveCollections,
 });
 
-const getEntry = createGetEntry({
-	getEntryImport: createGlobLookup(collectionToEntryMap),
-	getRenderEntryImport: createGlobLookup(collectionToRenderEntryMap),
-	collectionNames,
-	liveCollections,
-});
-
-export { getEntry as a, getCollection as g, renderEntry as r };
+export { getCollection as g, renderEntry as r };

@@ -1,16 +1,16 @@
-import { c as createComponent, r as renderComponent, a as renderHead, d as renderTemplate } from '../../chunks/astro/server_CA-1NlPe.mjs';
+import { c as createComponent, r as renderComponent, a as renderHead, g as renderScript, d as renderTemplate } from '../../chunks/astro/server_BWvinCl0.mjs';
 import 'piccolore';
-import { $ as $$BaseHead } from '../../chunks/BaseHead_BXjp2pBo.mjs';
-import { $ as $$Header, a as $$Footer } from '../../chunks/Header_BmKSZvhv.mjs';
-import { $ as $$GalleryCanvas } from '../../chunks/GalleryCanvas_wNMPTP-O.mjs';
-import { S as SITE_TITLE } from '../../chunks/consts_C6Gzotw0.mjs';
-import { g as getGalleryCategory, a as getGalleryItemsByCategory } from '../../chunks/galleryMedia_CTS_rLaz.mjs';
+import { $ as $$BaseHead } from '../../chunks/BaseHead_Wy0sVJGX.mjs';
+import { $ as $$Header, a as $$Footer } from '../../chunks/Header_DmMLhIda.mjs';
+import { $ as $$GalleryCanvas, a as $$AgeGate } from '../../chunks/AgeGate_DEnC8Vw_.mjs';
+import { S as SITE_TITLE } from '../../chunks/consts_B2K2yu7A.mjs';
+import { g as getGalleryCategory, a as getGalleryItemsByCategory } from '../../chunks/galleryMedia_MWrt3wVc.mjs';
 export { renderers } from '../../renderers.mjs';
 
 const $$EditorialPortrait = createComponent(($$result, $$props, $$slots) => {
   const category = getGalleryCategory("editorial-portrait");
   const items = getGalleryItemsByCategory(category.slug);
-  return renderTemplate`<html lang="en"> <head>${renderComponent($$result, "BaseHead", $$BaseHead, { "title": `${category.label} | ${SITE_TITLE}`, "description": category.description })}${renderHead()}</head> <body> ${renderComponent($$result, "Header", $$Header, {})} ${renderComponent($$result, "GalleryCanvas", $$GalleryCanvas, { "title": category.label, "description": category.description, "items": items })} ${renderComponent($$result, "Footer", $$Footer, {})} </body></html>`;
+  return renderTemplate`<html lang="en"> <head>${renderComponent($$result, "BaseHead", $$BaseHead, { "title": `${category.label} | ${SITE_TITLE}`, "description": category.description })}${renderHead()}</head> <body> ${renderComponent($$result, "Header", $$Header, {})} <div id="gallery"> ${renderComponent($$result, "GalleryCanvas", $$GalleryCanvas, { "title": category.label, "description": category.description, "items": items })} </div> ${renderComponent($$result, "Footer", $$Footer, {})} <div id="ageGate"> ${renderComponent($$result, "AgeGate", $$AgeGate, { "redirectTo": "/gallery" })} </div> ${renderScript($$result, "C:/projects/NEW photo booth/afraid-antimatter/src/pages/gallery/editorial-portrait.astro?astro&type=script&index=0&lang.ts")} </body> </html>`;
 }, "C:/projects/NEW photo booth/afraid-antimatter/src/pages/gallery/editorial-portrait.astro", void 0);
 
 const $$file = "C:/projects/NEW photo booth/afraid-antimatter/src/pages/gallery/editorial-portrait.astro";

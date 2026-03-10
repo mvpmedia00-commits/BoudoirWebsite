@@ -1,14 +1,14 @@
-import { e as createAstro, c as createComponent, r as renderComponent, a as renderHead, d as renderTemplate, b as addAttribute, g as renderSlot } from '../../chunks/astro/server_CA-1NlPe.mjs';
+import { e as createAstro, c as createComponent, r as renderComponent, a as renderHead, d as renderTemplate, b as addAttribute, f as renderSlot } from '../../chunks/astro/server_BWvinCl0.mjs';
 import 'piccolore';
-import { r as renderEntry, g as getCollection } from '../../chunks/_astro_content_JnFDEse4.mjs';
-import { $ as $$Image } from '../../chunks/_astro_assets_BnuIfOGN.mjs';
-import { $ as $$BaseHead } from '../../chunks/BaseHead_BXjp2pBo.mjs';
-import { $ as $$Header, a as $$Footer } from '../../chunks/Header_BmKSZvhv.mjs';
-import { $ as $$FormattedDate } from '../../chunks/FormattedDate_BaAnjusg.mjs';
+import { r as renderEntry, g as getCollection } from '../../chunks/_astro_content_C6C8B_CO.mjs';
+import { $ as $$Image } from '../../chunks/_astro_assets_DmJ3QSJS.mjs';
+import { $ as $$BaseHead } from '../../chunks/BaseHead_Wy0sVJGX.mjs';
+import { $ as $$Header, a as $$Footer } from '../../chunks/Header_DmMLhIda.mjs';
+import { $ as $$FormattedDate } from '../../chunks/FormattedDate_DG4XXLPz.mjs';
 /* empty css                                     */
 export { renderers } from '../../renderers.mjs';
 
-const $$Astro$1 = createAstro("https://mvpmedia.studio");
+const $$Astro$1 = createAstro("https://example.com");
 const $$BlogPost = createComponent(($$result, $$props, $$slots) => {
   const Astro2 = $$result.createAstro($$Astro$1, $$props, $$slots);
   Astro2.self = $$BlogPost;
@@ -17,7 +17,7 @@ const $$BlogPost = createComponent(($$result, $$props, $$slots) => {
 Updated ${renderComponent($$result, "FormattedDate", $$FormattedDate, { "date": updatedDate, "data-astro-cid-bvzihdzo": true })} </div>`} </div> <div class="meta-links" data-astro-cid-bvzihdzo> <a${addAttribute(`/blog/category/${category}/`, "href")} data-astro-cid-bvzihdzo>${category.replaceAll("-", " ")}</a> ${tags?.map((tag) => renderTemplate`<a${addAttribute(`/blog/tag/${tag.toLowerCase()}/`, "href")} data-astro-cid-bvzihdzo>#${tag}</a>`)} </div> <h1 data-astro-cid-bvzihdzo>${title}</h1> </div> <div class="article-content" data-astro-cid-bvzihdzo> ${renderSlot($$result, $$slots["default"])} </div> </div> </article> </main> ${renderComponent($$result, "Footer", $$Footer, { "data-astro-cid-bvzihdzo": true })} </body></html>`;
 }, "C:/projects/NEW photo booth/afraid-antimatter/src/layouts/BlogPost.astro", void 0);
 
-const $$Astro = createAstro("https://mvpmedia.studio");
+const $$Astro = createAstro("https://example.com");
 async function getStaticPaths() {
   const posts = await getCollection("blog");
   return posts.map((post) => ({

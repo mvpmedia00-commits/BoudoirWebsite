@@ -5,22 +5,30 @@ import Header from '../../components/Header.astro';
 import GalleryCanvas from '../../components/gallery/GalleryCanvas.astro';
 import AgeGate from '../../components/AgeGate.astro';
 import { SITE_TITLE } from '../../consts';
-import { hasAdultAccess } from '../../lib/auth';
 import { getGalleryCategory, getGalleryItemsByCategory } from '../../data/galleryMedia';
 
 const category = getGalleryCategory('boudoir');
 const items = getGalleryItemsByCategory(category.slug);
-const isAllowed = !category.sensitive || hasAdultAccess(Astro.cookies);
 ---
 
 <!doctype html>
 <html lang="en">
 	<head>
-		<BaseHead title={`${category.label} | ${SITE_TITLE}`} description={category.description} noIndex={category.sensitive} />
+		<BaseHead title={`${category.label} | ${SITE_TITLE}`} description={category.description} />
 	</head>
 	<body>
 		<Header />
-		{isAllowed ? <GalleryCanvas title={category.label} description={category.description} items={items} /> : <AgeGate redirectTo="/gallery" returnTo={Astro.url.pathname} />}
+		<div id="gallery">
+			<GalleryCanvas title={category.label} description={category.description} items={items} />
+		</div>
 		<Footer />
+		<div id="ageGate">
+			<AgeGate redirectTo="/gallery" />
+		</div>
+		<script>
+			const verified = localStorage.getItem("ageVerified") === "true";
+			document.getElementById("ageGate").style.display = verified ? "none" : "block";
+			document.getElementById("gallery").style.display = verified ? "block" : "none";
+		</script>
 	</body>
 </html>

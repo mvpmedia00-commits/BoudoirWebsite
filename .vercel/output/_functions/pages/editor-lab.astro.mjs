@@ -1,8 +1,8 @@
-import { c as createComponent, d as renderTemplate, r as renderComponent, a as renderHead } from '../chunks/astro/server_CA-1NlPe.mjs';
+import { c as createComponent, d as renderTemplate, r as renderComponent, a as renderHead } from '../chunks/astro/server_BWvinCl0.mjs';
 import 'piccolore';
-import { $ as $$BaseHead } from '../chunks/BaseHead_BXjp2pBo.mjs';
-import { a as $$Footer, $ as $$Header } from '../chunks/Header_BmKSZvhv.mjs';
-import { S as SITE_TITLE } from '../chunks/consts_C6Gzotw0.mjs';
+import { $ as $$BaseHead } from '../chunks/BaseHead_Wy0sVJGX.mjs';
+import { a as $$Footer, $ as $$Header } from '../chunks/Header_DmMLhIda.mjs';
+import { S as SITE_TITLE } from '../chunks/consts_B2K2yu7A.mjs';
 /* empty css                                      */
 export { renderers } from '../renderers.mjs';
 

@@ -1,17 +1,6 @@
-import { c as createComponent, m as maybeRenderHead, b as addAttribute, H as spreadAttributes, g as renderSlot, d as renderTemplate, e as createAstro, l as createVNode, F as Fragment, ay as __astro_tag_component__ } from './astro/server_CA-1NlPe.mjs';
-/* empty css                                                                  */
+import { l as createVNode, F as Fragment, ay as __astro_tag_component__ } from './astro/server_BWvinCl0.mjs';
+import { $ as $$HeaderLink } from './HeaderLink_EvyIZri6.mjs';
 import 'clsx';
-
-const $$Astro = createAstro("https://mvpmedia.studio");
-const $$HeaderLink = createComponent(($$result, $$props, $$slots) => {
-  const Astro2 = $$result.createAstro($$Astro, $$props, $$slots);
-  Astro2.self = $$HeaderLink;
-  const { href, class: className, ...props } = Astro2.props;
-  const pathname = Astro2.url.pathname.replace("/", "");
-  const subpath = pathname.match(/[^\/]+/g);
-  const isActive = href === pathname || href === "/" + (subpath?.[0] || "");
-  return renderTemplate`${maybeRenderHead()}<a${addAttribute(href, "href")}${addAttribute([className, { active: isActive }], "class:list")}${spreadAttributes(props)} data-astro-cid-eimmu3lg> ${renderSlot($$result, $$slots["default"])} </a> `;
-}, "C:/projects/NEW photo booth/afraid-antimatter/src/components/HeaderLink.astro", void 0);
 
 const frontmatter = {
   "title": "Using MDX",

@@ -1,15 +1,15 @@
-import { e as createAstro, c as createComponent, m as maybeRenderHead, b as addAttribute, d as renderTemplate, f as renderScript, r as renderComponent, a as renderHead, F as Fragment } from '../../chunks/astro/server_CA-1NlPe.mjs';
+import { e as createAstro, c as createComponent, m as maybeRenderHead, b as addAttribute, d as renderTemplate, g as renderScript, r as renderComponent, a as renderHead, F as Fragment } from '../../chunks/astro/server_BWvinCl0.mjs';
 import 'piccolore';
-import { $ as $$BaseHead } from '../../chunks/BaseHead_BXjp2pBo.mjs';
-import { $ as $$Header, a as $$Footer } from '../../chunks/Header_BmKSZvhv.mjs';
-import { $ as $$LeadForm } from '../../chunks/LeadForm_O0OWr70y.mjs';
+import { $ as $$BaseHead } from '../../chunks/BaseHead_Wy0sVJGX.mjs';
+import { $ as $$Header, a as $$Footer } from '../../chunks/Header_DmMLhIda.mjs';
+import { $ as $$LeadForm } from '../../chunks/LeadForm_CqNF-KHX.mjs';
 import 'clsx';
 import { _ as __ASTRO_IMAGE_IMPORT_Z1F4X4R } from '../../chunks/blog-placeholder-1_D1Pmb4Eu.mjs';
 import { c as __ASTRO_IMAGE_IMPORT_1NHVvs, b as __ASTRO_IMAGE_IMPORT_ZulDpU, a as __ASTRO_IMAGE_IMPORT_1inyCS, _ as __ASTRO_IMAGE_IMPORT_MGbyL } from '../../chunks/blog-placeholder-5_UAO6lreG.mjs';
 /* empty css                                     */
 export { renderers } from '../../renderers.mjs';
 
-const $$Astro$2 = createAstro("https://mvpmedia.studio");
+const $$Astro$2 = createAstro("https://example.com");
 const $$NicheGallery = createComponent(async ($$result, $$props, $$slots) => {
   const Astro2 = $$result.createAstro($$Astro$2, $$props, $$slots);
   Astro2.self = $$NicheGallery;
@@ -24,7 +24,7 @@ const $$NicheGallery = createComponent(async ($$result, $$props, $$slots) => {
   return renderTemplate`${maybeRenderHead()}<div class="niche-gallery" data-niche-gallery${addAttribute(niche, "data-niche")} data-astro-cid-rhdp6blp> ${fallbackCards.map((card) => renderTemplate`<figure data-astro-cid-rhdp6blp> <img${addAttribute(card.image, "src")}${addAttribute(card.title, "alt")} loading="lazy" data-astro-cid-rhdp6blp> <figcaption data-astro-cid-rhdp6blp>${card.title}</figcaption> </figure>`)} </div> ${renderScript($$result, "C:/projects/NEW photo booth/afraid-antimatter/src/components/ui/NicheGallery.astro?astro&type=script&index=0&lang.ts")} `;
 }, "C:/projects/NEW photo booth/afraid-antimatter/src/components/ui/NicheGallery.astro", void 0);
 
-const $$Astro$1 = createAstro("https://mvpmedia.studio");
+const $$Astro$1 = createAstro("https://example.com");
 const $$VideoPlayer = createComponent(($$result, $$props, $$slots) => {
   const Astro2 = $$result.createAstro($$Astro$1, $$props, $$slots);
   Astro2.self = $$VideoPlayer;
@@ -64,7 +64,7 @@ function getNicheBySlug(slug) {
   return NICHES.find((entry) => entry.slug === slug);
 }
 
-const $$Astro = createAstro("https://mvpmedia.studio");
+const $$Astro = createAstro("https://example.com");
 function getStaticPaths() {
   return NICHE_SLUGS.map((slug) => ({
     params: { slug }

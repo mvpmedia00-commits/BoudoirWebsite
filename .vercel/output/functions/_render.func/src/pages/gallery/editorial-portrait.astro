@@ -3,6 +3,7 @@ import BaseHead from '../../components/BaseHead.astro';
 import Footer from '../../components/Footer.astro';
 import Header from '../../components/Header.astro';
 import GalleryCanvas from '../../components/gallery/GalleryCanvas.astro';
+import AgeGate from '../../components/AgeGate.astro';
 import { SITE_TITLE } from '../../consts';
 import { getGalleryCategory, getGalleryItemsByCategory } from '../../data/galleryMedia';
 
@@ -17,7 +18,17 @@ const items = getGalleryItemsByCategory(category.slug);
 	</head>
 	<body>
 		<Header />
-		<GalleryCanvas title={category.label} description={category.description} items={items} />
+		<div id="gallery">
+			<GalleryCanvas title={category.label} description={category.description} items={items} />
+		</div>
 		<Footer />
+		<div id="ageGate">
+			<AgeGate redirectTo="/gallery" />
+		</div>
+		<script>
+			const verified = localStorage.getItem("ageVerified") === "true";
+			document.getElementById("ageGate").style.display = verified ? "none" : "block";
+			document.getElementById("gallery").style.display = verified ? "block" : "none";
+		</script>
 	</body>
 </html>

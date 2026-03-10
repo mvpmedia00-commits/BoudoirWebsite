@@ -28,10 +28,6 @@
 			"dest": "_render"
 		},
 		{
-			"src": "^/api/admin-session/?$",
-			"dest": "_render"
-		},
-		{
 			"src": "^/api/adult-access/?$",
 			"dest": "_render"
 		},
@@ -45,10 +41,6 @@
 		},
 		{
 			"src": "^/api/media/?$",
-			"dest": "_render"
-		},
-		{
-			"src": "^/api/vault-session/?$",
 			"dest": "_render"
 		},
 		{

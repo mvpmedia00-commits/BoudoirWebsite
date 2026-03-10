@@ -1,7 +1,7 @@
-import { c as createComponent, d as renderTemplate, f as renderScript, u as unescapeHTML, b as addAttribute, a as renderHead, r as renderComponent } from '../chunks/astro/server_CA-1NlPe.mjs';
+import { c as createComponent, d as renderTemplate, g as renderScript, u as unescapeHTML, b as addAttribute, a as renderHead, r as renderComponent } from '../chunks/astro/server_BWvinCl0.mjs';
 import 'piccolore';
-import { $ as $$BaseHead } from '../chunks/BaseHead_BXjp2pBo.mjs';
-import { S as SITE_TITLE } from '../chunks/consts_C6Gzotw0.mjs';
+import { $ as $$BaseHead } from '../chunks/BaseHead_Wy0sVJGX.mjs';
+import { S as SITE_TITLE } from '../chunks/consts_B2K2yu7A.mjs';
 import { a as ROSTER_ENTRIES } from '../chunks/roster_EQpwDjSn.mjs';
 /* empty css                                  */
 export { renderers } from '../renderers.mjs';

@@ -37,24 +37,6 @@ async function updateLead(id, updates) {
   }
   return response.json();
 }
-async function listLeads(limit = 100) {
-  const params = new URLSearchParams({
-    page: "1",
-    perPage: String(limit),
-    sort: "-created"
-  });
-  const response = await fetch(`${getCollectionUrl()}?${params.toString()}`, {
-    headers: {
-      ...{}
-    }
-  });
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`PocketBase list failed: ${response.status} ${errorText}`);
-  }
-  const data = await response.json();
-  return data.items ?? [];
-}
 async function listMediaItems(station, niche, limit = 60) {
   const params = new URLSearchParams({
     page: "1",
@@ -97,4 +79,4 @@ async function createEvent(payload) {
   }
 }
 
-export { createLead as a, listMediaItems as b, createEvent as c, listLeads as l, updateLead as u };
+export { createLead as a, createEvent as c, listMediaItems as l, updateLead as u };
