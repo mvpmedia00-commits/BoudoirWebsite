@@ -1,9 +1,5 @@
 ---
-import One from '../../assets/blog-placeholder-1.jpg';
-import Two from '../../assets/blog-placeholder-2.jpg';
-import Three from '../../assets/blog-placeholder-3.jpg';
-import Four from '../../assets/blog-placeholder-4.jpg';
-import Five from '../../assets/blog-placeholder-5.jpg';
+import { SITE_MEDIA } from '../../data/siteMedia';
 
 interface Props {
 	niche: string;
@@ -12,11 +8,11 @@ interface Props {
 const { niche } = Astro.props;
 
 const fallbackCards = [
-	{ title: `${niche} session highlight`, image: One.src },
-	{ title: `${niche} detail frame`, image: Two.src },
-	{ title: `${niche} hero composition`, image: Three.src },
-	{ title: `${niche} ambient portrait`, image: Four.src },
-	{ title: `${niche} closing shot`, image: Five.src }
+	{ title: `${niche} session highlight`, image: SITE_MEDIA.one },
+	{ title: `${niche} detail frame`, image: SITE_MEDIA.two },
+	{ title: `${niche} hero composition`, image: SITE_MEDIA.three },
+	{ title: `${niche} ambient portrait`, image: SITE_MEDIA.four },
+	{ title: `${niche} closing shot`, image: SITE_MEDIA.five }
 ];
 ---
 

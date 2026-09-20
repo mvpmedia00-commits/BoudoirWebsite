@@ -4,33 +4,28 @@ import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import { SITE_TITLE } from '../consts';
 import { GALLERY_CATEGORIES } from '../data/galleryMedia';
-import ImgOne from '../assets/blog-placeholder-1.jpg';
-import ImgTwo from '../assets/blog-placeholder-2.jpg';
-import ImgThree from '../assets/blog-placeholder-3.jpg';
-import ImgFour from '../assets/blog-placeholder-4.jpg';
-import ImgFive from '../assets/blog-placeholder-5.jpg';
-import ImgAbout from '../assets/blog-placeholder-about.jpg';
+import { SITE_MEDIA } from '../data/siteMedia';
 
 const categoryVisuals = {
 	boudoir: {
-		image: ImgThree.src,
+		image: SITE_MEDIA.three,
 		mood: 'Warm editorial silhouettes and confident direction.'
 	},
 	'artistic-nude': {
-		image: ImgFour.src,
+		image: SITE_MEDIA.four,
 		mood: 'Fine-art composition focused on form, light, and shape.'
 	},
 	'body-paint': {
-		image: ImgOne.src,
+		image: SITE_MEDIA.one,
 		mood: 'Color-washed texture and body-art storytelling.'
 	},
 	'editorial-portrait': {
-		image: ImgFive.src,
+		image: SITE_MEDIA.five,
 		mood: 'Brand-safe portraiture with cinematic styling and polish.'
 	}
 } as const;
 
-const featuredStrip = [ImgOne.src, ImgTwo.src, ImgThree.src, ImgFour.src, ImgFive.src, ImgAbout.src];
+const featuredStrip = [SITE_MEDIA.one, SITE_MEDIA.two, SITE_MEDIA.three, SITE_MEDIA.four, SITE_MEDIA.five, SITE_MEDIA.about];
 ---
 
 <!doctype html>
@@ -45,7 +40,7 @@ const featuredStrip = [ImgOne.src, ImgTwo.src, ImgThree.src, ImgFour.src, ImgFiv
 		<Header />
 		<main class="gallery-index">
 			<section class="gallery-atmosphere">
-				<img class="atmosphere-still" src={ImgAbout.src} alt="" loading="eager" />
+				<img class="atmosphere-still" src={SITE_MEDIA.about} alt="" loading="eager" />
 				<div class="gallery-atmosphere-overlay"></div>
 				<div class="gallery-lead fade-up">
 					<p class="eyebrow">Curated For The Bold</p>

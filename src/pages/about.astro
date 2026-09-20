@@ -2,8 +2,8 @@
 import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
-import Portrait from '../assets/blog-placeholder-about.jpg';
 import { SITE_TITLE } from '../consts';
+import { SITE_MEDIA } from '../data/siteMedia';
 ---
 
 <!doctype html>
@@ -15,7 +15,7 @@ import { SITE_TITLE } from '../consts';
 		<Header />
 		<main>
 			<section class="about-grid">
-				<img src={Portrait.src} alt="Lead photographer holding camera during a shoot." loading="lazy" />
+				<img src={SITE_MEDIA.about} alt="Lead photographer holding camera during a shoot." loading="lazy" />
 				<div>
 					<p class="eyebrow">Meet the Photographer</p>
 					<h1>Hi, I am Matthew Phillips.</h1>

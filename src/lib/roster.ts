@@ -1,9 +1,4 @@
-import ImgOne from '../assets/blog-placeholder-1.jpg';
-import ImgTwo from '../assets/blog-placeholder-2.jpg';
-import ImgThree from '../assets/blog-placeholder-3.jpg';
-import ImgFour from '../assets/blog-placeholder-4.jpg';
-import ImgFive from '../assets/blog-placeholder-5.jpg';
-import ImgAbout from '../assets/blog-placeholder-about.jpg';
+import { SITE_MEDIA } from '../data/siteMedia';
 
 export type RosterEntry = {
 	slug: string;
@@ -33,7 +28,7 @@ export const ROSTER_ENTRIES: RosterEntry[] = [
 		role: 'Director / Photographer',
 		location: 'United States',
 		bio: 'Cinematic visual direction with a focus on premium portrait narratives and after-dark editorial control.',
-		heroImage: ImgOne.src,
+		heroImage: SITE_MEDIA.one,
 		reelUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
 		availability: 'Open for bookings',
 		representedBy: 'MVP Media',
@@ -52,7 +47,7 @@ export const ROSTER_ENTRIES: RosterEntry[] = [
 		role: 'Creative Producer',
 		location: 'Los Angeles',
 		bio: 'Builds structured story systems around intimacy, confidence, and visual pacing for modern digital platforms.',
-		heroImage: ImgTwo.src,
+		heroImage: SITE_MEDIA.two,
 		reelUrl: 'https://www.youtube.com/embed/jNQXAC9IVRw',
 		availability: 'Limited availability',
 		representedBy: 'MVP Media',
@@ -71,7 +66,7 @@ export const ROSTER_ENTRIES: RosterEntry[] = [
 		role: 'Cinematographer',
 		location: 'New York',
 		bio: 'Designs low-light image architecture with deliberate movement, controlled highlights, and polished post intent.',
-		heroImage: ImgThree.src,
+		heroImage: SITE_MEDIA.three,
 		reelUrl: 'https://www.youtube.com/embed/aqz-KE-bpKQ',
 		availability: 'Open for commercial work',
 		representedBy: 'MVP Media',
@@ -90,7 +85,7 @@ export const ROSTER_ENTRIES: RosterEntry[] = [
 		role: 'Editor / Colorist',
 		location: 'Chicago',
 		bio: 'Shapes emotional rhythm in post with color depth, sound timing, and clean narrative finish.',
-		heroImage: ImgFour.src,
+		heroImage: SITE_MEDIA.four,
 		reelUrl: 'https://www.youtube.com/embed/ysz5S6PUM-U',
 		availability: 'Booked this month',
 		representedBy: 'MVP Media',
@@ -109,7 +104,7 @@ export const ROSTER_ENTRIES: RosterEntry[] = [
 		role: 'Photographer',
 		location: 'Miami',
 		bio: 'Captures premium portrait stills with a discreet process and high-end editorial composition.',
-		heroImage: ImgFive.src,
+		heroImage: SITE_MEDIA.five,
 		reelUrl: 'https://www.youtube.com/embed/ScMzIvxBSi4',
 		availability: 'Open for private sessions',
 		representedBy: 'MVP Media',
@@ -128,7 +123,7 @@ export const ROSTER_ENTRIES: RosterEntry[] = [
 		role: 'Visual Artist',
 		location: 'Atlanta',
 		bio: 'Blends still and motion language for bold gallery-ready frames and premium digital releases.',
-		heroImage: ImgAbout.src,
+		heroImage: SITE_MEDIA.about,
 		reelUrl: 'https://www.youtube.com/embed/tgbNymZ7vqY',
 		availability: 'Open for collaborations',
 		representedBy: 'MVP Media',

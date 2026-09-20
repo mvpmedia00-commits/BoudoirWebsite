@@ -1,9 +1,4 @@
-import ImgOne from '../assets/blog-placeholder-1.jpg';
-import ImgTwo from '../assets/blog-placeholder-2.jpg';
-import ImgThree from '../assets/blog-placeholder-3.jpg';
-import ImgFour from '../assets/blog-placeholder-4.jpg';
-import ImgFive from '../assets/blog-placeholder-5.jpg';
-import ImgAbout from '../assets/blog-placeholder-about.jpg';
+import { SITE_MEDIA } from './siteMedia';
 
 export type GalleryCategory = 'boudoir' | 'artistic-nude' | 'body-paint' | 'editorial-portrait';
 
@@ -74,32 +69,32 @@ const rawBaseSet: BaseMedia[] = [
 		description: 'External Cloudinary image test frame for gallery validation.'
 	},
 	{
-		image: ImgOne.src,
+		image: SITE_MEDIA.one,
 		title: 'Editorial Street Portrait',
 		description: 'Low-light portrait session focused on texture, contrast, and cinematic framing.'
 	},
 	{
-		image: ImgTwo.src,
+		image: SITE_MEDIA.two,
 		title: 'Brand Story Capture',
 		description: 'Short-form campaign frame designed for paid social and website hero usage.'
 	},
 	{
-		image: ImgThree.src,
+		image: SITE_MEDIA.three,
 		title: 'Night Session Motion',
 		description: 'Fast shutter sequence with controlled blur accents to preserve movement and mood.'
 	},
 	{
-		image: ImgFour.src,
+		image: SITE_MEDIA.four,
 		title: 'Environment Detail',
 		description: 'Interior-forward frame balancing spatial depth, color control, and architectural lines.'
 	},
 	{
-		image: ImgFive.src,
+		image: SITE_MEDIA.five,
 		title: 'Live Crowd Energy',
 		description: 'High-energy event still captured for recap content and promotional distribution.'
 	},
 	{
-		image: ImgAbout.src,
+		image: SITE_MEDIA.about,
 		title: 'Client Feature Frame',
 		description: 'Clean subject-led composition with natural light control and premium grading.'
 	}

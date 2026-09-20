@@ -3,12 +3,7 @@ import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
-import WorkOne from '../assets/blog-placeholder-1.jpg';
-import WorkTwo from '../assets/blog-placeholder-2.jpg';
-import WorkThree from '../assets/blog-placeholder-3.jpg';
-import WorkFour from '../assets/blog-placeholder-4.jpg';
-import WorkFive from '../assets/blog-placeholder-5.jpg';
-import WorkAbout from '../assets/blog-placeholder-about.jpg';
+import { SITE_MEDIA } from '../data/siteMedia';
 
 type HeroMediaColumn = {
 	reverse?: boolean;
@@ -115,7 +110,7 @@ const homeSchema = {
 						<p class="hero-location">New York and Destination Commissions</p>
 
 						<div class="hero-title-video-box">
-							<img class="hero-title-video" src={WorkAbout.src} alt="" loading="eager" decoding="async" fetchpriority="high" />
+							<img class="hero-title-video" src={SITE_MEDIA.about} alt="" loading="eager" decoding="async" fetchpriority="high" />
 							<div class="hero-title-overlay"></div>
 							<h1>Bold. Intimate. Cinematic.</h1>
 						</div>
@@ -146,7 +141,7 @@ const homeSchema = {
 					<div class="category-grid">
 						<a class="category-card" href="/gallery/boudoir" data-track data-track-element="home_category_boudoir">
 							<div class="art-frame">
-								<img src={WorkThree.src} alt="Boudoir category preview" loading="lazy" />
+								<img src={SITE_MEDIA.three} alt="Boudoir category preview" loading="lazy" />
 							</div>
 							<div class="category-copy">
 								<h3>Boudoir</h3>
@@ -155,7 +150,7 @@ const homeSchema = {
 						</a>
 						<a class="category-card" href="/gallery/artistic-nude" data-track data-track-element="home_category_artistic_nude">
 							<div class="art-frame">
-								<img src={WorkFour.src} alt="Artistic nude category preview" loading="lazy" />
+								<img src={SITE_MEDIA.four} alt="Artistic nude category preview" loading="lazy" />
 							</div>
 							<div class="category-copy">
 								<h3>Artistic Nude</h3>
@@ -164,7 +159,7 @@ const homeSchema = {
 						</a>
 						<a class="category-card" href="/gallery/body-paint" data-track data-track-element="home_category_body_paint">
 							<div class="art-frame">
-								<img src={WorkOne.src} alt="Body paint category preview" loading="lazy" />
+								<img src={SITE_MEDIA.one} alt="Body paint category preview" loading="lazy" />
 							</div>
 							<div class="category-copy">
 								<h3>Body Paint</h3>
@@ -173,7 +168,7 @@ const homeSchema = {
 						</a>
 						<a class="category-card" href="/gallery/editorial-portrait" data-track data-track-element="home_category_editorial_portrait">
 							<div class="art-frame">
-								<img src={WorkFive.src} alt="Editorial portrait category preview" loading="lazy" />
+								<img src={SITE_MEDIA.five} alt="Editorial portrait category preview" loading="lazy" />
 							</div>
 							<div class="category-copy">
 								<h3>Editorial Portrait</h3>
@@ -205,7 +200,7 @@ const homeSchema = {
 						</article>
 						<article class="reel-card">
 							<div class="art-frame">
-								<img src={WorkTwo.src} alt="Cinematic portrait detail" loading="lazy" />
+								<img src={SITE_MEDIA.two} alt="Cinematic portrait detail" loading="lazy" />
 							</div>
 							<div class="reel-copy">
 								<h3>Luxury Detail</h3>
@@ -239,9 +234,9 @@ const homeSchema = {
 						Every set is designed for atmosphere, confidence, and intention.
 					</p>
 					<div class="identity-moodboard">
-						<div class="art-frame"><img src={WorkThree.src} alt="Moody studio silhouette" loading="lazy" /></div>
-						<div class="art-frame"><img src={WorkFour.src} alt="Body paint editorial detail" loading="lazy" /></div>
-						<div class="art-frame"><img src={WorkAbout.src} alt="Cinematic close-up portrait" loading="lazy" /></div>
+						<div class="art-frame"><img src={SITE_MEDIA.three} alt="Moody studio silhouette" loading="lazy" /></div>
+						<div class="art-frame"><img src={SITE_MEDIA.four} alt="Body paint editorial detail" loading="lazy" /></div>
+						<div class="art-frame"><img src={SITE_MEDIA.about} alt="Cinematic close-up portrait" loading="lazy" /></div>
 					</div>
 				</section>
 
@@ -289,7 +284,7 @@ const homeSchema = {
 						</article>
 					</div>
 					<div class="process-visual art-frame">
-						<img src={WorkAbout.src} alt="Private studio session planning mood board" loading="lazy" />
+						<img src={SITE_MEDIA.about} alt="Private studio session planning mood board" loading="lazy" />
 					</div>
 				</section>
 

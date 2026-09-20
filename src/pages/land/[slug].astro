@@ -5,8 +5,8 @@ import Header from '../../components/Header.astro';
 import LeadForm from '../../components/ui/LeadForm.astro';
 import NicheGallery from '../../components/ui/NicheGallery.astro';
 import VideoPlayer from '../../components/ui/VideoPlayer.astro';
-import Poster from '../../assets/blog-placeholder-2.jpg';
 import { NICHE_SLUGS, getNicheBySlug } from '../../lib/niches';
+import { SITE_MEDIA } from '../../data/siteMedia';
 
 export function getStaticPaths() {
 	return NICHE_SLUGS.map((slug) => ({
@@ -32,7 +32,7 @@ const isAllowed = !requiresGate || hasAdultAccess;
 		<BaseHead
 			title={`${niche.title} | MVP Media`}
 			description={niche.description}
-			image={Poster}
+			image={SITE_MEDIA.two}
 			noIndex={requiresGate}
 		/>
 	</head>
@@ -47,7 +47,7 @@ const isAllowed = !requiresGate || hasAdultAccess;
 								<h1>{niche.title}</h1>
 								<p>{niche.hero}</p>
 							</div>
-							<VideoPlayer src="https://cdn.coverr.co/videos/coverr-a-city-at-night-1579/1080p.mp4" poster={Poster.src} />
+							<VideoPlayer src="https://cdn.coverr.co/videos/coverr-a-city-at-night-1579/1080p.mp4" poster={SITE_MEDIA.two} />
 						</section>
 
 						<section class="niche-section">

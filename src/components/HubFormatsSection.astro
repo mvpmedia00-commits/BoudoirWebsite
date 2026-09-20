@@ -1,16 +1,12 @@
 ---
-import One from '../assets/blog-placeholder-1.jpg';
-import Two from '../assets/blog-placeholder-2.jpg';
-import Three from '../assets/blog-placeholder-3.jpg';
-import Four from '../assets/blog-placeholder-4.jpg';
-import Five from '../assets/blog-placeholder-5.jpg';
+import { SITE_MEDIA } from '../data/siteMedia';
 
 const formats = [
-  { title: 'Weil Wiedererkennbarkeit kein Zufall ist.', image: One.src, statA: '+100%', statB: '+100%' },
-  { title: 'Weil schlechter Schnitt gute Botschaft ruiniert.', image: Two.src, statA: '+100%', statB: '+15Mio.' },
-  { title: 'Weil Standard im Feed untergeht.', image: Three.src, statA: '+1Mio.', statB: '+10K' },
-  { title: 'Weil Behauptungen nichts beweisen.', image: Four.src, statA: '+50%', statB: '+4.5%' },
-  { title: 'Weil Langeweile schlimmer ist als Laenge.', image: Five.src, statA: '+0%', statB: '+100%' }
+  { title: 'Weil Wiedererkennbarkeit kein Zufall ist.', image: SITE_MEDIA.one, statA: '+100%', statB: '+100%' },
+  { title: 'Weil schlechter Schnitt gute Botschaft ruiniert.', image: SITE_MEDIA.two, statA: '+100%', statB: '+15Mio.' },
+  { title: 'Weil Standard im Feed untergeht.', image: SITE_MEDIA.three, statA: '+1Mio.', statB: '+10K' },
+  { title: 'Weil Behauptungen nichts beweisen.', image: SITE_MEDIA.four, statA: '+50%', statB: '+4.5%' },
+  { title: 'Weil Langeweile schlimmer ist als Laenge.', image: SITE_MEDIA.five, statA: '+0%', statB: '+100%' }
 ];
 ---
 

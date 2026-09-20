@@ -1,6 +1,5 @@
 ---
-import CraftA from '../assets/blog-placeholder-about.jpg';
-import CraftB from '../assets/blog-placeholder-4.jpg';
+import { SITE_MEDIA } from '../data/siteMedia';
 
 const pillars = [
   { title: 'Strategie', text: 'Plattform, Zielgruppe und Hook werden vor dem Dreh festgelegt.' },
@@ -24,8 +23,8 @@ const pillars = [
       ))}
     </div>
     <div class="mosaic">
-      <img src={CraftA.src} alt="Behind the scenes production" loading="lazy" />
-      <img src={CraftB.src} alt="Team and camera setup" loading="lazy" />
+      <img src={SITE_MEDIA.about} alt="Behind the scenes production" loading="lazy" />
+      <img src={SITE_MEDIA.four} alt="Team and camera setup" loading="lazy" />
     </div>
   </div>
 </section>

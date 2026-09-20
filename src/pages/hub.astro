@@ -3,12 +3,7 @@ import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import { SITE_TITLE } from '../consts';
 import Header from '../components/Header.astro';
-import One from '../assets/blog-placeholder-1.jpg';
-import Two from '../assets/blog-placeholder-2.jpg';
-import Three from '../assets/blog-placeholder-3.jpg';
-import Four from '../assets/blog-placeholder-4.jpg';
-import Five from '../assets/blog-placeholder-5.jpg';
-import About from '../assets/blog-placeholder-about.jpg';
+import { SITE_MEDIA } from '../data/siteMedia';
 import { listMediaItems } from '../lib/pocketbase';
 
 const DRIVE_VIDEO_PREVIEW = 'https://drive.google.com/file/d/1RizgFs5c6eV4A7hWAinKD7jsAl_k-xmI/preview';
@@ -20,7 +15,7 @@ const slices = [
 		id: 'branding',
 		kicker: 'Branding Content',
 		title: 'Recognition Is Never an Accident.',
-		image: One.src,
+    image: SITE_MEDIA.one,
 		video: 'https://cdn.coverr.co/videos/coverr-a-city-at-night-1579/1080p.mp4',
 		statA: '+100%',
 		statB: '+100%',
@@ -34,7 +29,7 @@ const slices = [
 		id: 'edits',
 		kicker: 'High Quality Edits',
 		title: 'Bad Editing Kills a Great Message.',
-		image: Two.src,
+    image: SITE_MEDIA.two,
 		video: 'https://cdn.coverr.co/videos/coverr-a-city-at-night-1579/1080p.mp4',
 		statA: '+100%',
 		statB: '+1.5Mio.',
@@ -48,7 +43,7 @@ const slices = [
 		id: 'ugc',
 		kicker: 'UGC Content',
 		title: 'Standard Content Gets Lost in the Feed.',
-		image: Three.src,
+    image: SITE_MEDIA.three,
 		video: 'https://cdn.coverr.co/videos/coverr-a-city-at-night-1579/1080p.mp4',
 		statA: '+1Mio.',
 		statB: '+10k',
@@ -62,7 +57,7 @@ const slices = [
 		id: 'testimonials',
 		kicker: 'Testimonials',
 		title: 'Claims Mean Nothing Without Proof.',
-		image: Four.src,
+    image: SITE_MEDIA.four,
 		video: 'https://cdn.coverr.co/videos/coverr-a-city-at-night-1579/1080p.mp4',
 		statA: '+50%',
 		statB: '+4.5%',
@@ -76,7 +71,7 @@ const slices = [
 		id: 'long-form',
 		kicker: 'Long Form Content',
 		title: 'Boring Is Worse Than Long.',
-		image: Five.src,
+    image: SITE_MEDIA.five,
 		video: 'https://cdn.coverr.co/videos/coverr-a-city-at-night-1579/1080p.mp4',
 		statA: '+0%',
 		statB: '+100%',
@@ -90,7 +85,7 @@ const slices = [
 		id: 'droneshots',
 		kicker: 'Drone Shots',
 		title: 'Perspective Changes Performance.',
-		image: About.src,
+    image: SITE_MEDIA.about,
 		video: 'https://cdn.coverr.co/videos/coverr-a-city-at-night-1579/1080p.mp4',
 		statA: '+100%',
 		statB: '+20%',
@@ -102,7 +97,7 @@ const slices = [
 	}
 ];
 
-const stripImages = [One.src, Two.src, Three.src, Four.src, Five.src, About.src];
+const stripImages = [SITE_MEDIA.one, SITE_MEDIA.two, SITE_MEDIA.three, SITE_MEDIA.four, SITE_MEDIA.five, SITE_MEDIA.about];
 
 const hubSchema = {
 	'@context': 'https://schema.org',
