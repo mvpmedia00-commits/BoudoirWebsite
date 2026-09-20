@@ -5,6 +5,8 @@ import Header from '../components/Header.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 import { SITE_MEDIA } from '../data/siteMedia';
 
+export const prerender = true;
+
 type HeroMediaColumn = {
 	reverse?: boolean;
 	items: string[];
