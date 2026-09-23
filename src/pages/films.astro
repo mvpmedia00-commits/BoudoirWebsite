@@ -120,7 +120,7 @@ const filmsSchema = {
 						{filmTypes.map((film, index) => (
 							<article class:list={['film-type', { reverse: index % 2 === 1 }]}>
 								<div class="film-type-media">
-									<img src={film.image} alt="" loading="lazy" decoding="async" />
+									<img data-portfolio src={film.image} alt="" loading="lazy" decoding="async" />
 								</div>
 								<div class="film-type-copy">
 									<p class="film-index">{String(index + 1).padStart(2, '0')}</p>

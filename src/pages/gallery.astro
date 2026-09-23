@@ -57,7 +57,7 @@ const featuredStrip = [SITE_MEDIA.one, SITE_MEDIA.two, SITE_MEDIA.three, SITE_ME
 				{GALLERY_CATEGORIES.map((category) => (
 					<a class="category-card" href={`/gallery/${category.slug}`}>
 						<div class="category-media">
-							<img src={categoryVisuals[category.slug].image} alt={`${category.label} portfolio preview`} loading="lazy" />
+							<img data-portfolio src={categoryVisuals[category.slug].image} alt={`${category.label} portfolio preview`} loading="lazy" />
 							<div class="category-wash"></div>
 						</div>
 						<div class="category-content">
@@ -273,10 +273,11 @@ const featuredStrip = [SITE_MEDIA.one, SITE_MEDIA.two, SITE_MEDIA.three, SITE_ME
 		padding: 0.55rem;
 		animation: featured-scroll 26s linear infinite;
 	}
+	/* Natural width per photo, so vertical and horizontal work both show uncropped. */
 	.featured-track img {
-		width: 220px;
-		height: 140px;
-		object-fit: cover;
+		width: auto;
+		height: 180px;
+		max-width: none;
 		border-radius: 10px;
 		border: 1px solid rgba(255, 255, 255, 0.14);
 	}

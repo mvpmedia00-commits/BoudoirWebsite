@@ -19,7 +19,7 @@ const fallbackCards = [
 <div class="niche-gallery" data-niche-gallery data-niche={niche}>
 	{fallbackCards.map((card) => (
 		<figure>
-			<img src={card.image} alt={card.title} loading="lazy" />
+			<img data-portfolio src={card.image} alt={card.title} loading="lazy" />
 			<figcaption>{card.title}</figcaption>
 		</figure>
 	))}
@@ -39,6 +39,7 @@ const fallbackCards = [
 			img.src = item.thumb_url || item.media_url || '';
 			img.alt = item.title || 'Gallery media';
 			img.loading = 'lazy';
+			img.dataset.portfolio = '';
 			const caption = document.createElement('figcaption');
 			caption.textContent = item.title || 'Untitled';
 			figure.append(img, caption);
@@ -72,7 +73,7 @@ const fallbackCards = [
 		border: 1px solid var(--stroke);
 		border-radius: 0.9rem;
 		overflow: hidden;
-		background: #fff;
+		background: var(--surface);
 	}
 	img {
 		width: 100%;
