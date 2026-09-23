@@ -8,11 +8,11 @@ export const SITE_MEDIA = {
 } as const;
 
 /**
- * Video beside "From consultation to delivery" on the homepage. Host these on an adult-friendly
- * CDN (Bunny.net) and paste the https URLs here; until mp4 is set, the section keeps its photo.
- * mature: true shows a blurred still with an 18+ confirmation before the video loads.
+ * Video in "A session that feels like cinema" near the bottom of the homepage. Host these on an
+ * adult-friendly CDN (Bunny.net) and paste the https URLs here; until mp4 is set, the section keeps
+ * its current background video. mature: true shows a blurred still and an 18+ confirmation first.
  */
-export const PROCESS_VIDEO = {
+export const SESSION_VIDEO = {
 	mp4: '',
 	webm: '',
 	poster: '',

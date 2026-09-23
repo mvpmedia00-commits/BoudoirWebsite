@@ -3,7 +3,7 @@ import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
-import { PROCESS_VIDEO, SITE_MEDIA } from '../data/siteMedia';
+import { SESSION_VIDEO, SITE_MEDIA } from '../data/siteMedia';
 
 export const prerender = true;
 
@@ -307,53 +307,66 @@ const homeSchema = {
 							<p>A curated, retouched gallery delivered privately, with clear publishing permissions.</p>
 						</article>
 					</div>
-					{PROCESS_VIDEO.mp4 ? (
-						<div class="process-visual art-frame" data-process-video data-mature={PROCESS_VIDEO.mature ? 'true' : undefined}>
+					<div class="process-visual art-frame">
+						<img src={SITE_MEDIA.about} alt="Private studio session planning mood board" loading="lazy" />
+					</div>
+				</section>
+
+				{SESSION_VIDEO.mp4 ? (
+					<section class="signature-moment signature-split fade-up">
+						<div class="signature-copy">
+							<p class="section-kicker">The Experience</p>
+							<h2 class="heading-accent">A session that feels like cinema</h2>
+							<p>
+								Soft direction, intentional movement, and refined color design that turns confidence into timeless visual work.
+							</p>
+							<a class="btn btn-solid" href="/booking" data-track data-track-element="home_begin_session">Book a Consultation</a>
+						</div>
+						<div class="signature-media art-frame" data-gated-video data-mature={SESSION_VIDEO.mature ? 'true' : undefined}>
 							<video
 								muted
 								loop
 								playsinline
 								preload="none"
-								poster={PROCESS_VIDEO.poster || undefined}
+								poster={SESSION_VIDEO.poster || undefined}
 								data-sources={JSON.stringify([
-									...(PROCESS_VIDEO.webm ? [{ src: PROCESS_VIDEO.webm, type: 'video/webm' }] : []),
-									{ src: PROCESS_VIDEO.mp4, type: 'video/mp4' }
+									...(SESSION_VIDEO.webm ? [{ src: SESSION_VIDEO.webm, type: 'video/webm' }] : []),
+									{ src: SESSION_VIDEO.mp4, type: 'video/mp4' }
 								])}
-								aria-label="Body paint session film"
+								aria-label="Session film"
 							></video>
-							{PROCESS_VIDEO.mature && (
-								<div class="mature-veil" data-mature-veil>
+							{SESSION_VIDEO.mature && SESSION_VIDEO.poster && (
+								<img class="gated-still" src={SESSION_VIDEO.poster} alt="" loading="lazy" decoding="async" />
+							)}
+							{SESSION_VIDEO.mature && (
+								<div class="mature-veil">
 									<p>This video contains artistic nudity.</p>
 									<button class="btn btn-solid" type="button" data-mature-confirm>Confirm 18+ to view</button>
 								</div>
 							)}
 						</div>
-					) : (
-						<div class="process-visual art-frame">
-							<img src={SITE_MEDIA.about} alt="Private studio session planning mood board" loading="lazy" />
+					</section>
+				) : (
+					<section class="signature-moment fade-up">
+						<video
+							src="https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_1400,c_fill,vc_auto/v1771783064/grok-video-9235aa62-6fdd-4f45-bd14-ebb3fd08ae08_vrrjjo.mp4"
+							autoplay
+							muted
+							loop
+							playsinline
+							preload="metadata"
+						></video>
+						<div class="signature-overlay"></div>
+						<div class="signature-copy">
+							<p class="section-kicker">The Experience</p>
+							<h2 class="heading-accent">A session that feels like cinema</h2>
+							<p>
+								Soft direction, intentional movement, and refined color design that turns confidence into timeless visual work.
+							</p>
+							<a class="btn btn-solid" href="/booking" data-track data-track-element="home_begin_session">Book a Consultation</a>
 						</div>
-					)}
-				</section>
-
-				<section class="signature-moment fade-up">
-					<video
-						src="https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_1400,c_fill,vc_auto/v1771783064/grok-video-9235aa62-6fdd-4f45-bd14-ebb3fd08ae08_vrrjjo.mp4"
-						autoplay
-						muted
-						loop
-						playsinline
-						preload="metadata"
-					></video>
-					<div class="signature-overlay"></div>
-					<div class="signature-copy">
-						<p class="section-kicker">The Experience</p>
-						<h2 class="heading-accent">A session that feels like cinema</h2>
-						<p>
-							Soft direction, intentional movement, and refined color design that turns confidence into timeless visual work.
-						</p>
-						<a class="btn btn-solid" href="/booking" data-track data-track-element="home_begin_session">Book a Consultation</a>
-					</div>
-				</section>
+					</section>
+				)}
 
 
 				<section class="testimonials-block section--dark fade-up">
@@ -413,9 +426,9 @@ const homeSchema = {
 		});
 	});
 
-	// Process video: only downloads once visible, and for mature clips only after an 18+ confirmation
+	// Session video: only downloads once visible, and for mature clips only after an 18+ confirmation
 	// (shared with the gallery age gate).
-	const processBox = document.querySelector<HTMLElement>('[data-process-video]');
+	const processBox = document.querySelector<HTMLElement>('[data-gated-video]');
 	const processVideo = processBox?.querySelector<HTMLVideoElement>('video');
 	if (processBox && processVideo) {
 		const AGE_KEYS = ['ageVerified', 'age_gate_ack_v1'];
@@ -1042,17 +1055,63 @@ const homeSchema = {
 		grid-row: 1 / span 2;
 		aspect-ratio: 4 / 5;
 	}
-	.process-visual video {
+	/* Split layout used when SESSION_VIDEO is set: copy beside a full vertical clip. */
+	.signature-split {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: clamp(1.25rem, 4vw, 3rem);
+		align-items: center;
+		min-height: 0;
+		padding: clamp(1.25rem, 3vw, 2.25rem);
+		background: linear-gradient(135deg, #2a1518 0%, #090909 100%);
+	}
+	.signature-split .signature-copy {
+		min-height: 0;
+		padding: 0;
+		align-content: center;
+	}
+	.signature-media {
+		position: relative;
+		aspect-ratio: 9 / 16;
+		/* A fixed width: a percentage would resolve against its own auto-sized grid column (0px). */
+		width: 340px;
+		max-width: 100%;
+		border-radius: 18px;
+	}
+	@media (max-width: 760px) {
+		.signature-split {
+			grid-template-columns: 1fr;
+			justify-items: center;
+		}
+		.signature-split .signature-copy {
+			justify-self: stretch;
+		}
+	}
+	.signature-media video {
+		position: static;
 		display: block;
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
 		background: #0b0b0b;
 	}
-	/* Mature clips: blurred still and a confirmation until the visitor confirms 18+. */
-	.process-visual[data-mature]:not(.is-unlocked) video {
+	/* Mature clips: a blurred still (an <img>, which browsers render reliably under a filter)
+	   and a confirmation until the visitor confirms 18+. */
+	.gated-still {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		border-radius: 0;
 		filter: blur(22px) brightness(0.95) saturate(1.1);
 		transform: scale(1.12);
+	}
+	[data-gated-video][data-mature]:not(.is-unlocked) video {
+		visibility: hidden;
+	}
+	.is-unlocked .gated-still {
+		display: none;
 	}
 	.mature-veil {
 		position: absolute;
