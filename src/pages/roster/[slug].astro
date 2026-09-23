@@ -1,11 +1,7 @@
 ---
 import BaseHead from '../../components/BaseHead.astro';
 import { SITE_TITLE } from '../../consts';
-import { getRosterEntryBySlug, ROSTER_SLUGS } from '../../lib/roster';
-
-export function getStaticPaths() {
-	return ROSTER_SLUGS.map((slug) => ({ params: { slug } }));
-}
+import { getRosterEntryBySlug } from '../../lib/roster';
 
 const slug = Astro.params.slug || '';
 const entry = getRosterEntryBySlug(slug);

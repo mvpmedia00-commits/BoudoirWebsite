@@ -5,14 +5,8 @@ import Header from '../../components/Header.astro';
 import LeadForm from '../../components/ui/LeadForm.astro';
 import NicheGallery from '../../components/ui/NicheGallery.astro';
 import VideoPlayer from '../../components/ui/VideoPlayer.astro';
-import { NICHE_SLUGS, getNicheBySlug } from '../../lib/niches';
+import { getNicheBySlug } from '../../lib/niches';
 import { SITE_MEDIA } from '../../data/siteMedia';
-
-export function getStaticPaths() {
-	return NICHE_SLUGS.map((slug) => ({
-		params: { slug }
-	}));
-}
 
 const slug = Astro.params.slug ?? '';
 const niche = getNicheBySlug(slug);

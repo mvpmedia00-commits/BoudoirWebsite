@@ -1,20 +1,16 @@
 ---
-import { type CollectionEntry, getCollection, render } from 'astro:content';
+import { getEntry, render } from 'astro:content';
 import BaseHead from '../../components/BaseHead.astro';
 import Footer from '../../components/Footer.astro';
 import FormattedDate from '../../components/FormattedDate.astro';
 import Header from '../../components/Header.astro';
 
-export async function getStaticPaths() {
-	const entries = await getCollection('vault');
-	return entries.map((entry) => ({
-		params: { slug: entry.id },
-		props: entry,
-	}));
+const entry = Astro.params.slug ? await getEntry('vault', Astro.params.slug) : undefined;
+
+if (!entry) {
+	return Astro.redirect('/vault');
 }
 
-type Props = CollectionEntry<'vault'>;
-const entry = Astro.props as Props;
 const { Content } = await render(entry);
 ---
 

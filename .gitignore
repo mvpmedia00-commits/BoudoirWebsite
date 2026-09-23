@@ -23,3 +23,10 @@ backend/pb_data/
 
 # jetbrains setting folder
 .idea/
+
+# local build/cache output
+.vercel/
+.cache/
+.dev.*.log
+.env.local
+.env.*.local

@@ -1,8 +1,0 @@
-
-> afraid-antimatter@0.0.1 dev
-> astro dev
-
-[33m[1m10:10:19[22m [WARN] [config][39m This project contains server-rendered routes, but no adapter is installed. This is fine for development, but an adapter will be required to build your site for production.
-[2m10:10:19[22m [34m[types][39m Generated [2m1ms[22m
-[33m[1m10:10:19[22m [WARN] [content][39m Content config not loaded
-[2m10:10:19[22m [34m[vite][39m Re-optimizing dependencies because vite config has changed

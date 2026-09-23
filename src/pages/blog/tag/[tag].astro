@@ -6,12 +6,6 @@ import Footer from '../../../components/Footer.astro';
 import FormattedDate from '../../../components/FormattedDate.astro';
 import Header from '../../../components/Header.astro';
 
-export async function getStaticPaths() {
-	const posts = await getCollection('blog', ({ data }) => !data.draft);
-	const tags = Array.from(new Set(posts.flatMap((post) => post.data.tags)));
-	return tags.map((tag) => ({ params: { tag: tag.toLowerCase() } }));
-}
-
 const { tag } = Astro.params;
 const posts = (await getCollection(
 	'blog',

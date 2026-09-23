@@ -6,12 +6,6 @@ import Footer from '../../../components/Footer.astro';
 import FormattedDate from '../../../components/FormattedDate.astro';
 import Header from '../../../components/Header.astro';
 
-export async function getStaticPaths() {
-	const posts = await getCollection('blog', ({ data }) => !data.draft);
-	const categories = Array.from(new Set(posts.map((post) => post.data.category)));
-	return categories.map((category) => ({ params: { category } }));
-}
-
 const { category } = Astro.params;
 const posts = (await getCollection('blog', ({ data }) => !data.draft && data.category === category)).sort(
 	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
