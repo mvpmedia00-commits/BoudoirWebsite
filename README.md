@@ -40,6 +40,7 @@ src/
 ├── pages/                 Routes (file name = URL)
 │   ├── index.astro        Home (prerendered static page)
 │   ├── films.astro        Films (/hub redirects here)
+│   ├── magazine.astro     Magazine product page (details in src/data/magazine.ts)
 │   ├── gallery.astro      Gallery overview
 │   ├── gallery/[category] boudoir, artistic-nude, body-paint, editorial-portrait
 │   ├── land/[slug]        Niche landing pages (mature ones are age-gated)

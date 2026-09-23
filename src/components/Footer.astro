@@ -1,5 +1,6 @@
 ---
 import { SITE_TITLE } from '../consts';
+import { isMagazineLive } from '../data/magazine';
 
 const year = new Date().getFullYear();
 ---
@@ -15,6 +16,7 @@ const year = new Date().getFullYear();
 			<ul>
 				<li><a href="/gallery">Portfolio</a></li>
 				<li><a href="/films">Films</a></li>
+				{isMagazineLive && <li><a href="/magazine">Magazine</a></li>}
 				<li><a href="/about">About</a></li>
 				<li><a href="/vault">Members Vault</a></li>
 			</ul>
