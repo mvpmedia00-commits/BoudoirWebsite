@@ -11,6 +11,8 @@ const FEATURED_FILM = 'https://drive.google.com/file/d/1RizgFs5c6eV4A7hWAinKD7js
 const drivePreview = (fileId: string) => `https://drive.google.com/file/d/${fileId}/preview`;
 
 type FilmType = {
+	id: string;
+	nav: string;
 	title: string;
 	copy: string;
 	image: string;
@@ -28,6 +30,8 @@ const isVertical = (aspect = '16 / 9') => {
 
 const filmTypes: FilmType[] = [
 	{
+		id: 'boudoir',
+		nav: 'Boudoir',
 		title: 'Boudoir Films',
 		copy: 'A short, private film made alongside your photo session. Slow movement, soft light, and the same guided direction as the stills.',
 		image: SITE_MEDIA.one,
@@ -35,16 +39,22 @@ const filmTypes: FilmType[] = [
 		videoAspect: '16 / 9'
 	},
 	{
+		id: 'artistic',
+		nav: 'Artistic Motion',
 		title: 'Artistic Motion Studies',
 		copy: 'Fine-art studies of form and shadow, shot and graded like cinema. Built around composition rather than trend.',
 		image: SITE_MEDIA.two
 	},
 	{
+		id: 'body-paint',
+		nav: 'Body Paint',
 		title: 'Body Paint Process Films',
 		copy: 'The transformation from bare canvas to finished piece, captured from first brushstroke to final frame.',
 		image: SITE_MEDIA.three
 	},
 	{
+		id: 'editorial',
+		nav: 'Editorial',
 		title: 'Editorial and Brand Films',
 		copy: 'Portrait-led motion for creators, campaigns, and lookbooks, with no nudity and cut for every platform you publish on.',
 		image: SITE_MEDIA.about,
@@ -67,6 +77,19 @@ const steps = [
 	{ title: 'Planning', copy: 'Treatment, schedule, location, and wardrobe are mapped and confirmed.' },
 	{ title: 'Filming', copy: 'A relaxed, directed session on a closed set.' },
 	{ title: 'Edit and Delivery', copy: 'The film is edited and graded, then your final files are delivered privately.' }
+];
+
+// Photos for the scrolling strips between sections. One loop must be wider than the widest screen
+// (about 3,300px here), and the strip is drawn twice so the loop is seamless.
+const stripPhotos = [SITE_MEDIA.one, SITE_MEDIA.two, SITE_MEDIA.three, SITE_MEDIA.four, SITE_MEDIA.five, SITE_MEDIA.about];
+const stripLoop = [...stripPhotos, ...stripPhotos, ...stripPhotos, ...stripPhotos];
+const stripTrack = [...stripLoop, ...stripLoop];
+
+const sectionNav = [
+	{ href: '#reel', label: 'The Reel' },
+	...filmTypes.map((film) => ({ href: `#${film.id}`, label: film.nav })),
+	{ href: '#craft', label: 'The Craft' },
+	{ href: '#process', label: 'Process' }
 ];
 
 const filmsSchema = {
@@ -94,109 +117,134 @@ const filmsSchema = {
 		<Header />
 		<main class="films">
 			<section class="films-hero">
-				<img class="films-hero-image" src={SITE_MEDIA.about} alt="" loading="eager" fetchpriority="high" decoding="async" />
+				<img class="films-hero-image parallax" data-parallax-speed="0.12" src={SITE_MEDIA.about} alt="" loading="eager" fetchpriority="high" decoding="async" />
 				<div class="films-hero-overlay"></div>
 				<div class="films-shell films-hero-content">
-					<p class="eyebrow">Films</p>
-					<h1>Motion, made with the same care as the still.</h1>
-					<p class="lead">
+					<p class="eyebrow reveal" data-stagger="0">Films</p>
+					<h1 class="reveal" data-stagger="1">Motion, made with the same care as the still.</h1>
+					<p class="lead reveal" data-stagger="2">
 						Short, cinematic films for boudoir, fine art, body paint, and editorial clients. Directed on a closed set,
 						graded like cinema, and delivered privately.
 					</p>
-					<div class="hero-actions">
+					<div class="hero-actions reveal" data-stagger="3">
 						<a class="btn btn-solid" href="/booking">Discuss a Film</a>
-						<a class="btn btn-ghost" href="#featured">Watch the Reel</a>
+						<a class="btn btn-ghost" href="#reel">Watch the Reel</a>
 					</div>
 				</div>
 			</section>
 
-			<section class="films-section" id="featured">
-				<div class="films-shell featured-grid">
-					<div>
-						<p class="eyebrow">Featured</p>
-						<h2>The Reel</h2>
-						<p>
-							A selection of recent motion work: light, movement, and restraint. Every film begins with a consultation and
-							ends with private delivery.
-						</p>
-						<a class="btn btn-ghost" href="/booking">Start a Project</a>
-					</div>
-					<div class="film-frame">
-						<iframe
-							src={FEATURED_FILM}
-							title={`${SITE_TITLE} featured reel`}
-							loading="lazy"
-							allow="autoplay; encrypted-media; picture-in-picture"
-							allowfullscreen
-						></iframe>
-					</div>
+			<nav class="section-nav" aria-label="Films sections">
+				<div class="films-shell section-nav-links">
+					{sectionNav.map((item) => <a href={item.href} data-section-link>{item.label}</a>)}
 				</div>
-			</section>
+			</nav>
 
-			<section class="films-section">
+			<section class="slice" id="reel" data-section>
 				<div class="films-shell">
-					<header class="section-intro">
-						<p class="eyebrow">What We Film</p>
-						<h2>Four kinds of film</h2>
-					</header>
-					<div class="film-types">
-						{filmTypes.map((film, index) => (
-							<article class:list={['film-type', { reverse: index % 2 === 1 }]}>
-								{film.driveVideo ? (
-									<div
-										class:list={['film-type-media', 'is-video', { 'is-vertical': isVertical(film.videoAspect) }]}
-										style={`aspect-ratio: ${film.videoAspect ?? '16 / 9'};`}
-									>
-										<iframe
-											src={drivePreview(film.driveVideo)}
-											title={`${film.title} by ${SITE_TITLE}`}
-											loading="lazy"
-											allow="autoplay; encrypted-media; picture-in-picture"
-											allowfullscreen
-										></iframe>
+					<div class="card-shell featured-grid reveal">
+						<div>
+							<p class="eyebrow">Featured</p>
+							<h2 class="accent">The Reel</h2>
+							<p>
+								A selection of recent motion work: light, movement, and restraint. Every film begins with a consultation
+								and ends with private delivery.
+							</p>
+							<a class="btn btn-ghost" href="/booking">Start a Project</a>
+						</div>
+						<div class="film-frame">
+							<iframe
+								src={FEATURED_FILM}
+								title={`${SITE_TITLE} featured reel`}
+								loading="lazy"
+								allow="autoplay; encrypted-media; picture-in-picture"
+								allowfullscreen
+							></iframe>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			{filmTypes.map((film, index) => (
+				<>
+					<div class="photo-divider" aria-hidden="true">
+						<div class:list={['photo-track', { reverse: index % 2 === 1 }]}>
+							{stripTrack.map((src) => <img src={src} alt="" loading="lazy" decoding="async" />)}
+						</div>
+					</div>
+
+					<section class="slice" id={film.id} data-section>
+						<div class="films-shell">
+							<article class="card-shell reveal">
+								<header class="slice-intro">
+									<p class="film-index">{String(index + 1).padStart(2, '0')} / {String(filmTypes.length).padStart(2, '0')}</p>
+									<h2 class="accent">{film.title}</h2>
+								</header>
+								<div class:list={['content-row', { reverse: index % 2 === 1 }]}>
+									<div class="media-col reveal" data-stagger="1">
+										{film.driveVideo ? (
+											<div
+												class:list={['film-media', 'is-video', { 'is-vertical': isVertical(film.videoAspect) }]}
+												style={`aspect-ratio: ${film.videoAspect ?? '16 / 9'};`}
+											>
+												<iframe
+													src={drivePreview(film.driveVideo)}
+													title={`${film.title} by ${SITE_TITLE}`}
+													loading="lazy"
+													allow="autoplay; encrypted-media; picture-in-picture"
+													allowfullscreen
+												></iframe>
+											</div>
+										) : (
+											<div class="film-media is-photo">
+												<img class="parallax" data-parallax-speed="0.06" src={film.image} alt="" loading="lazy" decoding="async" />
+											</div>
+										)}
 									</div>
-								) : (
-									<div class="film-type-media">
-										<img src={film.image} alt="" loading="lazy" decoding="async" />
+									<div class="text-col reveal" data-stagger="2">
+										<p>{film.copy}</p>
+										<a class="btn btn-solid" href="/booking">Discuss a Film</a>
 									</div>
-								)}
-								<div class="film-type-copy">
-									<p class="film-index">{String(index + 1).padStart(2, '0')}</p>
-									<h3>{film.title}</h3>
-									<p>{film.copy}</p>
 								</div>
 							</article>
-						))}
+						</div>
+					</section>
+				</>
+			))}
+
+			<div class="photo-divider" aria-hidden="true">
+				<div class="photo-track">
+					{stripTrack.map((src) => <img src={src} alt="" loading="lazy" decoding="async" />)}
+				</div>
+			</div>
+
+			<section class="slice slice--warm" id="craft" data-section>
+				<div class="films-shell reveal">
+					<p class="eyebrow">The Craft</p>
+					<h2 class="accent">What every film includes</h2>
+					<div class="slider-wrap">
+						<button class="slider-btn" type="button" data-prev aria-label="Previous">&lsaquo;</button>
+						<div class="slider-track" data-slider>
+							{craft.map((item) => (
+								<article class="slide-card">
+									<h3>{item.title}</h3>
+									<p>{item.copy}</p>
+								</article>
+							))}
+						</div>
+						<button class="slider-btn" type="button" data-next aria-label="Next">&rsaquo;</button>
 					</div>
 				</div>
 			</section>
 
-			<section class="films-section films-section--warm">
+			<section class="slice" id="process" data-section>
 				<div class="films-shell">
-					<header class="section-intro">
-						<p class="eyebrow">The Craft</p>
-						<h2>What every film includes</h2>
-					</header>
-					<div class="craft-grid">
-						{craft.map((item) => (
-							<article class="craft-card">
-								<h3>{item.title}</h3>
-								<p>{item.copy}</p>
-							</article>
-						))}
-					</div>
-				</div>
-			</section>
-
-			<section class="films-section">
-				<div class="films-shell">
-					<header class="section-intro">
+					<header class="reveal">
 						<p class="eyebrow">Process</p>
-						<h2>From first call to final cut</h2>
+						<h2 class="accent">From first call to final cut</h2>
 					</header>
 					<ol class="steps">
 						{steps.map((step, index) => (
-							<li>
+							<li class="reveal" data-stagger={index}>
 								<span class="step-number">{String(index + 1).padStart(2, '0')}</span>
 								<h3>{step.title}</h3>
 								<p>{step.copy}</p>
@@ -206,8 +254,8 @@ const filmsSchema = {
 				</div>
 			</section>
 
-			<section class="films-section films-cta">
-				<div class="films-shell">
+			<section class="slice films-cta">
+				<div class="films-shell reveal">
 					<p class="eyebrow">Private Commissions</p>
 					<h2>Have a film in mind?</h2>
 					<p>Tell us your idea and timeline. We will reply privately with options, pricing, and availability.</p>
@@ -219,18 +267,120 @@ const filmsSchema = {
 	</body>
 </html>
 
+<script>
+	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	// Reveal: sections slide and fade in as they reach the viewport, staggered by data-stagger.
+	const revealTargets = document.querySelectorAll<HTMLElement>('.reveal');
+	if (reduceMotion || !('IntersectionObserver' in window)) {
+		revealTargets.forEach((target) => target.classList.add('is-visible'));
+	} else {
+		const revealObserver = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (!entry.isIntersecting || !(entry.target instanceof HTMLElement)) return;
+					const stagger = Number(entry.target.dataset.stagger || 0);
+					entry.target.style.transitionDelay = `${stagger * 110}ms`;
+					entry.target.classList.add('is-visible');
+					revealObserver.unobserve(entry.target);
+				});
+			},
+			{ threshold: 0.15 }
+		);
+		revealTargets.forEach((target) => revealObserver.observe(target));
+	}
+
+	// Parallax: photos drift gently against the scroll.
+	const parallaxNodes = Array.from(document.querySelectorAll<HTMLElement>('.parallax'));
+	if (!reduceMotion && parallaxNodes.length) {
+		const updateParallax = () => {
+			const viewportCenter = window.innerHeight * 0.5;
+			parallaxNodes.forEach((node) => {
+				const rect = node.getBoundingClientRect();
+				if (rect.bottom < -200 || rect.top > window.innerHeight + 200) return;
+				const distance = rect.top + rect.height * 0.5 - viewportCenter;
+				const speed = Number(node.dataset.parallaxSpeed || 0.06);
+				node.style.setProperty('--parallax-y', `${(-distance * speed).toFixed(1)}px`);
+			});
+		};
+		let frame = 0;
+		const schedule = () => {
+			if (frame) return;
+			frame = requestAnimationFrame(() => {
+				updateParallax();
+				frame = 0;
+			});
+		};
+		updateParallax();
+		window.addEventListener('scroll', schedule, { passive: true });
+		window.addEventListener('resize', schedule);
+	}
+
+	// Craft slider arrows.
+	const slider = document.querySelector<HTMLElement>('[data-slider]');
+	const prev = document.querySelector<HTMLButtonElement>('[data-prev]');
+	const next = document.querySelector<HTMLButtonElement>('[data-next]');
+	if (slider && prev && next) {
+		const step = () => Math.max(280, slider.clientWidth * 0.8);
+		const behavior: ScrollBehavior = reduceMotion ? 'auto' : 'smooth';
+		prev.addEventListener('click', () => slider.scrollBy({ left: -step(), behavior }));
+		next.addEventListener('click', () => slider.scrollBy({ left: step(), behavior }));
+	}
+
+	// Section nav: highlight the section currently on screen and keep its chip in view.
+	const nav = document.querySelector<HTMLElement>('.section-nav-links');
+	const links = new Map(
+		Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-section-link]')).map((link) => [link.hash.slice(1), link])
+	);
+	if (nav && 'IntersectionObserver' in window && links.size) {
+		const navObserver = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (!entry.isIntersecting) return;
+					links.forEach((link) => link.classList.remove('is-active'));
+					const active = links.get(entry.target.id);
+					if (!active) return;
+					active.classList.add('is-active');
+					// Scroll only the chip bar, never the page.
+					const left = active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2;
+					nav.scrollTo({ left, behavior: reduceMotion ? 'auto' : 'smooth' });
+				});
+			},
+			{ rootMargin: '-45% 0px -50% 0px' }
+		);
+		document.querySelectorAll<HTMLElement>('[data-section]').forEach((section) => navObserver.observe(section));
+	}
+</script>
+
 <style>
 	.films {
 		padding: 0;
+		background: radial-gradient(circle at top, #1b1410 0%, #050505 55%, #020202 100%);
 	}
 	.films-shell {
 		max-width: 1200px;
 		margin: 0 auto;
 		padding: 0 clamp(1rem, 3vw, 2rem);
 	}
+	.accent {
+		position: relative;
+		display: inline-block;
+		padding-bottom: 10px;
+	}
+	.accent::after {
+		content: '';
+		position: absolute;
+		left: 0;
+		bottom: 0;
+		width: 64px;
+		height: 2px;
+		background: linear-gradient(90deg, var(--brand-strong), var(--brand-rose));
+	}
+
+	/* Hero */
 	.films-hero {
 		position: relative;
-		min-height: min(78vh, 760px);
+		min-height: min(80vh, 780px);
 		display: flex;
 		align-items: flex-end;
 		overflow: hidden;
@@ -238,16 +388,18 @@ const filmsSchema = {
 	}
 	.films-hero-image {
 		position: absolute;
-		inset: 0;
+		top: -8%;
+		left: 0;
 		width: 100%;
-		height: 100%;
+		height: 116%;
 		object-fit: cover;
 		object-position: center 20%;
+		border-radius: 0;
 	}
 	.films-hero-overlay {
 		position: absolute;
 		inset: 0;
-		background: linear-gradient(180deg, rgba(5, 5, 5, 0.35) 0%, rgba(5, 5, 5, 0.65) 55%, rgba(5, 5, 5, 0.96) 100%);
+		background: linear-gradient(180deg, rgba(5, 5, 5, 0.3) 0%, rgba(5, 5, 5, 0.62) 55%, rgba(5, 5, 5, 0.96) 100%);
 	}
 	.films-hero-content {
 		position: relative;
@@ -264,114 +416,237 @@ const filmsSchema = {
 		color: #d8d2cb;
 		max-width: 56ch;
 	}
-	.films-section {
-		padding: clamp(3.5rem, 8vw, 6rem) 0;
+
+	/* Sticky section chips */
+	.section-nav {
+		position: sticky;
+		top: var(--header-h, 70px);
+		z-index: 20;
+		background: rgba(7, 7, 7, 0.9);
+		backdrop-filter: blur(8px);
+		border-bottom: 1px solid var(--stroke);
 	}
-	.films-section--warm {
+	.section-nav-links {
+		display: flex;
+		gap: 0.5rem;
+		overflow-x: auto;
+		padding-top: 0.6rem;
+		padding-bottom: 0.6rem;
+		scrollbar-width: none;
+	}
+	.section-nav-links::-webkit-scrollbar {
+		display: none;
+	}
+	.section-nav-links a {
+		flex: none;
+		color: var(--text-muted);
+		text-decoration: none;
+		background: #0f0f0f;
+		border: 1px solid var(--stroke);
+		border-radius: 999px;
+		padding: 0.4rem 0.85rem;
+		font-size: 0.72rem;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		white-space: nowrap;
+		transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+	}
+	.section-nav-links a:hover,
+	.section-nav-links a.is-active {
+		color: #0a0a0a;
+		background: var(--brand-strong);
+		border-color: var(--brand-strong);
+	}
+
+	/* Section slices */
+	.slice {
+		padding: clamp(2rem, 5vw, 3.5rem) 0;
+		scroll-margin-top: calc(var(--header-h, 70px) + 60px);
+	}
+	.slice--warm {
 		background: var(--bg-amber-gradient);
 	}
-	.section-intro {
-		margin-bottom: 2.5rem;
+	.card-shell {
+		background: linear-gradient(145deg, rgba(16, 16, 16, 0.92), rgba(10, 10, 10, 0.92));
+		border: 1px solid var(--stroke);
+		border-radius: var(--radius);
+		padding: clamp(1.25rem, 3vw, 2.25rem);
+		box-shadow: 0 24px 50px rgba(0, 0, 0, 0.4);
+		transition: border-color 0.25s ease, box-shadow 0.25s ease;
+	}
+	.card-shell:hover {
+		border-color: rgba(212, 194, 161, 0.35);
+		box-shadow: 0 28px 60px rgba(0, 0, 0, 0.5);
+	}
+	.slice-intro {
+		margin-bottom: 1.5rem;
+	}
+	.slice-intro h2 {
+		font-size: clamp(1.9rem, 3.6vw, 2.8rem);
+	}
+	.film-index,
+	.step-number {
+		display: block;
+		color: var(--brand-strong);
+		font-size: 0.78rem;
+		letter-spacing: 0.2em;
+		margin-bottom: 0.5rem;
 	}
 	.featured-grid {
 		display: grid;
 		grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-		gap: clamp(1.5rem, 4vw, 3.5rem);
+		gap: clamp(1.5rem, 4vw, 3rem);
 		align-items: center;
 	}
 	.film-frame {
 		position: relative;
 		aspect-ratio: 16 / 9;
-		border-radius: var(--radius);
+		border-radius: 14px;
 		overflow: hidden;
 		border: 1px solid var(--stroke);
 		background: #000;
-		box-shadow: var(--shadow-soft);
 	}
-	.film-frame iframe {
+	.film-frame iframe,
+	.film-media iframe {
 		position: absolute;
 		inset: 0;
 		width: 100%;
 		height: 100%;
 		border: 0;
 	}
-	.film-types {
+	.content-row {
 		display: grid;
-		gap: clamp(2rem, 5vw, 4rem);
-	}
-	.film-type {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-		gap: clamp(1.25rem, 4vw, 3.5rem);
+		grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
+		gap: clamp(1.25rem, 4vw, 3rem);
 		align-items: center;
 	}
-	.film-type.reverse .film-type-media {
+	.content-row.reverse {
+		grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr);
+	}
+	.content-row.reverse .media-col {
 		order: 2;
 	}
-	.film-type-media {
-		aspect-ratio: 4 / 5;
-		width: min(100%, 440px);
-		justify-self: center;
-		border-radius: var(--radius);
+	.media-col {
+		display: flex;
+		justify-content: center;
+	}
+	.film-media {
+		position: relative;
+		width: 100%;
 		overflow: hidden;
+		border-radius: 14px;
 		border: 1px solid var(--stroke);
-		background: var(--surface);
-	}
-	/* Films get a wider box than photos, sized to the video's own shape. */
-	.film-type-media.is-video {
-		width: 100%;
 		background: #000;
+		box-shadow: 0 20px 34px rgba(0, 0, 0, 0.3);
 	}
-	.film-type-media.is-video.is-vertical {
-		width: min(100%, 340px);
+	.film-media.is-photo {
+		aspect-ratio: 4 / 5;
+		max-width: 460px;
 	}
-	.film-type-media iframe {
+	.film-media.is-photo img {
+		position: absolute;
+		top: -10%;
+		left: 0;
 		width: 100%;
-		height: 100%;
-		border: 0;
-		display: block;
-	}
-	.film-type-media img {
-		width: 100%;
-		height: 100%;
+		height: 120%;
 		object-fit: cover;
-		transition: transform 0.8s ease;
+		border-radius: 0;
 	}
-	.film-type:hover .film-type-media img {
-		transform: scale(1.03);
+	.film-media.is-vertical {
+		max-width: 340px;
 	}
-	.film-index,
-	.step-number {
-		color: var(--brand-strong);
-		font-size: 0.8rem;
-		letter-spacing: 0.2em;
-		margin-bottom: 0.6rem;
+	.text-col p {
+		font-size: 1.05rem;
+		color: #d0c8c0;
 	}
-	.film-type h3 {
-		font-size: clamp(1.6rem, 3vw, 2.3rem);
+
+	/* Scrolling photo strips between sections */
+	.photo-divider {
+		overflow: hidden;
+		padding: 0.5rem 0;
 	}
-	.craft-grid {
+	.photo-track {
+		display: flex;
+		width: max-content;
+		gap: 0.6rem;
+		animation: photo-strip-scroll 120s linear infinite;
+	}
+	.photo-track.reverse {
+		animation-direction: reverse;
+	}
+	.photo-track img {
+		width: 128px;
+		height: 160px;
+		object-fit: cover;
+		border-radius: 10px;
+		border: 1px solid rgba(255, 255, 255, 0.12);
+	}
+	.photo-divider:hover .photo-track {
+		animation-play-state: paused;
+	}
+
+	/* Craft slider */
+	.slider-wrap {
 		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: 1rem;
+		grid-template-columns: auto minmax(0, 1fr) auto;
+		gap: 0.75rem;
+		align-items: center;
+		margin-top: 1.5rem;
 	}
-	.craft-card {
-		padding: 1.6rem;
+	.slider-track {
+		display: grid;
+		grid-auto-flow: column;
+		grid-auto-columns: minmax(260px, calc((100% - 2rem) / 3));
+		gap: 1rem;
+		overflow-x: auto;
+		scroll-snap-type: x mandatory;
+		scrollbar-width: none;
+	}
+	.slider-track::-webkit-scrollbar {
+		display: none;
+	}
+	.slide-card {
+		scroll-snap-align: start;
+		min-height: 190px;
+		padding: 1.5rem;
 		border-radius: var(--radius);
 		border: 1px solid var(--stroke);
-		background: linear-gradient(145deg, rgba(12, 12, 12, 0.85), rgba(18, 18, 18, 0.85));
+		background: rgba(12, 12, 12, 0.85);
+		transition: transform 0.25s ease, border-color 0.25s ease;
 	}
-	.craft-card h3,
+	.slide-card:hover {
+		transform: translateY(-4px);
+		border-color: rgba(212, 194, 161, 0.35);
+	}
+	.slide-card h3,
 	.steps h3 {
 		font-size: 1.35rem;
 	}
-	.craft-card p,
+	.slide-card p,
 	.steps p {
 		margin: 0;
 	}
+	.slider-btn {
+		width: 42px;
+		height: 42px;
+		border-radius: 999px;
+		border: 1px solid var(--stroke);
+		background: #111;
+		color: var(--text-primary);
+		font-size: 1.4rem;
+		line-height: 1;
+		cursor: pointer;
+		transition: background 0.2s ease, transform 0.2s ease;
+	}
+	.slider-btn:hover {
+		background: #222;
+		transform: scale(1.05);
+	}
+
+	/* Process */
 	.steps {
 		list-style: none;
-		margin: 0;
+		margin: 1.5rem 0 0;
 		padding: 0;
 		display: grid;
 		grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -393,23 +668,71 @@ const filmsSchema = {
 		display: inline-block;
 		margin-top: 0.8rem;
 	}
+
+	/* Motion */
+	.reveal {
+		opacity: 0;
+		--reveal-y: 28px;
+		transform: translate3d(0, var(--reveal-y), 0);
+		transition: opacity 0.7s ease, transform 0.7s ease;
+	}
+	.reveal.is-visible {
+		opacity: 1;
+		--reveal-y: 0px;
+	}
+	.parallax {
+		--parallax-y: 0px;
+		transform: translate3d(0, var(--parallax-y), 0);
+		will-change: transform;
+	}
+	@keyframes photo-strip-scroll {
+		from {
+			transform: translateX(0);
+		}
+		to {
+			transform: translateX(-50%);
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.reveal {
+			opacity: 1;
+			transform: none;
+			transition: none;
+		}
+		.photo-track {
+			animation: none;
+		}
+	}
+
 	@media (max-width: 900px) {
 		.featured-grid,
-		.film-type {
+		.content-row,
+		.content-row.reverse {
 			grid-template-columns: 1fr;
 		}
-		.film-type.reverse .film-type-media {
+		.content-row.reverse .media-col {
 			order: 0;
 		}
-		.craft-grid,
 		.steps {
 			grid-template-columns: 1fr 1fr;
 		}
+		.slider-track {
+			grid-auto-columns: minmax(240px, 80%);
+		}
 	}
 	@media (max-width: 560px) {
-		.craft-grid,
 		.steps {
 			grid-template-columns: 1fr;
+		}
+		.slider-wrap {
+			grid-template-columns: minmax(0, 1fr);
+		}
+		.slider-btn {
+			display: none;
+		}
+		.photo-track img {
+			width: 104px;
+			height: 130px;
 		}
 	}
 </style>

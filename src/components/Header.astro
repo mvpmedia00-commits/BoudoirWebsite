@@ -42,6 +42,15 @@ const links = [
 </header>
 
 <script>
+	// Publish the header's height so sticky sub-navigation (e.g. on /films) can sit right below it.
+	const siteHeader = document.querySelector<HTMLElement>('.site-header');
+	if (siteHeader) {
+		const setHeaderHeight = () =>
+			document.documentElement.style.setProperty('--header-h', `${siteHeader.offsetHeight}px`);
+		setHeaderHeight();
+		if ('ResizeObserver' in window) new ResizeObserver(setHeaderHeight).observe(siteHeader);
+	}
+
 	const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
 	const menu = document.querySelector<HTMLElement>('[data-menu]');
 	if (toggle && menu) {
