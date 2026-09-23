@@ -50,7 +50,19 @@ const heroMediaColumns = rawHeroMediaColumns.map((column) => ({
 	items: [...column.items, ...column.items]
 }));
 
-const getVideoPoster = (src: string) => src.replace(',vc_auto', '').replace('.mp4', '.jpg');
+// Hero clips are listed with a 480px Cloudinary transform. Each tile picks its real size in the
+// browser (see the hero script), so the markup carries a template with a {w} width placeholder.
+// c_limit never upscales past the original clip.
+const HERO_TRANSFORM = /\/video\/upload\/[^/]+\//;
+const heroVideoTemplate = (src: string) => src.replace(HERO_TRANSFORM, '/video/upload/f_auto,q_auto,w_{w},c_limit,vc_auto/');
+// Headline image in several widths, so each screen downloads a sharp but not oversized copy.
+const TITLE_IMAGE_WIDTHS = [900, 1400, 1800];
+const titleImage = (width: number) => SITE_MEDIA.about.replace(/w_\d+/, `w_${width}`);
+const titleImageSrcset = TITLE_IMAGE_WIDTHS.map((width) => `${titleImage(width)} ${width}w`).join(', ');
+
+// First frame (so_0) as a still, so the poster matches the moment playback starts.
+const getVideoPoster = (src: string, width = 720) =>
+	src.replace(HERO_TRANSFORM, `/video/upload/so_0,f_auto,q_auto,w_${width},c_limit/`).replace(/\.mp4$/, '.jpg');
 
 const homeSchema = {
 	'@context': 'https://schema.org',
@@ -62,7 +74,6 @@ const homeSchema = {
 	email: 'hello@mvpmedia.studio',
 	areaServed: 'United States'
 };
-// ...existing code...
 ---
 
 <!doctype html>
@@ -85,16 +96,14 @@ const homeSchema = {
 									{
 										column.items.map((src, index) => {
 											const isPrime = index === 0;
-											const isDeferred = !isPrime;
 											return (
 												<video
-													src={isDeferred ? undefined : src}
-													data-src={isDeferred ? src : undefined}
+													data-src={heroVideoTemplate(src)}
 													autoplay
 													muted
 													loop
 													playsinline
-													preload={isPrime ? 'metadata' : 'none'}
+													preload="none"
 													poster={getVideoPoster(src)}
 													data-hero-prime={isPrime ? 'true' : undefined}
 													aria-hidden={index >= 3 ? 'true' : undefined}
@@ -117,7 +126,16 @@ const homeSchema = {
 						<p class="hero-location">United States</p>
 
 						<div class="hero-title-video-box">
-							<img class="hero-title-video" src={SITE_MEDIA.about} alt="" loading="eager" decoding="async" fetchpriority="high" />
+							<img
+								class="hero-title-video"
+								src={titleImage(1400)}
+								srcset={titleImageSrcset}
+								sizes="(max-width: 980px) 100vw, 900px"
+								alt=""
+								loading="eager"
+								decoding="async"
+								fetchpriority="high"
+							/>
 							<div class="hero-title-overlay"></div>
 							<h1>Bold. Intimate. Cinematic.</h1>
 						</div>
@@ -376,27 +394,36 @@ const homeSchema = {
 	const heroWall = document.querySelector('.hero-media-wall');
 	if (heroWall instanceof HTMLElement) {
 		heroWall.classList.add('is-loading');
-		const primeVideos = Array.from(heroWall.querySelectorAll<HTMLVideoElement>('video[data-hero-prime]'));
-		const deferredVideos = Array.from(heroWall.querySelectorAll<HTMLVideoElement>('video[data-src]'));
+		const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+		// Visitors on data saver or with reduced motion keep the still poster frames.
+		const stillsOnly =
+			connection?.saveData === true || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		const primeVideos = stillsOnly
+			? []
+			: Array.from(heroWall.querySelectorAll<HTMLVideoElement>('video[data-hero-prime]'));
+		const deferredVideos = Array.from(
+			heroWall.querySelectorAll<HTMLVideoElement>('video[data-src]:not([data-hero-prime])')
+		);
+
+		// Pick the smallest clip that stays sharp at the tile's on-screen size. Density is capped
+		// at 2x to keep bandwidth sensible; c_limit in the URL stops at the original resolution.
+		const WIDTHS = [480, 720, 960, 1280];
+		const pickWidth = (video: HTMLVideoElement) => {
+			const needed = video.getBoundingClientRect().width * Math.min(window.devicePixelRatio || 1, 2);
+			return WIDTHS.find((width) => width >= needed) ?? WIDTHS[WIDTHS.length - 1];
+		};
 
 		const hydrateVideo = (video: HTMLVideoElement) => {
-			if (!(video instanceof HTMLVideoElement)) return;
 			if (video.dataset.hydrated === 'true') return;
-			const src = video.dataset.src;
-			if (!src) return;
-			video.src = src;
+			const template = video.dataset.src;
+			if (!template) return;
+			video.src = template.replace('{w}', String(pickWidth(video)));
 			video.dataset.hydrated = 'true';
 			video.load();
 		};
 
-		// Deferred clips only download once they are about to scroll into view, and never for
-		// visitors on data saver or with reduced motion (they keep the still poster frames).
-		const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
-		const skipDeferred =
-			connection?.saveData === true || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
 		const hydrateDeferredVideos = () => {
-			if (!deferredVideos.length || skipDeferred) return;
+			if (!deferredVideos.length || stillsOnly) return;
 			if (!('IntersectionObserver' in window)) {
 				deferredVideos.forEach(hydrateVideo);
 				return;
@@ -440,7 +467,7 @@ const homeSchema = {
 				}
 				video.addEventListener('loadeddata', markReady, { once: true });
 				video.addEventListener('error', markReady, { once: true });
-				video.load();
+				hydrateVideo(video);
 			});
 		}
 	}
@@ -509,7 +536,6 @@ const homeSchema = {
 		object-fit: cover;
 		border-radius: 10px;
 		border: 1px solid rgba(255, 255, 255, 0.15);
-		opacity: 0.85;
 	}
 	.post-hero-info > section {
 		content-visibility: auto;
@@ -518,7 +544,7 @@ const homeSchema = {
 	.hero-noise {
 		position: absolute;
 		inset: 0;
-		opacity: 0.1;
+		opacity: 0.035;
 		background-image: radial-gradient(circle, rgba(255, 255, 255, 0.45) 0.8px, transparent 0.8px);
 		background-size: 3px 3px;
 		pointer-events: none;
@@ -561,7 +587,6 @@ const homeSchema = {
 		background: linear-gradient(160deg, rgba(7, 7, 7, 0.82), rgba(7, 7, 7, 0.58));
 		border: 1px solid rgba(255, 255, 255, 0.1);
 		border-radius: 6px;
-		backdrop-filter: blur(4px);
 		box-shadow: 0 20px 70px rgba(0, 0, 0, 0.45);
 		position: relative;
 	}
@@ -632,12 +657,12 @@ const homeSchema = {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
-		opacity: 0.42;
+		opacity: 0.78;
 	}
 	.hero-title-overlay {
 		position: absolute;
 		inset: 0;
-		background: linear-gradient(150deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.72));
+		background: linear-gradient(150deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.2) 55%, rgba(0, 0, 0, 0.5) 100%);
 		z-index: 0;
 	}
 	.hero-sub {
