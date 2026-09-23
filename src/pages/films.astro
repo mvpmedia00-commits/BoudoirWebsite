@@ -7,7 +7,20 @@ import { SITE_MEDIA } from '../data/siteMedia';
 
 const FEATURED_FILM = 'https://drive.google.com/file/d/1RizgFs5c6eV4A7hWAinKD7jsAl_k-xmI/preview';
 
-const filmTypes = [
+// Google Drive's embeddable player for a file ID. The file must be shared as "Anyone with the link".
+const drivePreview = (fileId: string) => `https://drive.google.com/file/d/${fileId}/preview`;
+
+type FilmType = {
+	title: string;
+	copy: string;
+	image: string;
+	/** Optional Google Drive file ID; shows the film instead of the photo. */
+	driveVideo?: string;
+	/** Shape of the video player box; '16 / 9' for horizontal films, '9 / 16' for vertical ones. */
+	videoAspect?: string;
+};
+
+const filmTypes: FilmType[] = [
 	{
 		title: 'Boudoir Films',
 		copy: 'A short, private film made alongside your photo session. Slow movement, soft light, and the same guided direction as the stills.',
@@ -26,7 +39,9 @@ const filmTypes = [
 	{
 		title: 'Editorial and Brand Films',
 		copy: 'Portrait-led motion for creators, campaigns, and lookbooks, with no nudity and cut for every platform you publish on.',
-		image: SITE_MEDIA.about
+		image: SITE_MEDIA.about,
+		driveVideo: '1HxsW9_NkIe0DxcP97pw2X227Jqe9v-BD',
+		videoAspect: '16 / 9'
 	}
 ];
 
@@ -119,9 +134,21 @@ const filmsSchema = {
 					<div class="film-types">
 						{filmTypes.map((film, index) => (
 							<article class:list={['film-type', { reverse: index % 2 === 1 }]}>
-								<div class="film-type-media">
-									<img src={film.image} alt="" loading="lazy" decoding="async" />
-								</div>
+								{film.driveVideo ? (
+									<div class="film-type-media is-video" style={`aspect-ratio: ${film.videoAspect ?? '16 / 9'};`}>
+										<iframe
+											src={drivePreview(film.driveVideo)}
+											title={`${film.title} by ${SITE_TITLE}`}
+											loading="lazy"
+											allow="autoplay; encrypted-media; picture-in-picture"
+											allowfullscreen
+										></iframe>
+									</div>
+								) : (
+									<div class="film-type-media">
+										<img src={film.image} alt="" loading="lazy" decoding="async" />
+									</div>
+								)}
 								<div class="film-type-copy">
 									<p class="film-index">{String(index + 1).padStart(2, '0')}</p>
 									<h3>{film.title}</h3>
@@ -278,6 +305,17 @@ const filmsSchema = {
 		overflow: hidden;
 		border: 1px solid var(--stroke);
 		background: var(--surface);
+	}
+	/* Films get a wider box than photos, sized to the video's own shape. */
+	.film-type-media.is-video {
+		width: 100%;
+		background: #000;
+	}
+	.film-type-media iframe {
+		width: 100%;
+		height: 100%;
+		border: 0;
+		display: block;
 	}
 	.film-type-media img {
 		width: 100%;
