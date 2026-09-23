@@ -38,7 +38,7 @@ const INITIAL_RENDER_COUNT = 24;
 					aria-describedby="drag-instruction"
 				>
 					<div class="media-wrap" style={`height:${item.h}px;`}>
-						<img data-portfolio src={item.image} alt={item.title} loading="lazy" draggable="false" />
+						<img src={item.image} alt={item.title} loading="lazy" draggable="false" />
 						<div class="shade"></div>
 					</div>
 					<p>{item.title}</p>
@@ -170,7 +170,6 @@ const INITIAL_RENDER_COUNT = 24;
 		image.alt = item.title;
 		image.loading = 'lazy';
 		image.draggable = false;
-		image.dataset.portfolio = '';
 
 		const shade = document.createElement('div');
 		shade.className = 'shade';

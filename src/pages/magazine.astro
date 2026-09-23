@@ -61,7 +61,7 @@ const productSchema = {
 					<>
 						<section class="product">
 							<div class="product-cover">
-								<img data-portfolio src={cover} alt={`Cover of ${pageTitle}`} loading="eager" fetchpriority="high" decoding="async" />
+								<img src={cover} alt={`Cover of ${pageTitle}`} loading="eager" fetchpriority="high" decoding="async" />
 							</div>
 							<div class="product-info">
 								<p class="eyebrow">The Magazine</p>
@@ -108,7 +108,7 @@ const productSchema = {
 								<div class="preview-grid">
 									{MAGAZINE.previews.map((src, index) => (
 										<div class="preview">
-											<img data-portfolio src={src} alt={`${MAGAZINE.title} inside page ${index + 1}`} loading="lazy" decoding="async" />
+											<img src={src} alt={`${MAGAZINE.title} inside page ${index + 1}`} loading="lazy" decoding="async" />
 										</div>
 									))}
 								</div>

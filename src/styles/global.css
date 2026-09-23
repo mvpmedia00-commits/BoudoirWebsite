@@ -375,20 +375,6 @@ figcaption {
   margin-bottom: 2rem;
 }
 
-.about-photo {
-  aspect-ratio: 4 / 5;
-  overflow: hidden;
-  border-radius: var(--radius);
-  border: 1px solid var(--stroke);
-  background: var(--surface);
-}
-
-.about-photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
 .booking-page {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -467,21 +453,4 @@ figcaption {
   .photo-card img {
     height: 230px;
   }
-}
-
-/*
- * Portfolio frames. Any <img data-portfolio> that turns out to be vertical is shown whole,
- * never cropped, on a dark matte inside its existing slot (see the script in BaseHead.astro).
- * !important because page styles set object-fit: cover and hover zooms with higher specificity.
- */
-.pf-portrait {
-  background: radial-gradient(circle at 50% 38%, #1c1815 0%, #0b0b0b 72%) !important;
-}
-.pf-portrait > img[data-portfolio] {
-  box-sizing: border-box;
-  padding: clamp(0.45rem, 5%, 1.4rem);
-  object-fit: contain !important;
-  object-position: center !important;
-  transform: none !important;
-  filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.55));
 }
