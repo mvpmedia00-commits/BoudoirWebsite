@@ -3,7 +3,7 @@ import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
-import { SITE_MEDIA } from '../data/siteMedia';
+import { PROCESS_VIDEO, SITE_MEDIA } from '../data/siteMedia';
 
 export const prerender = true;
 
@@ -307,9 +307,32 @@ const homeSchema = {
 							<p>A curated, retouched gallery delivered privately, with clear publishing permissions.</p>
 						</article>
 					</div>
-					<div class="process-visual art-frame">
-						<img src={SITE_MEDIA.about} alt="Private studio session planning mood board" loading="lazy" />
-					</div>
+					{PROCESS_VIDEO.mp4 ? (
+						<div class="process-visual art-frame" data-process-video data-mature={PROCESS_VIDEO.mature ? 'true' : undefined}>
+							<video
+								muted
+								loop
+								playsinline
+								preload="none"
+								poster={PROCESS_VIDEO.poster || undefined}
+								data-sources={JSON.stringify([
+									...(PROCESS_VIDEO.webm ? [{ src: PROCESS_VIDEO.webm, type: 'video/webm' }] : []),
+									{ src: PROCESS_VIDEO.mp4, type: 'video/mp4' }
+								])}
+								aria-label="Body paint session film"
+							></video>
+							{PROCESS_VIDEO.mature && (
+								<div class="mature-veil" data-mature-veil>
+									<p>This video contains artistic nudity.</p>
+									<button class="btn btn-solid" type="button" data-mature-confirm>Confirm 18+ to view</button>
+								</div>
+							)}
+						</div>
+					) : (
+						<div class="process-visual art-frame">
+							<img src={SITE_MEDIA.about} alt="Private studio session planning mood board" loading="lazy" />
+						</div>
+					)}
 				</section>
 
 				<section class="signature-moment fade-up">
@@ -389,6 +412,64 @@ const homeSchema = {
 			source: 'homepage'
 		});
 	});
+
+	// Process video: only downloads once visible, and for mature clips only after an 18+ confirmation
+	// (shared with the gallery age gate).
+	const processBox = document.querySelector<HTMLElement>('[data-process-video]');
+	const processVideo = processBox?.querySelector<HTMLVideoElement>('video');
+	if (processBox && processVideo) {
+		const AGE_KEYS = ['ageVerified', 'age_gate_ack_v1'];
+		const hasAck = () => {
+			try {
+				return AGE_KEYS.some((key) => localStorage.getItem(key) === 'true');
+			} catch {
+				return false;
+			}
+		};
+		const saveAck = () => {
+			try {
+				AGE_KEYS.forEach((key) => localStorage.setItem(key, 'true'));
+			} catch {
+				// Storage unavailable: the confirmation lasts for this page view only.
+			}
+		};
+		const start = () => {
+			if (!processVideo.dataset.loaded) {
+				const sources: { src: string; type: string }[] = JSON.parse(processVideo.dataset.sources || '[]');
+				sources.forEach(({ src, type }) => {
+					const source = document.createElement('source');
+					source.src = src;
+					source.type = type;
+					processVideo.appendChild(source);
+				});
+				processVideo.dataset.loaded = 'true';
+				processVideo.load();
+			}
+			if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) void processVideo.play().catch(() => {});
+		};
+		const unlock = () => {
+			processBox.classList.add('is-unlocked');
+			if ('IntersectionObserver' in window) {
+				const seen = new IntersectionObserver((entries) => {
+					entries.forEach((entry) => {
+						if (entry.isIntersecting) start();
+						else processVideo.pause();
+					});
+				}, { rootMargin: '150px 0px' });
+				seen.observe(processBox);
+			} else {
+				start();
+			}
+		};
+		if (processBox.dataset.mature !== 'true' || hasAck()) {
+			unlock();
+		} else {
+			processBox.querySelector('[data-mature-confirm]')?.addEventListener('click', () => {
+				saveAck();
+				unlock();
+			});
+		}
+	}
 
 	const heroWall = document.querySelector('.hero-media-wall');
 	if (heroWall instanceof HTMLElement) {
@@ -960,6 +1041,38 @@ const homeSchema = {
 		grid-column: 2;
 		grid-row: 1 / span 2;
 		aspect-ratio: 4 / 5;
+	}
+	.process-visual video {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		background: #0b0b0b;
+	}
+	/* Mature clips: blurred still and a confirmation until the visitor confirms 18+. */
+	.process-visual[data-mature]:not(.is-unlocked) video {
+		filter: blur(22px) brightness(0.95) saturate(1.1);
+		transform: scale(1.12);
+	}
+	.mature-veil {
+		position: absolute;
+		inset: 0;
+		z-index: 2;
+		display: grid;
+		place-content: center;
+		justify-items: center;
+		gap: 0.8rem;
+		padding: 1.25rem;
+		text-align: center;
+		background: rgba(8, 8, 8, 0.35);
+	}
+	.mature-veil p {
+		margin: 0;
+		color: #f1ece6;
+		font-size: 0.9rem;
+	}
+	.is-unlocked .mature-veil {
+		display: none;
 	}
 	.signature-moment {
 		position: relative;
