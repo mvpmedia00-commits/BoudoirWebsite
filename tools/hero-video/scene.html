@@ -1,0 +1,168 @@
+<!doctype html>
+<html>
+<body style="margin:0;background:#000">
+<canvas id="c" width="1600" height="600"></canvas>
+<script>
+// "Window light": warm light through blinds drifting across a dark room, with glowing dust.
+// Every motion completes a whole number of cycles in LOOP seconds, so the video loops seamlessly.
+const W = 1600, H = 600, LOOP = 12;
+const TAU = Math.PI * 2;
+const c = document.getElementById('c');
+const ctx = c.getContext('2d');
+
+// Seeded random so every render is identical.
+let seed = 20260923;
+const rand = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
+
+// Off-screen layers.
+const layer = (w = W, h = H) => { const cv = document.createElement('canvas'); cv.width = w; cv.height = h; return cv; };
+const lightCv = layer(), lightCtx = lightCv.getContext('2d');
+
+// Fixed dither texture: identical every frame, so it prevents banding without costing bitrate.
+const dither = layer();
+{
+	const d = dither.getContext('2d');
+	const img = d.createImageData(W, H);
+	for (let i = 0; i < img.data.length; i += 4) {
+		const v = rand() * 255;
+		img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
+		img.data[i + 3] = 10;
+	}
+	d.putImageData(img, 0, 0);
+}
+
+// Dust: each mote rises exactly n screen-heights per loop, plus a gentle periodic sway.
+const motes = Array.from({ length: 110 }, () => ({
+	x: rand() * W,
+	y: rand() * H,
+	laps: 1 + Math.floor(rand() * 2),
+	sway: 8 + rand() * 30,
+	swayCycles: 1 + Math.floor(rand() * 3),
+	phase: rand() * TAU,
+	r: rand() < 0.12 ? 6 + rand() * 10 : 0.8 + rand() * 2.2,
+	twinkle: 1 + Math.floor(rand() * 4),
+	a: 0.25 + rand() * 0.6
+}));
+
+function render(t) {
+	const p = (t % LOOP) / LOOP; // 0..1 loop progress
+	const wave = (cycles, phase = 0) => Math.sin(TAU * (p * cycles) + phase);
+
+	// Room: deep warm black.
+	const bg = ctx.createLinearGradient(0, 0, W, H);
+	bg.addColorStop(0, '#0b0706');
+	bg.addColorStop(1, '#150d0a');
+	ctx.globalCompositeOperation = 'source-over';
+	ctx.filter = 'none';
+	ctx.fillStyle = bg;
+	ctx.fillRect(0, 0, W, H);
+
+	// Ambient glows (rose and amber) on slow Lissajous paths.
+	ctx.globalCompositeOperation = 'screen';
+	const glow = (x, y, r, color) => {
+		const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+		g.addColorStop(0, color);
+		g.addColorStop(1, 'rgba(0,0,0,0)');
+		ctx.fillStyle = g;
+		ctx.fillRect(0, 0, W, H);
+	};
+	glow(W * 0.28 + 120 * wave(1), H * 0.62 + 60 * wave(2, 1), 560, 'rgba(196,106,123,0.38)');
+	glow(W * 0.74 + 140 * wave(1, 2), H * 0.35 + 50 * wave(1, 0.5), 600, 'rgba(240,164,93,0.26)');
+
+	// Window light: a warm, slanted patch cut into slats by blinds, drifting two slats per loop.
+	lightCtx.globalCompositeOperation = 'source-over';
+	lightCtx.clearRect(0, 0, W, H);
+	lightCtx.save();
+	lightCtx.translate(W * 0.64, H * 0.52);
+	lightCtx.rotate(-0.38);
+	const breathe = 0.85 + 0.15 * wave(1, -1);
+	const beam = lightCtx.createLinearGradient(-720, 0, 720, 0);
+	beam.addColorStop(0, 'rgba(255,190,130,0)');
+	beam.addColorStop(0.3, `rgba(255,196,138,${0.62 * breathe})`);
+	beam.addColorStop(0.62, `rgba(255,176,120,${0.5 * breathe})`);
+	beam.addColorStop(1, 'rgba(255,170,120,0)');
+	lightCtx.fillStyle = beam;
+	lightCtx.fillRect(-720, -230, 1440, 460);
+	// Soft top and bottom edges, so it reads as a window patch rather than an endless band.
+	lightCtx.globalCompositeOperation = 'destination-in';
+	const edge = lightCtx.createLinearGradient(0, -230, 0, 230);
+	edge.addColorStop(0, 'rgba(0,0,0,0)');
+	edge.addColorStop(0.25, 'rgba(0,0,0,1)');
+	edge.addColorStop(0.75, 'rgba(0,0,0,1)');
+	edge.addColorStop(1, 'rgba(0,0,0,0)');
+	lightCtx.fillStyle = edge;
+	lightCtx.fillRect(-720, -230, 1440, 460);
+	// Slats: cut dark bands out of the patch.
+	const slat = 84;
+	const drift = p * slat * 2;
+	lightCtx.globalCompositeOperation = 'destination-out';
+	lightCtx.fillStyle = 'rgba(0,0,0,0.9)';
+	for (let y = -300 - slat * 2; y < 300 + slat; y += slat) {
+		lightCtx.fillRect(-720, y + drift, 1440, slat * 0.42);
+	}
+	lightCtx.restore();
+	ctx.globalCompositeOperation = 'screen';
+	ctx.filter = 'blur(10px)';
+	ctx.drawImage(lightCv, 0, 0);
+	ctx.filter = 'none';
+
+	// Sheer fabric: soft golden ribbons rippling through the light.
+	ctx.globalCompositeOperation = 'screen';
+	ctx.filter = 'blur(14px)';
+	for (let k = 0; k < 3; k++) {
+		ctx.beginPath();
+		const base = H * (0.3 + k * 0.2);
+		for (let x = -40; x <= W + 40; x += 20) {
+			const y =
+				base +
+				38 * Math.sin((x / W) * TAU * (1 + k * 0.5) + TAU * p * (k + 1)) +
+				16 * Math.sin((x / W) * TAU * 3 - TAU * p * 2 + k);
+			x === -40 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+		}
+		ctx.strokeStyle = `rgba(212,194,161,${0.10 + 0.04 * k})`;
+		ctx.lineWidth = 26 - k * 6;
+		ctx.stroke();
+	}
+	ctx.filter = 'none';
+
+	// Dust motes, brighter where they cross the beam.
+	ctx.globalCompositeOperation = 'lighter';
+	for (const m of motes) {
+		const y = ((m.y - p * H * m.laps) % H + H) % H;
+		const x = m.x + m.sway * Math.sin(TAU * p * m.swayCycles + m.phase);
+		const tw = 0.55 + 0.45 * Math.sin(TAU * p * m.twinkle + m.phase);
+		const inBeam = Math.max(0, 1 - Math.abs((x - W * 0.64) * Math.sin(0.38) + (y - H * 0.52) * Math.cos(0.38)) / 230);
+		const alpha = m.a * tw * (0.25 + 0.75 * inBeam);
+		const g = ctx.createRadialGradient(x, y, 0, x, y, m.r * 2.4);
+		g.addColorStop(0, `rgba(255,228,196,${alpha})`);
+		g.addColorStop(1, 'rgba(255,228,196,0)');
+		ctx.fillStyle = g;
+		ctx.fillRect(x - m.r * 2.4, y - m.r * 2.4, m.r * 4.8, m.r * 4.8);
+	}
+
+	// Darker left side, where the headline sits.
+	ctx.globalCompositeOperation = 'source-over';
+	const side = ctx.createLinearGradient(0, 0, W * 0.55, 0);
+	side.addColorStop(0, 'rgba(5,3,3,0.62)');
+	side.addColorStop(1, 'rgba(5,3,3,0)');
+	ctx.fillStyle = side;
+	ctx.fillRect(0, 0, W, H);
+
+	// Vignette.
+	ctx.globalCompositeOperation = 'source-over';
+	const v = ctx.createRadialGradient(W / 2, H / 2, H * 0.25, W / 2, H / 2, W * 0.62);
+	v.addColorStop(0, 'rgba(0,0,0,0)');
+	v.addColorStop(1, 'rgba(0,0,0,0.72)');
+	ctx.fillStyle = v;
+	ctx.fillRect(0, 0, W, H);
+
+	// Dither.
+	ctx.globalCompositeOperation = 'overlay';
+	ctx.drawImage(dither, 0, 0);
+	ctx.globalCompositeOperation = 'source-over';
+}
+window.render = render;
+window.LOOP = LOOP;
+</script>
+</body>
+</html>

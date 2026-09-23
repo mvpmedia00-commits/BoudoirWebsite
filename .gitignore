@@ -30,3 +30,7 @@ backend/pb_data/
 .dev.*.log
 .env.local
 .env.*.local
+
+# hero video render frames
+tools/hero-video/frames/
+tools/hero-video/preview_*.jpg

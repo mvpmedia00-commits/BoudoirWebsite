@@ -55,11 +55,6 @@ const heroMediaColumns = rawHeroMediaColumns.map((column) => ({
 // c_limit never upscales past the original clip.
 const HERO_TRANSFORM = /\/video\/upload\/[^/]+\//;
 const heroVideoTemplate = (src: string) => src.replace(HERO_TRANSFORM, '/video/upload/f_auto,q_auto,w_{w},c_limit,vc_auto/');
-// Headline image in several widths, so each screen downloads a sharp but not oversized copy.
-const TITLE_IMAGE_WIDTHS = [900, 1400, 1800];
-const titleImage = (width: number) => SITE_MEDIA.about.replace(/w_\d+/, `w_${width}`);
-const titleImageSrcset = TITLE_IMAGE_WIDTHS.map((width) => `${titleImage(width)} ${width}w`).join(', ');
-
 // First frame (so_0) as a still, so the poster matches the moment playback starts.
 const getVideoPoster = (src: string, width = 720) =>
 	src.replace(HERO_TRANSFORM, `/video/upload/so_0,f_auto,q_auto,w_${width},c_limit/`).replace(/\.mp4$/, '.jpg');
@@ -81,7 +76,7 @@ const homeSchema = {
 	<head>
 		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
 		<link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
-		<link rel="preload" as="image" href={getVideoPoster(heroMediaColumns[0].items[0])} />
+		<link rel="preload" as="image" href="/media/hero/hero-light-poster.jpg" />
 		<script type="application/ld+json" set:html={JSON.stringify(homeSchema)} />
 	</head>
 	<body>
@@ -126,16 +121,20 @@ const homeSchema = {
 						<p class="hero-location">United States</p>
 
 						<div class="hero-title-video-box">
-							<img
+							<video
 								class="hero-title-video"
-								src={titleImage(1400)}
-								srcset={titleImageSrcset}
-								sizes="(max-width: 980px) 100vw, 900px"
-								alt=""
-								loading="eager"
-								decoding="async"
-								fetchpriority="high"
-							/>
+								autoplay
+								muted
+								loop
+								playsinline
+								preload="auto"
+								poster="/media/hero/hero-light-poster.jpg"
+								aria-hidden="true"
+								data-hero-title-video
+							>
+								<source src="/media/hero/hero-light.webm" type="video/webm" />
+								<source src="/media/hero/hero-light.mp4" type="video/mp4" />
+							</video>
 							<div class="hero-title-overlay"></div>
 							<h1>Bold. Intimate. Cinematic.</h1>
 						</div>
@@ -398,6 +397,12 @@ const homeSchema = {
 		// Visitors on data saver or with reduced motion keep the still poster frames.
 		const stillsOnly =
 			connection?.saveData === true || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		const titleVideo = document.querySelector<HTMLVideoElement>('[data-hero-title-video]');
+		if (titleVideo && stillsOnly) {
+			titleVideo.pause();
+			titleVideo.removeAttribute('autoplay');
+		}
+
 		const primeVideos = stillsOnly
 			? []
 			: Array.from(heroWall.querySelectorAll<HTMLVideoElement>('video[data-hero-prime]'));
@@ -657,12 +662,12 @@ const homeSchema = {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
-		opacity: 0.78;
+		object-position: 70% center;
 	}
 	.hero-title-overlay {
 		position: absolute;
 		inset: 0;
-		background: linear-gradient(150deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.2) 55%, rgba(0, 0, 0, 0.5) 100%);
+		background: linear-gradient(150deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.05) 55%, rgba(0, 0, 0, 0.35) 100%);
 		z-index: 0;
 	}
 	.hero-sub {
