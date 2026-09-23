@@ -20,6 +20,12 @@ type FilmType = {
 	videoAspect?: string;
 };
 
+// A vertical player (taller than wide) gets a phone-sized width instead of the full column.
+const isVertical = (aspect = '16 / 9') => {
+	const [w, h] = aspect.split('/').map(Number);
+	return h > w;
+};
+
 const filmTypes: FilmType[] = [
 	{
 		title: 'Boudoir Films',
@@ -41,7 +47,7 @@ const filmTypes: FilmType[] = [
 		copy: 'Portrait-led motion for creators, campaigns, and lookbooks, with no nudity and cut for every platform you publish on.',
 		image: SITE_MEDIA.about,
 		driveVideo: '1HxsW9_NkIe0DxcP97pw2X227Jqe9v-BD',
-		videoAspect: '16 / 9'
+		videoAspect: '9 / 16'
 	}
 ];
 
@@ -135,7 +141,10 @@ const filmsSchema = {
 						{filmTypes.map((film, index) => (
 							<article class:list={['film-type', { reverse: index % 2 === 1 }]}>
 								{film.driveVideo ? (
-									<div class="film-type-media is-video" style={`aspect-ratio: ${film.videoAspect ?? '16 / 9'};`}>
+									<div
+										class:list={['film-type-media', 'is-video', { 'is-vertical': isVertical(film.videoAspect) }]}
+										style={`aspect-ratio: ${film.videoAspect ?? '16 / 9'};`}
+									>
 										<iframe
 											src={drivePreview(film.driveVideo)}
 											title={`${film.title} by ${SITE_TITLE}`}
@@ -310,6 +319,9 @@ const filmsSchema = {
 	.film-type-media.is-video {
 		width: 100%;
 		background: #000;
+	}
+	.film-type-media.is-video.is-vertical {
+		width: min(100%, 340px);
 	}
 	.film-type-media iframe {
 		width: 100%;
