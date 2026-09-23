@@ -568,7 +568,8 @@ const INITIAL_RENDER_COUNT = 24;
 			touch-action: auto;
 		}
 		.media-wrap {
-			height: 270px !important;
+			height: auto !important;
+			aspect-ratio: 4 / 5;
 		}
 		.credit {
 			position: static;
@@ -584,7 +585,9 @@ const INITIAL_RENDER_COUNT = 24;
 			margin: 0 0.8rem;
 		}
 		.stage {
-			grid-template-columns: 1fr;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 0.6rem;
+			padding: 0.6rem;
 		}
 	}
 	@keyframes spin {

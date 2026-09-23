@@ -92,14 +92,17 @@ const isAllowed = !requiresGate || hasAdultAccess;
 	.niche-hero {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
-		gap: 1rem;
-		margin-bottom: 1.4rem;
+		gap: clamp(1.5rem, 4vw, 3rem);
+		align-items: center;
+		margin-bottom: 2.5rem;
 	}
 	.niche-hero-media {
 		border-radius: var(--radius);
 		overflow: hidden;
 		border: 1px solid var(--stroke);
-		aspect-ratio: 4 / 3;
+		aspect-ratio: 4 / 5;
+		width: min(100%, 460px);
+		justify-self: center;
 	}
 	.niche-hero-media img {
 		width: 100%;

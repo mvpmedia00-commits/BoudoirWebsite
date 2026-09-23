@@ -18,7 +18,9 @@ import { SITE_MEDIA } from '../data/siteMedia';
 		<Header />
 		<main>
 			<section class="about-grid">
-				<img src={SITE_MEDIA.about} alt="Portrait by Matthew Phillips" loading="lazy" />
+				<div class="about-photo">
+					<img src={SITE_MEDIA.about} alt="Portrait by Matthew Phillips" loading="lazy" />
+				</div>
 				<div>
 					<p class="eyebrow">Meet the Photographer</p>
 					<h1>I'm Matthew Phillips.</h1>
@@ -56,3 +58,21 @@ import { SITE_MEDIA } from '../data/siteMedia';
 		<Footer />
 	</body>
 </html>
+
+<style>
+	.about-photo {
+		aspect-ratio: 4 / 5;
+		width: min(100%, 520px);
+		justify-self: center;
+		overflow: hidden;
+		border-radius: var(--radius);
+		border: 1px solid var(--stroke);
+		background: var(--surface);
+	}
+	.about-photo img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		border-radius: 0;
+	}
+</style>

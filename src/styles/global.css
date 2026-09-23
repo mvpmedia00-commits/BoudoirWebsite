@@ -142,6 +142,12 @@ img {
   max-width: 100%;
   display: block;
   border-radius: var(--radius);
+  /* When a photo is cropped to fill its box, keep the upper-middle (faces, shoulders) in frame. */
+  object-position: 50% 30%;
+}
+
+video {
+  object-position: 50% 30%;
 }
 
 .heading-accent {
@@ -172,9 +178,8 @@ img {
 .art-frame img {
   display: block;
   width: 100%;
-  height: auto;
-  transform: scale(1.02);
-  filter: saturate(1.1) contrast(1.05);
+  height: 100%;
+  object-fit: cover;
 }
 
 .art-frame::before {
