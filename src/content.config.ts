@@ -32,4 +32,42 @@ const vault = defineCollection({
 		}),
 });
 
-export const collections = { blog, vault };
+// Store items: one Markdown file per product in src/content/store (files starting with _ are ignored).
+// Buy buttons link to wherever each option is sold (MagCloud, Gumroad, your own checkout, ...).
+const store = defineCollection({
+	loader: glob({ base: './src/content/store', pattern: '**/[^_]*.{md,mdx}' }),
+	schema: z.object({
+		title: z.string(),
+		/** Short line under the title, e.g. "Issue 1". */
+		subtitle: z.string().optional(),
+		/** One or two sentences for the store grid and search engines. */
+		summary: z.string(),
+		category: z.string().default('Shop'),
+		/** Main image URL; leave out to show a styled title card instead. */
+		image: z.string().url().optional(),
+		/** Extra image URLs shown under the main image. */
+		gallery: z.array(z.string().url()).default([]),
+		/** Nudity: blurred in the grid and behind the 18+ confirmation. */
+		mature: z.boolean().default(false),
+		/** available shows buy buttons, coming-soon shows the item without them, hidden removes it. */
+		status: z.enum(['available', 'coming-soon', 'hidden']).default('available'),
+		/** Lower numbers show first. */
+		order: z.number().default(100),
+		options: z
+			.array(
+				z.object({
+					label: z.string(),
+					/** Display price including currency, e.g. "$45". */
+					price: z.string().optional(),
+					/** Full https link where this option is bought. Options without one show as coming soon. */
+					url: z.string().url().startsWith('https://').optional(),
+					note: z.string().optional()
+				})
+			)
+			.default([]),
+		/** Where it is sold and delivered, e.g. "MagCloud". */
+		seller: z.string().optional()
+	})
+});
+
+export const collections = { blog, vault, store };

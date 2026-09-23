@@ -1,16 +1,18 @@
 ---
 import { getCollection } from 'astro:content';
 import { SITE_TITLE } from '../consts';
-import { isMagazineLive } from '../data/magazine';
+import { getStoreItems } from '../lib/store';
 import HeaderLink from './HeaderLink.astro';
 
 // Only link the journal once there is something to read.
 const hasJournal = (await getCollection('blog', ({ data }) => !data.draft)).length > 0;
+// The store link appears once there is at least one item to show.
+const hasStore = (await getStoreItems()).length > 0;
 
 const links = [
 	{ href: '/gallery', label: 'Portfolio' },
 	{ href: '/films', label: 'Films' },
-	...(isMagazineLive ? [{ href: '/magazine', label: 'Magazine' }] : []),
+	...(hasStore ? [{ href: '/store', label: 'Store' }] : []),
 	{ href: '/about', label: 'About' },
 	...(hasJournal ? [{ href: '/blog', label: 'Journal' }] : []),
 	{ href: '/vault', label: 'Vault' }

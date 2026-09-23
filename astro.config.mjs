@@ -16,6 +16,7 @@ export default defineConfig({
   output: 'server',
   redirects: {
     '/hub': '/films',
+    '/magazine': '/store/mvp-media-magazine',
   },
   security: {
     // Astro only trusts the request Host header for these domains. Without them every

@@ -1,0 +1,308 @@
+---
+import { getEntry, render } from 'astro:content';
+import BaseHead from '../../components/BaseHead.astro';
+import Footer from '../../components/Footer.astro';
+import Header from '../../components/Header.astro';
+import ProductCover from '../../components/store/ProductCover.astro';
+import { SITE_MEDIA } from '../../data/siteMedia';
+import { SITE_TITLE } from '../../consts';
+import { hasAdultAccess } from '../../lib/access';
+import { buyableOptions, priceNumber } from '../../lib/store';
+
+const item = Astro.params.slug ? await getEntry('store', Astro.params.slug) : undefined;
+if (!item || item.data.status === 'hidden') {
+	return Astro.redirect('/store');
+}
+
+const { data } = item;
+const isAllowed = !data.mature || hasAdultAccess(Astro.cookies);
+const { Content } = await render(item);
+const buyable = buyableOptions(item);
+const images = [data.image, ...data.gallery].filter((src): src is string => Boolean(src));
+const pageTitle = [data.title, data.subtitle].filter(Boolean).join(', ');
+
+const productSchema = {
+	'@context': 'https://schema.org',
+	'@type': 'Product',
+	name: pageTitle,
+	description: data.summary,
+	...(images[0] ? { image: images[0] } : {}),
+	brand: { '@type': 'Brand', name: SITE_TITLE },
+	offers: buyable
+		.filter((option) => priceNumber(option.price))
+		.map((option) => ({
+			'@type': 'Offer',
+			name: option.label,
+			price: priceNumber(option.price),
+			priceCurrency: 'USD',
+			url: option.url,
+			availability: 'https://schema.org/InStock'
+		}))
+};
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title={`${pageTitle} | ${SITE_TITLE}`}
+			description={data.summary}
+			image={isAllowed && images[0] ? images[0] : SITE_MEDIA.one}
+			noIndex={data.mature}
+			jsonLd={isAllowed ? productSchema : null}
+		/>
+	</head>
+	<body>
+		<Header />
+		<main class="product-page">
+			<p class="crumb"><a href="/store">Store</a> / {data.category}</p>
+			{
+				isAllowed ? (
+					<>
+						<section class="product">
+							<div class="media">
+								<div data-main-cover>
+									<ProductCover title={data.title} subtitle={data.subtitle} image={images[0]} eager />
+								</div>
+								{images.length > 1 && (
+									<div class="thumbs" role="list">
+										{images.map((src, index) => (
+											<button
+												type="button"
+												role="listitem"
+												class:list={['thumb', { 'is-active': index === 0 }]}
+												data-thumb={src}
+												aria-label={`Show image ${index + 1}`}
+											>
+												<img src={src} alt="" loading="lazy" decoding="async" />
+											</button>
+										))}
+									</div>
+								)}
+							</div>
+
+							<div class="info">
+								<p class="eyebrow">{data.category}</p>
+								<h1>{data.title}</h1>
+								{data.subtitle && <p class="subtitle">{data.subtitle}</p>}
+								<p class="summary">{data.summary}</p>
+
+								{data.options.length > 0 && (
+									<div class="options">
+										{data.options.map((option) => {
+											const canBuy = data.status === 'available' && option.url;
+											return (
+												<div class="option">
+													<div class="option-head">
+														<h2>{option.label}</h2>
+														{option.price && <span class="price">{option.price}</span>}
+													</div>
+													{option.note && <p class="note">{option.note}</p>}
+													{canBuy ? (
+														<a class="btn btn-solid" href={option.url} target="_blank" rel="noopener noreferrer">
+															Buy {option.label}
+															<span class="sr-only"> (opens in a new tab)</span>
+														</a>
+													) : (
+														<span class="soon">Coming soon</span>
+													)}
+												</div>
+											);
+										})}
+									</div>
+								)}
+
+								{buyable.length > 0 ? (
+									<p class="seller">
+										{data.seller
+											? `Sold and delivered by ${data.seller}. You will complete your purchase on their site.`
+											: 'You will complete your purchase on our store partner’s site.'}
+									</p>
+								) : (
+									<p class="seller">
+										Not available to buy yet. <a href="mailto:hello@mvpmedia.studio?subject=Store%20inquiry">Email us</a> to hear when it is.
+									</p>
+								)}
+							</div>
+						</section>
+
+						<section class="details">
+							<Content />
+						</section>
+
+						<p class="back"><a href="/store">&larr; Back to the store</a></p>
+					</>
+				) : (
+					<section class="gate">
+						<p class="eyebrow">18+ Only</p>
+						<h1>{data.title}</h1>
+						<p>This item contains artistic nudity and is intended for adults. Please confirm you are 18 or older to continue.</p>
+						<a class="btn btn-solid" href={`/api/adult-access?returnTo=/store/${item.id}`}>I am 18 or older</a>
+						<a class="btn btn-ghost" href="/store">Back to the store</a>
+					</section>
+				)
+			}
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<script>
+	// Gallery: clicking a thumbnail swaps the main image.
+	const main = document.querySelector<HTMLImageElement>('[data-main-cover] img');
+	const thumbs = document.querySelectorAll<HTMLButtonElement>('[data-thumb]');
+	thumbs.forEach((thumb) => {
+		thumb.addEventListener('click', () => {
+			if (!main || !thumb.dataset.thumb) return;
+			main.src = thumb.dataset.thumb;
+			thumbs.forEach((other) => other.classList.toggle('is-active', other === thumb));
+		});
+	});
+</script>
+
+<style>
+	.product-page {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding-top: clamp(1.5rem, 4vw, 3rem);
+	}
+	.crumb {
+		font-size: 0.8rem;
+		letter-spacing: 0.08em;
+		margin-bottom: 1.5rem;
+	}
+	.crumb a {
+		text-decoration: none;
+	}
+	.product {
+		display: grid;
+		grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+		gap: clamp(2rem, 5vw, 4rem);
+		align-items: start;
+	}
+	.media {
+		position: sticky;
+		top: calc(var(--header-h, 70px) + 1.5rem);
+		display: grid;
+		gap: 0.75rem;
+	}
+	.thumbs {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+		gap: 0.5rem;
+	}
+	.thumb {
+		padding: 0;
+		border: 1px solid var(--stroke);
+		border-radius: 8px;
+		overflow: hidden;
+		background: none;
+		cursor: pointer;
+		aspect-ratio: 4 / 5;
+		opacity: 0.6;
+		transition: opacity 0.2s ease, border-color 0.2s ease;
+	}
+	.thumb.is-active,
+	.thumb:hover {
+		opacity: 1;
+		border-color: var(--brand-strong);
+	}
+	.thumb img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		border-radius: 0;
+	}
+	.info h1 {
+		font-size: clamp(2.3rem, 5vw, 3.6rem);
+		margin-bottom: 0.3rem;
+	}
+	.subtitle {
+		color: var(--brand-strong);
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		font-size: 0.8rem;
+	}
+	.summary {
+		font-size: 1.08rem;
+		color: #d8d2cb;
+	}
+	.options {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+		gap: 1rem;
+		margin-top: 1.75rem;
+	}
+	.option {
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+		padding: 1.3rem;
+		border: 1px solid var(--stroke);
+		border-radius: var(--radius);
+		background: linear-gradient(145deg, var(--surface), var(--surface-elevated));
+	}
+	.option-head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 1rem;
+	}
+	.option h2 {
+		margin: 0;
+		font-size: 1.45rem;
+	}
+	.price {
+		color: var(--text-primary);
+		font-weight: 700;
+		font-size: 1.15rem;
+	}
+	.note {
+		margin: 0;
+		font-size: 0.88rem;
+		line-height: 1.6;
+	}
+	.option .btn,
+	.soon {
+		margin-top: auto;
+		text-align: center;
+	}
+	.soon {
+		display: block;
+		padding: 0.73rem 1.15rem;
+		border: 1px dashed var(--stroke);
+		border-radius: 999px;
+		color: var(--text-muted);
+		font-size: 0.78rem;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+	}
+	.seller {
+		margin-top: 1rem;
+		font-size: 0.88rem;
+	}
+	.details {
+		max-width: 70ch;
+		margin-top: clamp(2.5rem, 6vw, 4rem);
+		padding-top: 2rem;
+		border-top: 1px solid var(--stroke);
+	}
+	.details :global(p) {
+		color: #cfc7bf;
+	}
+	.back {
+		margin-top: 2.5rem;
+	}
+	.gate .btn {
+		width: fit-content;
+	}
+	@media (max-width: 860px) {
+		.product {
+			grid-template-columns: 1fr;
+		}
+		.media {
+			position: static;
+			max-width: 440px;
+		}
+	}
+</style>

@@ -1,0 +1,192 @@
+---
+import BaseHead from '../../components/BaseHead.astro';
+import Footer from '../../components/Footer.astro';
+import Header from '../../components/Header.astro';
+import ProductCover from '../../components/store/ProductCover.astro';
+import { SITE_TITLE } from '../../consts';
+import { hasAdultAccess } from '../../lib/access';
+import { buyableOptions, getStoreItems, priceLabel } from '../../lib/store';
+
+const items = await getStoreItems();
+if (items.length === 0) {
+	return Astro.redirect('/');
+}
+
+const adult = hasAdultAccess(Astro.cookies);
+const categories = [...new Set(items.map((item) => item.data.category))];
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title={`Store | ${SITE_TITLE}`}
+			description="Magazines, prints, and more from the MVP Media studio."
+		/>
+	</head>
+	<body>
+		<Header />
+		<main class="store">
+			<header class="store-head">
+				<p class="eyebrow">Store</p>
+				<h1>From the studio</h1>
+				<p>Magazines, prints, and more from MVP Media. Items marked 18+ ask you to confirm your age before viewing.</p>
+				{categories.length > 1 && (
+					<div class="filters" role="group" aria-label="Filter by category">
+						<button type="button" class="is-active" data-filter="all" aria-pressed="true">All</button>
+						{categories.map((category) => (
+							<button type="button" data-filter={category} aria-pressed="false">{category}</button>
+						))}
+					</div>
+				)}
+			</header>
+
+			<ul class="grid">
+				{items.map((item) => {
+					const price = priceLabel(item);
+					const buyable = buyableOptions(item).length > 0;
+					return (
+						<li data-category={item.data.category}>
+							<a class="card" href={`/store/${item.id}`}>
+								<ProductCover
+									title={item.data.title}
+									subtitle={item.data.subtitle}
+									image={item.data.image}
+									veiled={item.data.mature && !adult}
+								/>
+								<div class="card-body">
+									<div class="tags">
+										<span>{item.data.category}</span>
+										{item.data.mature && <span>18+</span>}
+										{!buyable && <span class="soon">Coming soon</span>}
+									</div>
+									<h2>{item.data.title}</h2>
+									{item.data.subtitle && <p class="sub">{item.data.subtitle}</p>}
+									{price && <p class="price">{price}</p>}
+								</div>
+							</a>
+						</li>
+					);
+				})}
+			</ul>
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<script>
+	const buttons = document.querySelectorAll<HTMLButtonElement>('[data-filter]');
+	const cards = document.querySelectorAll<HTMLElement>('[data-category]');
+	buttons.forEach((button) => {
+		button.addEventListener('click', () => {
+			const filter = button.dataset.filter;
+			buttons.forEach((other) => {
+				other.classList.toggle('is-active', other === button);
+				other.setAttribute('aria-pressed', String(other === button));
+			});
+			cards.forEach((card) => {
+				card.hidden = filter !== 'all' && card.dataset.category !== filter;
+			});
+		});
+	});
+</script>
+
+<style>
+	.store {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding-top: clamp(2.5rem, 6vw, 4.5rem);
+	}
+	.store-head {
+		margin-bottom: 2rem;
+	}
+	.store-head h1 {
+		font-size: clamp(2.4rem, 5vw, 3.8rem);
+	}
+	.filters {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin-top: 1.25rem;
+	}
+	.filters button {
+		font: inherit;
+		font-size: 0.75rem;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+		background: #0f0f0f;
+		border: 1px solid var(--stroke);
+		border-radius: 999px;
+		padding: 0.45rem 0.9rem;
+		cursor: pointer;
+	}
+	.filters button.is-active,
+	.filters button:hover {
+		color: #0a0a0a;
+		background: var(--brand-strong);
+		border-color: var(--brand-strong);
+	}
+	.grid {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+		gap: clamp(1rem, 2.5vw, 1.75rem);
+	}
+	.grid li[hidden] {
+		display: none;
+	}
+	.card {
+		display: block;
+		color: inherit;
+		text-decoration: none;
+		transition: transform 0.25s ease;
+	}
+	.card:hover {
+		transform: translateY(-4px);
+	}
+	.card:hover :global(.cover img) {
+		transform: scale(1.04);
+	}
+	.card:hover :global(.veiled img) {
+		transform: scale(1.12);
+	}
+	.card-body {
+		padding: 0.9rem 0.1rem 0;
+	}
+	.tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		margin-bottom: 0.5rem;
+	}
+	.tags span {
+		font-size: 0.65rem;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--brand-strong);
+		border: 1px solid rgba(212, 194, 161, 0.35);
+		border-radius: 999px;
+		padding: 0.2rem 0.55rem;
+	}
+	.tags .soon {
+		color: var(--text-muted);
+		border-color: var(--stroke);
+	}
+	.card h2 {
+		font-size: 1.45rem;
+		margin-bottom: 0.2rem;
+	}
+	.sub,
+	.price {
+		margin: 0;
+		font-size: 0.9rem;
+	}
+	.price {
+		color: var(--text-primary);
+		font-weight: 700;
+		margin-top: 0.35rem;
+	}
+</style>
