@@ -1,44 +1,107 @@
 ---
-const today = new Date();
+import { SITE_TITLE } from '../consts';
+
+const year = new Date().getFullYear();
 ---
 
-<footer>
+<footer class="site-footer">
 	<div class="footer-shell">
-		<p>&copy; {today.getFullYear()} MVP Media · Matthew Phillips</p>
-		<p class="muted">Boudoir, artistic nude, and afterdark adult portrait sessions with discreet premium delivery.</p>
-		<div class="links">
-			<a href="mailto:hello@mvpmedia.studio">hello@mvpmedia.studio</a>
-			<a href="/gallery">View Gallery</a>
+		<div class="footer-brand">
+			<a class="brand" href="/">{SITE_TITLE}</a>
+			<p>Fine art boudoir, artistic nude, body paint, and editorial portraiture. Photographed with discretion across the United States.</p>
+		</div>
+		<nav class="footer-col" aria-label="Footer">
+			<h2>Explore</h2>
+			<ul>
+				<li><a href="/gallery">Portfolio</a></li>
+				<li><a href="/films">Films</a></li>
+				<li><a href="/about">About</a></li>
+				<li><a href="/vault">Members Vault</a></li>
+			</ul>
+		</nav>
+		<div class="footer-col">
+			<h2>Contact</h2>
+			<ul>
+				<li><a href="/booking">Book a Consultation</a></li>
+				<li><a href="mailto:hello@mvpmedia.studio">hello@mvpmedia.studio</a></li>
+			</ul>
 		</div>
 	</div>
+	<div class="footer-legal">
+		<p>&copy; {year} {SITE_TITLE}. All rights reserved.</p>
+		<p>All sessions are for adults 18+.</p>
+	</div>
 </footer>
+
 <style>
-	footer {
-		padding: 2.4rem 1rem 3.2rem;
+	.site-footer {
 		background: #070707;
 		border-top: 1px solid var(--stroke);
-		color: var(--text-primary);
+		color: var(--text-muted);
+		font-size: 0.92rem;
 	}
 	.footer-shell {
-		width: 100%;
-		margin: 0;
-		text-align: center;
+		max-width: 1320px;
+		margin: 0 auto;
+		padding: 3.5rem clamp(1rem, 3vw, 2rem) 2.5rem;
+		display: grid;
+		grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+		gap: 2.5rem;
 	}
-	p {
-		margin: 0.3rem 0;
-	}
-	.muted {
-		color: var(--text-muted);
-	}
-	.links {
-		margin-top: 0.7rem;
-		display: flex;
-		gap: 1rem;
-		justify-content: center;
-		flex-wrap: wrap;
-	}
-	.links a {
+	.brand {
+		color: var(--text-primary);
 		text-decoration: none;
+		font-weight: 700;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+	}
+	.footer-brand p {
+		max-width: 38ch;
+		margin: 0.9rem 0 0;
+		line-height: 1.7;
+	}
+	h2 {
+		margin: 0 0 0.9rem;
+		color: var(--text-primary);
+		font-size: 0.75rem;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+	}
+	ul {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		display: grid;
+		gap: 0.55rem;
+	}
+	a {
+		color: var(--text-muted);
+		text-decoration: none;
+		transition: color 0.2s ease;
+	}
+	a:hover {
 		color: var(--brand-strong);
+	}
+	.footer-legal {
+		max-width: 1320px;
+		margin: 0 auto;
+		padding: 1.25rem clamp(1rem, 3vw, 2rem) 2rem;
+		border-top: 1px solid var(--stroke);
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		gap: 0.5rem 2rem;
+		font-size: 0.8rem;
+	}
+	.footer-legal p {
+		margin: 0;
+	}
+	@media (max-width: 720px) {
+		.footer-shell {
+			grid-template-columns: 1fr 1fr;
+		}
+		.footer-brand {
+			grid-column: 1 / -1;
+		}
 	}
 </style>

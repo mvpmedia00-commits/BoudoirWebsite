@@ -14,6 +14,9 @@ export default defineConfig({
   integrations: [mdx(), sitemap()],
   adapter: vercel(),
   output: 'server',
+  redirects: {
+    '/hub': '/films',
+  },
   security: {
     // Astro only trusts the request Host header for these domains. Without them every
     // request looks like it came from localhost, so same-site form posts (the vault

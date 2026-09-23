@@ -43,13 +43,13 @@ const featuredStrip = [SITE_MEDIA.one, SITE_MEDIA.two, SITE_MEDIA.three, SITE_ME
 				<img class="atmosphere-still" src={SITE_MEDIA.about} alt="" loading="eager" />
 				<div class="gallery-atmosphere-overlay"></div>
 				<div class="gallery-lead fade-up">
-					<p class="eyebrow">Curated For The Bold</p>
-					<h1>Every Body Tells A Story. Choose Where Yours Begins.</h1>
+					<p class="eyebrow">Portfolio</p>
+					<h1>Every body tells a story.</h1>
 					<p>
 						Cinematic boudoir, artistic nude, body-paint, and editorial portrait collections with discreet direction and premium
 						visual finish.
 					</p>
-					<p class="lead-note">Sensitive categories use an elegant 18+ confirmation before entry.</p>
+					<p class="lead-note">Categories marked 18+ ask you to confirm your age before viewing.</p>
 				</div>
 			</section>
 
@@ -57,11 +57,11 @@ const featuredStrip = [SITE_MEDIA.one, SITE_MEDIA.two, SITE_MEDIA.three, SITE_ME
 				{GALLERY_CATEGORIES.map((category) => (
 					<a class="category-card" href={`/gallery/${category.slug}`}>
 						<div class="category-media">
-							<img src={categoryVisuals[category.slug].image} alt={`${category.label} teaser`} loading="lazy" />
+							<img src={categoryVisuals[category.slug].image} alt={`${category.label} portfolio preview`} loading="lazy" />
 							<div class="category-wash"></div>
 						</div>
 						<div class="category-content">
-							<p class="card-kicker">{category.sensitive ? '18+ Category' : 'All Audiences'}</p>
+							<p class="card-kicker">{category.sensitive ? '18+' : 'All audiences'}</p>
 							<h2>{category.label}</h2>
 							<p>{category.description}</p>
 							<p class="category-mood">{categoryVisuals[category.slug].mood}</p>
@@ -73,34 +73,34 @@ const featuredStrip = [SITE_MEDIA.one, SITE_MEDIA.two, SITE_MEDIA.three, SITE_ME
 
 			<section class="featured-strip fade-up" aria-label="Featured Work Preview">
 				<div class="featured-track">
-					{featuredStrip.map((src) => <img src={src} alt="Featured work teaser" loading="lazy" />)}
-					{featuredStrip.map((src) => <img src={src} alt="Featured work teaser" loading="lazy" />)}
+					{featuredStrip.map((src) => <img src={src} alt="" loading="lazy" />)}
+					{featuredStrip.map((src) => <img src={src} alt="" loading="lazy" />)}
 				</div>
 			</section>
 
 			<section class="creator-reassurance fade-up">
-				<p class="eyebrow">Creator Reassurance</p>
-				<h2>Private. Empowering. Artistically Directed.</h2>
+				<p class="eyebrow">Your Session</p>
+				<h2>Private, guided, and yours</h2>
 				<div class="reassurance-grid">
 					<article>
 						<h3>Your Images, Your Control</h3>
 						<p>Publication permissions stay in your hands with clear boundaries and documented usage.</p>
 					</article>
 					<article>
-						<h3>Discreet Premium Delivery</h3>
-						<p>Secure transfer workflow for personal galleries, campaign edits, and platform-ready exports.</p>
+						<h3>Private Delivery</h3>
+						<p>Your final gallery is delivered privately, with sizes ready for print, web, and social.</p>
 					</article>
 					<article>
 						<h3>Creative Direction</h3>
-						<p>Guided posing and styling that preserves comfort while delivering cinematic, elevated outcomes.</p>
+						<p>Guided posing and styling at a pace that keeps you comfortable throughout.</p>
 					</article>
 				</div>
 			</section>
 
 			<section class="category-cta fade-up">
-				<h2>Step Into The Studio</h2>
-				<p>Begin your transformation with a private consultation and a curated concept built around your vision.</p>
-				<a class="btn btn-solid" href="/booking">Begin Your Session</a>
+				<h2>Step into the studio</h2>
+				<p>Every session starts with a private consultation and a concept built around you.</p>
+				<a class="btn btn-solid" href="/booking">Book a Consultation</a>
 			</section>
 		</main>
 		<Footer />

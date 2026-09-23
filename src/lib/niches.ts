@@ -26,9 +26,9 @@ export const NICHES: Niche[] = [
 	},
 	{
 		slug: 'afterdark',
-		name: 'Afterdark',
-		title: 'Afterdark Editorial Sessions',
-		description: 'Cinematic low-light afterdark sessions focused on mood, silhouette, and premium editorial execution.',
+		name: 'After Dark Editorial',
+		title: 'After Dark Editorial Sessions',
+		description: 'Cinematic low-light After Dark sessions focused on mood, silhouette, and premium editorial execution.',
 		hero: 'Night-driven editorial portraits designed for atmosphere, confidence, and discretion.',
 		isMature: true
 	}

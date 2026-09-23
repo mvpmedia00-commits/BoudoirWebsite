@@ -24,8 +24,6 @@ export type GalleryItem = {
 
 type BaseMedia = {
 	image: string;
-	title: string;
-	description: string;
 };
 
 export const GALLERY_CATEGORIES: GalleryCategoryMeta[] = [
@@ -50,54 +48,23 @@ export const GALLERY_CATEGORIES: GalleryCategoryMeta[] = [
 	{
 		slug: 'editorial-portrait',
 		label: 'Editorial Portrait',
-		description: 'A non-sensitive portfolio baseline for brand and portrait storytelling.',
+		description: 'Portraits for creators, brands, and personal stories, with no nudity.',
 		sensitive: false
 	}
 ];
 
 const CATEGORY_CYCLE: GalleryCategory[] = ['editorial-portrait', 'boudoir', 'artistic-nude', 'body-paint'];
 
+// Portfolio images, cycled through the gallery canvas. Replace with the final portfolio set.
 const rawBaseSet: BaseMedia[] = [
-	{
-		image: 'https://res.cloudinary.com/douekbaqn/image/upload/v1771009257/5B1A0245_yo4xcf.jpg',
-		title: 'Cloudinary Test Frame A',
-		description: 'External Cloudinary image test frame for gallery validation.'
-	},
-	{
-		image: 'https://res.cloudinary.com/douekbaqn/image/upload/v1771009327/84BC53CD-AC43-4BC4-8C9F-1E2C86489101_m2jwtm.jpg',
-		title: 'Cloudinary Test Frame B',
-		description: 'External Cloudinary image test frame for gallery validation.'
-	},
-	{
-		image: SITE_MEDIA.one,
-		title: 'Editorial Street Portrait',
-		description: 'Low-light portrait session focused on texture, contrast, and cinematic framing.'
-	},
-	{
-		image: SITE_MEDIA.two,
-		title: 'Brand Story Capture',
-		description: 'Short-form campaign frame designed for paid social and website hero usage.'
-	},
-	{
-		image: SITE_MEDIA.three,
-		title: 'Night Session Motion',
-		description: 'Fast shutter sequence with controlled blur accents to preserve movement and mood.'
-	},
-	{
-		image: SITE_MEDIA.four,
-		title: 'Environment Detail',
-		description: 'Interior-forward frame balancing spatial depth, color control, and architectural lines.'
-	},
-	{
-		image: SITE_MEDIA.five,
-		title: 'Live Crowd Energy',
-		description: 'High-energy event still captured for recap content and promotional distribution.'
-	},
-	{
-		image: SITE_MEDIA.about,
-		title: 'Client Feature Frame',
-		description: 'Clean subject-led composition with natural light control and premium grading.'
-	}
+	{ image: 'https://res.cloudinary.com/douekbaqn/image/upload/v1771009257/5B1A0245_yo4xcf.jpg' },
+	{ image: 'https://res.cloudinary.com/douekbaqn/image/upload/v1771009327/84BC53CD-AC43-4BC4-8C9F-1E2C86489101_m2jwtm.jpg' },
+	{ image: SITE_MEDIA.one },
+	{ image: SITE_MEDIA.two },
+	{ image: SITE_MEDIA.three },
+	{ image: SITE_MEDIA.four },
+	{ image: SITE_MEDIA.five },
+	{ image: SITE_MEDIA.about }
 ];
 
 const toCloudinaryOptimized = (url: string) =>
@@ -126,6 +93,8 @@ export const galleryItems: GalleryItem[] = Array.from({ length: 96 }, (_, idx) =
 	const category = CATEGORY_CYCLE[idx % CATEGORY_CYCLE.length];
 	const categoryMeta = categoryMetaBySlug[category];
 	const number = String(idx + 1).padStart(3, '0');
+	// CATEGORY_CYCLE repeats every four items, so this is the image's position within its category.
+	const categoryNumber = String(Math.floor(idx / CATEGORY_CYCLE.length) + 1).padStart(2, '0');
 	const row = Math.floor(idx / cols);
 	const col = idx % cols;
 	const width = [170, 190, 210][idx % 3];
@@ -135,8 +104,8 @@ export const galleryItems: GalleryItem[] = Array.from({ length: 96 }, (_, idx) =
 	return {
 		id: `img-${number}`,
 		image: base.image,
-		title: `${base.title} ${number}`,
-		description: base.description,
+		title: `${categoryMeta.label} No. ${categoryNumber}`,
+		description: categoryMeta.description,
 		category,
 		sensitive: categoryMeta.sensitive,
 		x,

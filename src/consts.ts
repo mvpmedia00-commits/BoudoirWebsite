@@ -1,3 +1,3 @@
 export const SITE_TITLE = 'MVP Media';
 export const SITE_DESCRIPTION =
-	'After dark boudoir, artistic nude, and adult editorial photography with discreet, luxury sessions.';
+	'Fine art boudoir, artistic nude, body paint, and editorial portrait photography across the United States, with private, discreet sessions.';

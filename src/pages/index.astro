@@ -54,7 +54,13 @@ const getVideoPoster = (src: string) => src.replace(',vc_auto', '').replace('.mp
 
 const homeSchema = {
 	'@context': 'https://schema.org',
-	// ...add schema properties here...
+	'@type': 'ProfessionalService',
+	name: SITE_TITLE,
+	description: SITE_DESCRIPTION,
+	url: Astro.site?.href,
+	image: SITE_MEDIA.about,
+	email: 'hello@mvpmedia.studio',
+	areaServed: 'United States'
 };
 // ...existing code...
 ---
@@ -107,9 +113,8 @@ const homeSchema = {
 
 				<div class="hero-content-wrap">
 					<div class="hero-copy">
-						<p class="hero-kicker">Private Studio Sessions</p>
-						<p class="hero-strap">Luxury Boudoir Direction</p>
-						<p class="hero-location">New York and Destination Commissions</p>
+						<p class="hero-kicker">Fine Art Boudoir and Portraiture</p>
+						<p class="hero-location">United States</p>
 
 						<div class="hero-title-video-box">
 							<img class="hero-title-video" src={SITE_MEDIA.about} alt="" loading="eager" decoding="async" fetchpriority="high" />
@@ -122,8 +127,8 @@ const homeSchema = {
 						</p>
 						<div class="hero-divider"></div>
 						<div class="hero-actions">
-							<a class="btn btn-solid" href="/booking" data-track data-track-element="hero_book_session">Book Session</a>
-							<a class="btn btn-ghost" href="/gallery" data-track data-track-element="hero_view_gallery">View Gallery</a>
+							<a class="btn btn-solid" href="/booking" data-track data-track-element="hero_book_session">Book a Consultation</a>
+							<a class="btn btn-ghost" href="/gallery" data-track data-track-element="hero_view_gallery">View Portfolio</a>
 						</div>
 						<div class="hero-meta">
 							<span>Bespoke Direction</span>
@@ -138,7 +143,7 @@ const homeSchema = {
 				<section class="category-preview section--warm fade-up">
 					<div class="section-head">
 						<p class="section-kicker">Portfolio</p>
-						<h2 class="heading-accent">Choose Your Category</h2>
+						<h2 class="heading-accent">Explore the portfolio</h2>
 					</div>
 					<div class="category-grid">
 						<a class="category-card" href="/gallery/boudoir" data-track data-track-element="home_category_boudoir">
@@ -183,7 +188,7 @@ const homeSchema = {
 				<section class="immersive-reel section--rose fade-up">
 					<div class="section-head">
 						<p class="section-kicker">Visual Atmosphere</p>
-						<h2 class="heading-accent">Color, Motion, Mood</h2>
+						<h2 class="heading-accent">Color, motion, and mood</h2>
 					</div>
 					<div class="reel-grid">
 						<article class="reel-card">
@@ -229,11 +234,11 @@ const homeSchema = {
 				<section class="identity-statement section--dark fade-up">
 					<div class="section-head">
 						<p class="section-kicker">Art Direction</p>
-						<h2 class="heading-accent">Intimate. Cinematic. Elevated.</h2>
+						<h2 class="heading-accent">Every frame, considered</h2>
 					</div>
 					<p>
-						We create boudoir, artistic nude, body-paint, and creator-focused visual work with a luxury editorial finish.
-						Every set is designed for atmosphere, confidence, and intention.
+						Boudoir, artistic nude, body paint, and editorial portraiture with a fine art finish. Every session is planned
+						around atmosphere, confidence, and intention.
 					</p>
 					<div class="identity-moodboard">
 						<div class="art-frame"><img src={SITE_MEDIA.three} alt="Moody studio silhouette" loading="lazy" /></div>
@@ -244,12 +249,12 @@ const homeSchema = {
 
 				<section class="privacy-block section--dark fade-up">
 					<div class="section-head">
-						<p class="section-kicker">Privacy + Discretion</p>
-						<h2 class="heading-accent">Confidential By Design</h2>
+						<p class="section-kicker">Privacy and Discretion</p>
+						<h2 class="heading-accent">Confidential by design</h2>
 					</div>
 					<p>
-						Every session includes consent-first planning, private production flow, and controlled release options. You decide
-						what is shared, where it appears, and how final files are delivered.
+						Every session begins with consent and ends with private delivery. You decide what is shared, where it appears,
+						and how your final images reach you.
 					</p>
 					<ul>
 						<li>Private consultation and clear boundaries before production</li>
@@ -261,7 +266,7 @@ const homeSchema = {
 				<section class="process-block section--rose fade-up">
 					<div class="section-head">
 						<p class="section-kicker">How It Works</p>
-						<h2 class="heading-accent">Consultation To Delivery</h2>
+						<h2 class="heading-accent">From consultation to delivery</h2>
 					</div>
 					<div class="process-grid">
 						<article>
@@ -281,8 +286,8 @@ const homeSchema = {
 						</article>
 						<article>
 							<p class="step">04</p>
-							<h3>Retouch + Delivery</h3>
-							<p>Curated finals delivered discreetly with clear publishing permissions.</p>
+							<h3>Retouching and Delivery</h3>
+							<p>A curated, retouched gallery delivered privately, with clear publishing permissions.</p>
 						</article>
 					</div>
 					<div class="process-visual art-frame">
@@ -301,40 +306,20 @@ const homeSchema = {
 					></video>
 					<div class="signature-overlay"></div>
 					<div class="signature-copy">
-						<p class="section-kicker">Signature Moment</p>
-						<h2 class="heading-accent">A Session That Feels Like Cinema</h2>
+						<p class="section-kicker">The Experience</p>
+						<h2 class="heading-accent">A session that feels like cinema</h2>
 						<p>
 							Soft direction, intentional movement, and refined color design that turns confidence into timeless visual work.
 						</p>
-						<a class="btn btn-solid" href="/booking" data-track data-track-element="home_begin_session">Begin Your Session</a>
+						<a class="btn btn-solid" href="/booking" data-track data-track-element="home_begin_session">Book a Consultation</a>
 					</div>
 				</section>
 
-				<section class="creator-focus section--warm fade-up">
-					<div class="section-head">
-						<p class="section-kicker">Creator Focus</p>
-						<h2 class="heading-accent">Control, Privacy, Creative Ownership</h2>
-					</div>
-					<div class="creator-grid">
-						<article>
-							<h3>Discreet Production</h3>
-							<p>Private sets, controlled teams, and secure asset delivery designed around your boundaries.</p>
-						</article>
-						<article>
-							<h3>Creative Direction</h3>
-							<p>Posing, styling, and narrative guidance built for artistic storytelling and platform-ready edits.</p>
-						</article>
-						<article>
-							<h3>Content Ownership</h3>
-							<p>Clear usage agreements and publishing control so you decide what is shared and where.</p>
-						</article>
-					</div>
-				</section>
 
 				<section class="testimonials-block section--dark fade-up">
 					<div class="section-head">
 						<p class="section-kicker">Client Feedback</p>
-						<h2 class="heading-accent">Trusted Experience</h2>
+						<h2 class="heading-accent">In our clients' words</h2>
 					</div>
 					<div class="testimonials-grid">
 						<article>
@@ -354,21 +339,14 @@ const homeSchema = {
 					</div>
 				</section>
 
-				<section class="statement-band fade-up">
-					<h2 class="heading-accent">We Tell Stories With Light, Shadow, and Skin</h2>
-					<p>
-						Intimate, cinematic sessions that honor the body as art with discreet, premium delivery for boudoir, artistic nude,
-						and body paint commissions.
-					</p>
-				</section>
 
 				<section class="final-cta fade-up" id="contact">
 					<div>
-						<h2>Step Into The Studio</h2>
-						<p>Tell us your concept and ideal timeline. We will respond with a private planning path.</p>
+						<h2>Step into the studio</h2>
+						<p>Tell us your idea and ideal timeline. We will reply privately with options, pricing, and availability.</p>
 					</div>
 					<div class="final-cta-actions">
-						<a class="btn btn-solid" href="/booking" data-track data-track-element="home_book_consultation">Begin Your Session</a>
+						<a class="btn btn-solid" href="/booking" data-track data-track-element="home_book_consultation">Book a Consultation</a>
 						<a class="btn btn-ghost" href="/gallery" data-track data-track-element="home_view_portfolio">View Portfolio</a>
 					</div>
 				</section>
@@ -411,23 +389,29 @@ const homeSchema = {
 			video.load();
 		};
 
+		// Deferred clips only download once they are about to scroll into view, and never for
+		// visitors on data saver or with reduced motion (they keep the still poster frames).
+		const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+		const skipDeferred =
+			connection?.saveData === true || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 		const hydrateDeferredVideos = () => {
-			if (!deferredVideos.length) return;
-			let cursor = 0;
-			const runBatch = () => {
-				const batch = deferredVideos.slice(cursor, cursor + 2);
-				batch.forEach((video) => hydrateVideo(video));
-				cursor += batch.length;
-				if (cursor < deferredVideos.length) {
-					window.setTimeout(runBatch, 180);
-				}
-			};
-			const scheduleBatch = () => window.requestAnimationFrame(runBatch);
-			if (typeof window.requestIdleCallback === 'function') {
-				window.requestIdleCallback(scheduleBatch, { timeout: 1200 });
+			if (!deferredVideos.length || skipDeferred) return;
+			if (!('IntersectionObserver' in window)) {
+				deferredVideos.forEach(hydrateVideo);
 				return;
 			}
-			setTimeout(scheduleBatch, 120);
+			const observer = new IntersectionObserver(
+				(entries) => {
+					entries.forEach((entry) => {
+						if (!entry.isIntersecting || !(entry.target instanceof HTMLVideoElement)) return;
+						hydrateVideo(entry.target);
+						observer.unobserve(entry.target);
+					});
+				},
+				{ rootMargin: '200px 0px' }
+			);
+			deferredVideos.forEach((video) => observer.observe(video));
 		};
 
 		if (!primeVideos.length) {
@@ -529,7 +513,7 @@ const homeSchema = {
 	}
 	.post-hero-info > section {
 		content-visibility: auto;
-		contain-intrinsic-size: 760px;
+		contain-intrinsic-block-size: 760px;
 	}
 	.hero-noise {
 		position: absolute;
@@ -733,6 +717,7 @@ const homeSchema = {
 		color: #dfdfdf;
 		padding: 2.4rem 1rem 2.2rem;
 		display: grid;
+		grid-template-columns: minmax(0, 1fr);
 		gap: 1.5rem;
 	}
 	.post-hero-info > section + section {

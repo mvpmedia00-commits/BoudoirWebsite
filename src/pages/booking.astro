@@ -4,77 +4,139 @@ import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import LeadForm from '../components/ui/LeadForm.astro';
 import { SITE_TITLE } from '../consts';
+
+const sessions = [
+	{ title: 'Boudoir', copy: 'Guided sessions in the studio or a private location of your choice.' },
+	{ title: 'Artistic Nude', copy: 'Fine art portraiture shaped by form, light, and composition.' },
+	{ title: 'Body Paint', copy: 'Collaborative body-art concepts, from first sketch to final frame.' },
+	{ title: 'After Dark Editorial', copy: 'Low-light cinematic sets with controlled mood and styling.' },
+	{ title: 'Editorial Portrait', copy: 'Portraits for creators and brands, with no nudity.' },
+	{ title: 'Film', copy: 'Short cinematic films, on their own or alongside a photo session.' }
+];
+
+const steps = [
+	'We read your inquiry and reply privately.',
+	'You receive session options, pricing, and availability.',
+	'We agree on the plan and confirm your date.'
+];
 ---
 
 <!doctype html>
 <html lang="en">
 	<head>
-		<BaseHead title={`Booking | ${SITE_TITLE}`} description="Start your after dark boudoir project with a discreet intake and fast response." />
+		<BaseHead
+			title={`Book a Consultation | ${SITE_TITLE}`}
+			description="Request a private consultation for a boudoir, artistic nude, body paint, editorial, or film session with MVP Media."
+		/>
 	</head>
 	<body>
 		<Header />
-		<main>
-			<section class="booking-intro">
-				<p class="eyebrow">Booking</p>
-				<h1>Start Your Boudoir Session</h1>
-				<p>
-					Share your vision, comfort level, and preferred timeline. We qualify first, then schedule privately.
-				</p>
-			</section>
+		<main class="booking">
+			<div class="booking-grid">
+				<div class="booking-info">
+					<p class="eyebrow">Book a Consultation</p>
+					<h1>Let's plan your session.</h1>
+					<p class="lead">
+						Tell us about your idea, your comfort level, and your preferred timeline. Every inquiry is read personally and
+						answered privately.
+					</p>
 
-			<section class="offers">
-				<article>
-					<h2>Private Boudoir</h2>
-					<p>Discreet boudoir sessions in studio or private location with guided direction.</p>
-				</article>
-				<article>
-					<h2>Artistic Nude</h2>
-					<p>Fine-art nude portrait direction with tasteful framing and privacy-first pacing.</p>
-				</article>
-				<article>
-					<h2>Afterdark Editorial</h2>
-					<p>Low-light cinematic sets with controlled mood, styling, and confidential delivery.</p>
-				</article>
-			</section>
+					<h2>Sessions</h2>
+					<ul class="sessions">
+						{sessions.map((session) => (
+							<li>
+								<h3>{session.title}</h3>
+								<p>{session.copy}</p>
+							</li>
+						))}
+					</ul>
 
-			<section class="next-steps">
-				<h2>What Happens Next</h2>
-				<p>1. We review your inquiry and goals.</p>
-				<p>2. You receive options, pricing range, and availability.</p>
-				<p>3. We confirm scope and lock in your date.</p>
-			</section>
+					<h2>What happens next</h2>
+					<ol class="steps">
+						{steps.map((step) => <li>{step}</li>)}
+					</ol>
+				</div>
 
-			<section>
-				<LeadForm niche="boudoir" source="booking-page" />
-			</section>
+				<div class="booking-form">
+					<LeadForm niche="boudoir" source="booking-page" chooseSession />
+					<p class="direct">Prefer email? Write to <a href="mailto:hello@mvpmedia.studio">hello@mvpmedia.studio</a>.</p>
+				</div>
+			</div>
 		</main>
 		<Footer />
 	</body>
 </html>
 
 <style>
-	main {
+	.booking {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding-top: clamp(2.5rem, 6vw, 4.5rem);
+	}
+	.booking-grid {
 		display: grid;
-		gap: 1.1rem;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		gap: clamp(2rem, 5vw, 4.5rem);
+		align-items: start;
 	}
-	.booking-intro,
-	.next-steps,
-	.offers article {
-		background: linear-gradient(145deg, var(--surface), var(--surface-elevated));
-		border: 1px solid var(--stroke);
-		border-radius: var(--radius);
-		padding: 1.1rem;
+	.booking h1 {
+		font-size: clamp(2.4rem, 5vw, 3.8rem);
 	}
-	.offers {
+	.lead {
+		font-size: 1.08rem;
+		color: #d8d2cb;
+	}
+	.booking h2 {
+		margin-top: 2.25rem;
+		font-size: 1.6rem;
+	}
+	.sessions {
+		list-style: none;
+		margin: 0;
+		padding: 0;
 		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: 0.8rem;
+		grid-template-columns: 1fr 1fr;
+		gap: 1.25rem 1.5rem;
 	}
-	.next-steps p {
-		margin-bottom: 0.4rem;
+	.sessions h3 {
+		font-size: 1.2rem;
+		margin-bottom: 0.25rem;
+	}
+	.sessions p {
+		margin: 0;
+		font-size: 0.93rem;
+		line-height: 1.6;
+	}
+	.steps {
+		margin: 0;
+		padding-left: 1.2rem;
+		color: var(--text-muted);
+		display: grid;
+		gap: 0.5rem;
+	}
+	.steps li::marker {
+		color: var(--brand-strong);
+	}
+	.booking-form {
+		position: sticky;
+		top: 6rem;
+	}
+	.direct {
+		margin-top: 1rem;
+		font-size: 0.9rem;
+		text-align: center;
+		max-width: none;
 	}
 	@media (max-width: 900px) {
-		.offers {
+		.booking-grid {
+			grid-template-columns: 1fr;
+		}
+		.booking-form {
+			position: static;
+		}
+	}
+	@media (max-width: 520px) {
+		.sessions {
 			grid-template-columns: 1fr;
 		}
 	}

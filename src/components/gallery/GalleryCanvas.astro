@@ -15,12 +15,10 @@ const INITIAL_RENDER_COUNT = 24;
 
 <main class="gallery-main">
 	<section class="gallery-head">
-		<p class="eyebrow">MVP Media Gallery</p>
+		<p class="eyebrow"><a href="/gallery">Portfolio</a></p>
 		<h1>{title}</h1>
-		<p>
-			{description}
-			Loaded: <strong>{items.length}</strong> images.
-		</p>
+		<p>{description}</p>
+		<p class="gallery-hint">Drag images to rearrange them. Select any image to view it larger.</p>
 	</section>
 
 	<section class="stage-shell">
@@ -50,7 +48,7 @@ const INITIAL_RENDER_COUNT = 24;
 
 			<div class="credit">
 				<h3>MVP Media</h3>
-				<p>Cinematic photography and visual storytelling</p>
+				<p>Fine art photography and film</p>
 			</div>
 		</div>
 	</section>
@@ -375,6 +373,15 @@ const INITIAL_RENDER_COUNT = 24;
 	.gallery-head h1 {
 		font-size: clamp(2rem, 6vw, 4.2rem);
 		margin: 0.2rem 0 0.5rem;
+	}
+	.gallery-head .eyebrow a {
+		color: inherit;
+		text-decoration: none;
+	}
+	.gallery-hint {
+		font-size: 0.85rem;
+		color: var(--text-muted);
+		opacity: 0.8;
 	}
 	.stage-shell {
 		margin: 0 1rem;

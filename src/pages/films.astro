@@ -1,0 +1,361 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import { SITE_TITLE } from '../consts';
+import { SITE_MEDIA } from '../data/siteMedia';
+
+const FEATURED_FILM = 'https://drive.google.com/file/d/1RizgFs5c6eV4A7hWAinKD7jsAl_k-xmI/preview';
+
+const filmTypes = [
+	{
+		title: 'Boudoir Films',
+		copy: 'A short, private film made alongside your photo session. Slow movement, soft light, and the same guided direction as the stills.',
+		image: SITE_MEDIA.one
+	},
+	{
+		title: 'Artistic Motion Studies',
+		copy: 'Fine-art studies of form and shadow, shot and graded like cinema. Built around composition rather than trend.',
+		image: SITE_MEDIA.two
+	},
+	{
+		title: 'Body Paint Process Films',
+		copy: 'The transformation from bare canvas to finished piece, captured from first brushstroke to final frame.',
+		image: SITE_MEDIA.three
+	},
+	{
+		title: 'Editorial and Brand Films',
+		copy: 'Portrait-led motion for creators, campaigns, and lookbooks, with no nudity and cut for every platform you publish on.',
+		image: SITE_MEDIA.about
+	}
+];
+
+const craft = [
+	{ title: 'Concept and Treatment', copy: 'Mood, references, wardrobe, and boundaries agreed before anything is filmed.' },
+	{ title: 'Direction and Capture', copy: 'Calm, guided direction on a closed set, with lighting designed for skin and shadow.' },
+	{ title: 'Edit and Pacing', copy: 'An edit that breathes. Rhythm and restraint over fast cuts.' },
+	{ title: 'Color Grading', copy: 'A cinematic grade matched to your stills, so the photos and the film feel like one body of work.' },
+	{ title: 'Sound and Music', copy: 'Music and a clean mix chosen to suit the mood of the film.' },
+	{ title: 'Private Delivery', copy: 'Secure, private delivery in the formats you need, from a full-length cut to short vertical versions.' }
+];
+
+const steps = [
+	{ title: 'Consultation', copy: 'We talk through your idea, comfort level, and how the film will be used.' },
+	{ title: 'Planning', copy: 'Treatment, schedule, location, and wardrobe are mapped and confirmed.' },
+	{ title: 'Filming', copy: 'A relaxed, directed session on a closed set.' },
+	{ title: 'Edit and Delivery', copy: 'The film is edited and graded, then your final files are delivered privately.' }
+];
+
+const filmsSchema = {
+	'@context': 'https://schema.org',
+	'@type': 'Service',
+	name: `${SITE_TITLE} Films`,
+	serviceType: 'Boudoir and fine art film production',
+	provider: { '@type': 'Organization', name: SITE_TITLE },
+	areaServed: 'United States',
+	url: Astro.url.href
+};
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title={`Films | ${SITE_TITLE}`}
+			description="Boudoir, fine art, body paint, and editorial films, directed, graded, and delivered privately across the United States."
+			image={SITE_MEDIA.about}
+			jsonLd={filmsSchema}
+		/>
+	</head>
+	<body>
+		<Header />
+		<main class="films">
+			<section class="films-hero">
+				<img class="films-hero-image" src={SITE_MEDIA.about} alt="" loading="eager" fetchpriority="high" decoding="async" />
+				<div class="films-hero-overlay"></div>
+				<div class="films-shell films-hero-content">
+					<p class="eyebrow">Films</p>
+					<h1>Motion, made with the same care as the still.</h1>
+					<p class="lead">
+						Short, cinematic films for boudoir, fine art, body paint, and editorial clients. Directed on a closed set,
+						graded like cinema, and delivered privately.
+					</p>
+					<div class="hero-actions">
+						<a class="btn btn-solid" href="/booking">Discuss a Film</a>
+						<a class="btn btn-ghost" href="#featured">Watch the Reel</a>
+					</div>
+				</div>
+			</section>
+
+			<section class="films-section" id="featured">
+				<div class="films-shell featured-grid">
+					<div>
+						<p class="eyebrow">Featured</p>
+						<h2>The Reel</h2>
+						<p>
+							A selection of recent motion work: light, movement, and restraint. Every film begins with a consultation and
+							ends with private delivery.
+						</p>
+						<a class="btn btn-ghost" href="/booking">Start a Project</a>
+					</div>
+					<div class="film-frame">
+						<iframe
+							src={FEATURED_FILM}
+							title={`${SITE_TITLE} featured reel`}
+							loading="lazy"
+							allow="autoplay; encrypted-media; picture-in-picture"
+							allowfullscreen
+						></iframe>
+					</div>
+				</div>
+			</section>
+
+			<section class="films-section">
+				<div class="films-shell">
+					<header class="section-intro">
+						<p class="eyebrow">What We Film</p>
+						<h2>Four kinds of film</h2>
+					</header>
+					<div class="film-types">
+						{filmTypes.map((film, index) => (
+							<article class:list={['film-type', { reverse: index % 2 === 1 }]}>
+								<div class="film-type-media">
+									<img src={film.image} alt="" loading="lazy" decoding="async" />
+								</div>
+								<div class="film-type-copy">
+									<p class="film-index">{String(index + 1).padStart(2, '0')}</p>
+									<h3>{film.title}</h3>
+									<p>{film.copy}</p>
+								</div>
+							</article>
+						))}
+					</div>
+				</div>
+			</section>
+
+			<section class="films-section films-section--warm">
+				<div class="films-shell">
+					<header class="section-intro">
+						<p class="eyebrow">The Craft</p>
+						<h2>What every film includes</h2>
+					</header>
+					<div class="craft-grid">
+						{craft.map((item) => (
+							<article class="craft-card">
+								<h3>{item.title}</h3>
+								<p>{item.copy}</p>
+							</article>
+						))}
+					</div>
+				</div>
+			</section>
+
+			<section class="films-section">
+				<div class="films-shell">
+					<header class="section-intro">
+						<p class="eyebrow">Process</p>
+						<h2>From first call to final cut</h2>
+					</header>
+					<ol class="steps">
+						{steps.map((step, index) => (
+							<li>
+								<span class="step-number">{String(index + 1).padStart(2, '0')}</span>
+								<h3>{step.title}</h3>
+								<p>{step.copy}</p>
+							</li>
+						))}
+					</ol>
+				</div>
+			</section>
+
+			<section class="films-section films-cta">
+				<div class="films-shell">
+					<p class="eyebrow">Private Commissions</p>
+					<h2>Have a film in mind?</h2>
+					<p>Tell us your idea and timeline. We will reply privately with options, pricing, and availability.</p>
+					<a class="btn btn-solid" href="/booking">Book a Consultation</a>
+				</div>
+			</section>
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<style>
+	.films {
+		padding: 0;
+	}
+	.films-shell {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 0 clamp(1rem, 3vw, 2rem);
+	}
+	.films-hero {
+		position: relative;
+		min-height: min(78vh, 760px);
+		display: flex;
+		align-items: flex-end;
+		overflow: hidden;
+		border-bottom: 1px solid var(--stroke);
+	}
+	.films-hero-image {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: center 30%;
+	}
+	.films-hero-overlay {
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(180deg, rgba(5, 5, 5, 0.35) 0%, rgba(5, 5, 5, 0.65) 55%, rgba(5, 5, 5, 0.96) 100%);
+	}
+	.films-hero-content {
+		position: relative;
+		width: 100%;
+		padding-top: 6rem;
+		padding-bottom: clamp(3rem, 8vw, 5.5rem);
+	}
+	.films-hero h1 {
+		max-width: 16ch;
+		font-size: clamp(2.6rem, 6vw, 5rem);
+	}
+	.lead {
+		font-size: 1.1rem;
+		color: #d8d2cb;
+		max-width: 56ch;
+	}
+	.films-section {
+		padding: clamp(3.5rem, 8vw, 6rem) 0;
+	}
+	.films-section--warm {
+		background: var(--bg-amber-gradient);
+	}
+	.section-intro {
+		margin-bottom: 2.5rem;
+	}
+	.featured-grid {
+		display: grid;
+		grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+		gap: clamp(1.5rem, 4vw, 3.5rem);
+		align-items: center;
+	}
+	.film-frame {
+		position: relative;
+		aspect-ratio: 16 / 9;
+		border-radius: var(--radius);
+		overflow: hidden;
+		border: 1px solid var(--stroke);
+		background: #000;
+		box-shadow: var(--shadow-soft);
+	}
+	.film-frame iframe {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		border: 0;
+	}
+	.film-types {
+		display: grid;
+		gap: clamp(2rem, 5vw, 4rem);
+	}
+	.film-type {
+		display: grid;
+		grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+		gap: clamp(1.25rem, 4vw, 3.5rem);
+		align-items: center;
+	}
+	.film-type.reverse .film-type-media {
+		order: 2;
+	}
+	.film-type-media {
+		aspect-ratio: 16 / 10;
+		border-radius: var(--radius);
+		overflow: hidden;
+		border: 1px solid var(--stroke);
+		background: var(--surface);
+	}
+	.film-type-media img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		transition: transform 0.8s ease;
+	}
+	.film-type:hover .film-type-media img {
+		transform: scale(1.03);
+	}
+	.film-index,
+	.step-number {
+		color: var(--brand-strong);
+		font-size: 0.8rem;
+		letter-spacing: 0.2em;
+		margin-bottom: 0.6rem;
+	}
+	.film-type h3 {
+		font-size: clamp(1.6rem, 3vw, 2.3rem);
+	}
+	.craft-grid {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 1rem;
+	}
+	.craft-card {
+		padding: 1.6rem;
+		border-radius: var(--radius);
+		border: 1px solid var(--stroke);
+		background: linear-gradient(145deg, rgba(12, 12, 12, 0.85), rgba(18, 18, 18, 0.85));
+	}
+	.craft-card h3,
+	.steps h3 {
+		font-size: 1.35rem;
+	}
+	.craft-card p,
+	.steps p {
+		margin: 0;
+	}
+	.steps {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 1rem;
+	}
+	.steps li {
+		padding-top: 1.2rem;
+		border-top: 1px solid var(--brand-deep);
+	}
+	.films-cta {
+		text-align: center;
+		background: radial-gradient(circle at top, #2b1518 0%, #050505 60%);
+	}
+	.films-cta p {
+		margin-left: auto;
+		margin-right: auto;
+	}
+	.films-cta .btn {
+		display: inline-block;
+		margin-top: 0.8rem;
+	}
+	@media (max-width: 900px) {
+		.featured-grid,
+		.film-type {
+			grid-template-columns: 1fr;
+		}
+		.film-type.reverse .film-type-media {
+			order: 0;
+		}
+		.craft-grid,
+		.steps {
+			grid-template-columns: 1fr 1fr;
+		}
+	}
+	@media (max-width: 560px) {
+		.craft-grid,
+		.steps {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

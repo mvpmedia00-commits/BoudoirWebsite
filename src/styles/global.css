@@ -41,6 +41,8 @@ body {
   margin: 0;
   padding: 0;
   background: var(--bg-warm-gradient);
+  /* Decorative glows and marquees must never cause sideways scrolling on phones. */
+  overflow-x: clip;
 }
 
 body {

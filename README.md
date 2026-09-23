@@ -39,7 +39,7 @@ Without PocketBase, the site still renders: lead submissions fail with a friendl
 src/
 ├── pages/                 Routes (file name = URL)
 │   ├── index.astro        Home (prerendered static page)
-│   ├── hub.astro          Media hub
+│   ├── films.astro        Films (/hub redirects here)
 │   ├── gallery.astro      Gallery overview
 │   ├── gallery/[category] boudoir, artistic-nude, body-paint, editorial-portrait
 │   ├── land/[slug]        Niche landing pages (mature ones are age-gated)

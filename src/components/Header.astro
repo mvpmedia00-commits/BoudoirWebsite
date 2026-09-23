@@ -1,97 +1,228 @@
 ---
+import { getCollection } from 'astro:content';
 import { SITE_TITLE } from '../consts';
 import HeaderLink from './HeaderLink.astro';
+
+// Only link the journal once there is something to read.
+const hasJournal = (await getCollection('blog', ({ data }) => !data.draft)).length > 0;
+
+const links = [
+	{ href: '/gallery', label: 'Portfolio' },
+	{ href: '/films', label: 'Films' },
+	{ href: '/about', label: 'About' },
+	...(hasJournal ? [{ href: '/blog', label: 'Journal' }] : []),
+	{ href: '/vault', label: 'Vault' }
+];
 ---
 
-<header>
-	<nav class="nav-shell">
-		<h2 class="brand"><a href="/">{SITE_TITLE}</a></h2>
-		<div class="internal-links" aria-label="Primary">
-			<HeaderLink href="/">Home</HeaderLink>
-			<HeaderLink href="/gallery">Gallery</HeaderLink>
-			<HeaderLink href="/gallery/editorial-portrait">Editorial</HeaderLink>
-			<HeaderLink href="/gallery/boudoir">Boudoir</HeaderLink>
-			<HeaderLink href="/hub">Hub</HeaderLink>
-			<HeaderLink href="/editor-lab">Editor Lab</HeaderLink>
-			<HeaderLink href="/blog">Blog</HeaderLink>
-			<HeaderLink href="/vault">Vault</HeaderLink>
-			<HeaderLink href="/booking">Consultation</HeaderLink>
-			<HeaderLink href="/about">About</HeaderLink>
-			<a href="/#contact">Contact</a>
+<header class="site-header">
+	<nav class="nav-shell" aria-label="Primary">
+		<a class="brand" href="/">{SITE_TITLE}</a>
+		<button
+			class="menu-toggle"
+			type="button"
+			aria-expanded="false"
+			aria-controls="site-menu"
+			data-menu-toggle
+		>
+			<span class="menu-icon" aria-hidden="true"></span>
+			<span class="menu-label">Menu</span>
+		</button>
+		<div class="menu" id="site-menu" data-menu>
+			<ul class="internal-links">
+				{links.map((link) => (
+					<li><HeaderLink href={link.href}>{link.label}</HeaderLink></li>
+				))}
+			</ul>
+			<a class="book-link" href="/booking">Book a Consultation</a>
 		</div>
-		<a class="book-link" href="/booking">Book Consultation</a>
 	</nav>
 </header>
+
+<script>
+	const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+	const menu = document.querySelector<HTMLElement>('[data-menu]');
+	if (toggle && menu) {
+		const setOpen = (open: boolean) => {
+			toggle.setAttribute('aria-expanded', String(open));
+			menu.classList.toggle('is-open', open);
+			document.body.classList.toggle('menu-open', open);
+		};
+		toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
+		document.addEventListener('keydown', (event) => {
+			if (event.key === 'Escape' && menu.classList.contains('is-open')) {
+				setOpen(false);
+				toggle.focus();
+			}
+		});
+		window.matchMedia('(min-width: 861px)').addEventListener('change', (event) => {
+			if (event.matches) setOpen(false);
+		});
+	}
+</script>
+
 <style>
-	header {
+	.site-header {
 		position: sticky;
 		top: 0;
-		z-index: 10;
-		padding: 0.8rem 1rem;
-		background: rgba(7, 7, 7, 0.9);
-		backdrop-filter: blur(8px);
+		z-index: 50;
+		background: rgba(7, 7, 7, 0.88);
+		backdrop-filter: blur(10px);
 		border-bottom: 1px solid var(--stroke);
 	}
 	.nav-shell {
-		width: 100%;
-		margin: 0;
+		max-width: 1320px;
+		margin: 0 auto;
+		padding: 0.85rem clamp(1rem, 3vw, 2rem);
 		display: flex;
 		align-items: center;
-		gap: 1rem;
 		justify-content: space-between;
+		gap: 1.5rem;
 	}
 	.brand {
-		margin: 0;
-		font-size: 1.05rem;
-		letter-spacing: 0.02em;
-		text-transform: uppercase;
-	}
-	.brand a {
-		text-decoration: none;
 		color: var(--text-primary);
+		text-decoration: none;
+		font-weight: 700;
+		font-size: 1rem;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+		white-space: nowrap;
+	}
+	.menu {
+		display: flex;
+		align-items: center;
+		gap: 1.75rem;
 	}
 	.internal-links {
 		display: flex;
 		align-items: center;
-		gap: 0.5rem;
+		gap: 1.6rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
 	}
-	.internal-links a {
-		padding: 0.4rem 0.7rem;
+	.internal-links :global(a) {
 		color: var(--text-muted);
+		font-size: 0.82rem;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
 		text-decoration: none;
-		font-size: 0.95rem;
-		border-radius: 999px;
+		padding: 0.35rem 0;
+		border-bottom: 1px solid transparent;
+		transition: color 0.2s ease, border-color 0.2s ease;
 	}
-	.internal-links a:hover,
-	.internal-links a.active {
-		background: rgba(157, 135, 95, 0.2);
+	.internal-links :global(a:hover),
+	.internal-links :global(a.active) {
 		color: var(--text-primary);
+		border-bottom-color: var(--brand-strong);
 	}
 	.book-link {
+		color: #0a0a0a;
 		background: var(--brand-strong);
-		color: #090909;
 		text-decoration: none;
-		padding: 0.6rem 1rem;
-		font-size: 0.85rem;
-		letter-spacing: 0.06em;
+		font-size: 0.78rem;
+		font-weight: 700;
+		letter-spacing: 0.12em;
 		text-transform: uppercase;
+		padding: 0.7rem 1.15rem;
 		border-radius: 999px;
+		white-space: nowrap;
+		transition: background 0.2s ease;
 	}
 	.book-link:hover {
 		background: #f1dfbe;
 	}
-	@media (max-width: 760px) {
-		.nav-shell {
-			flex-wrap: wrap;
+	.menu-toggle {
+		display: none;
+		align-items: center;
+		gap: 0.6rem;
+		background: none;
+		border: 1px solid var(--stroke);
+		border-radius: 999px;
+		color: var(--text-primary);
+		font: inherit;
+		font-size: 0.78rem;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		padding: 0.55rem 0.95rem;
+		cursor: pointer;
+	}
+	.menu-icon,
+	.menu-icon::before,
+	.menu-icon::after {
+		display: block;
+		width: 16px;
+		height: 1.5px;
+		background: currentColor;
+		transition: transform 0.2s ease, opacity 0.2s ease;
+	}
+	.menu-icon {
+		position: relative;
+	}
+	.menu-icon::before,
+	.menu-icon::after {
+		content: '';
+		position: absolute;
+		left: 0;
+	}
+	.menu-icon::before {
+		top: -5px;
+	}
+	.menu-icon::after {
+		top: 5px;
+	}
+	.menu-toggle[aria-expanded='true'] .menu-icon {
+		background: transparent;
+	}
+	.menu-toggle[aria-expanded='true'] .menu-icon::before {
+		transform: translateY(5px) rotate(45deg);
+	}
+	.menu-toggle[aria-expanded='true'] .menu-icon::after {
+		transform: translateY(-5px) rotate(-45deg);
+	}
+
+	@media (max-width: 860px) {
+		.menu-toggle {
+			display: inline-flex;
+		}
+		.menu {
+			display: none;
+			position: absolute;
+			top: 100%;
+			left: 0;
+			right: 0;
+			flex-direction: column;
+			align-items: stretch;
+			gap: 1.25rem;
+			padding: 1.25rem clamp(1rem, 3vw, 2rem) 1.75rem;
+			background: #070707;
+			box-shadow: 0 24px 40px rgba(0, 0, 0, 0.6);
+			border-bottom: 1px solid var(--stroke);
+		}
+		.menu.is-open {
+			display: flex;
 		}
 		.internal-links {
-			order: 3;
-			width: 100%;
-			justify-content: center;
-			padding-top: 0.2rem;
+			flex-direction: column;
+			align-items: stretch;
+			gap: 0;
+		}
+		.internal-links :global(a) {
+			display: block;
+			padding: 0.95rem 0;
+			font-size: 0.9rem;
+			border-bottom: 1px solid var(--stroke);
+		}
+		.internal-links :global(a.active) {
+			border-bottom-color: var(--stroke);
+			color: var(--brand-strong);
 		}
 		.book-link {
-			margin-left: auto;
+			text-align: center;
+			padding: 0.95rem 1.15rem;
 		}
+	}
+	:global(body.menu-open) {
+		overflow: hidden;
 	}
 </style>

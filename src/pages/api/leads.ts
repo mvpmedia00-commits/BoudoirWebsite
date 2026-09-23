@@ -6,6 +6,11 @@ const json = (body: unknown, status = 200) =>
 	new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
 const LEAD_STATUSES = new Set(['new', 'contacted', 'booked']);
+
+// Values the live PocketBase `niche` select accepts. Other session types (body paint, film, ...)
+// are stored as 'boudoir' with the real type written at the top of the message, so no inquiry
+// is rejected. Add the new values after importing backend/pb_schema.json.
+const STORED_NICHES = new Set(['boudoir', 'artistic-nude', 'afterdark']);
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const prerender = false;
@@ -32,11 +37,15 @@ export const POST: APIRoute = async ({ request }) => {
 			return json({ error: 'Please enter a valid email address.' }, 400);
 		}
 
+		const niche = body.niche.trim();
+		const storedNiche = STORED_NICHES.has(niche) ? niche : 'boudoir';
+		const message = body.message?.trim() ?? '';
+
 		await createLead({
 			name: body.name.trim(),
 			email: body.email.trim(),
-			niche: body.niche.trim(),
-			message: body.message?.trim() ?? '',
+			niche: storedNiche,
+			message: storedNiche === niche ? message : `Session type: ${niche}\n\n${message}`.trim(),
 			budget: typeof body.budget === 'number' && Number.isFinite(body.budget) ? body.budget : null,
 			source: body.source?.trim() ?? '',
 			utm_source: body.utm_source?.trim() ?? '',

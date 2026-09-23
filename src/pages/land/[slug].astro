@@ -4,7 +4,6 @@ import Footer from '../../components/Footer.astro';
 import Header from '../../components/Header.astro';
 import LeadForm from '../../components/ui/LeadForm.astro';
 import NicheGallery from '../../components/ui/NicheGallery.astro';
-import VideoPlayer from '../../components/ui/VideoPlayer.astro';
 import { getNicheBySlug } from '../../lib/niches';
 import { SITE_MEDIA } from '../../data/siteMedia';
 import { hasAdultAccess as readAdultAccess } from '../../lib/access';
@@ -42,7 +41,9 @@ const isAllowed = !requiresGate || hasAdultAccess;
 								<h1>{niche.title}</h1>
 								<p>{niche.hero}</p>
 							</div>
-							<VideoPlayer src="https://cdn.coverr.co/videos/coverr-a-city-at-night-1579/1080p.mp4" poster={SITE_MEDIA.two} />
+							<div class="niche-hero-media">
+								<img src={SITE_MEDIA.two} alt={`${niche.name} portrait by MVP Media`} loading="eager" decoding="async" />
+							</div>
 						</section>
 
 						<section class="niche-section">
@@ -52,16 +53,16 @@ const isAllowed = !requiresGate || hasAdultAccess;
 
 						<section class="niche-section two-col">
 							<div>
-								<h2>Why This Matters</h2>
+								<h2>What to expect</h2>
 								<ul>
-									<li><strong>Experience:</strong> Clear session planning from first message to final gallery.</li>
-									<li><strong>Comfort:</strong> Direction that keeps your session relaxed, private, and efficient.</li>
-									<li><strong>Results:</strong> Cinematic boudoir images with premium finishing and discretion.</li>
+									<li><strong>Planning:</strong> Clear session planning from first message to final gallery.</li>
+									<li><strong>Comfort:</strong> Direction that keeps your session relaxed, private, and unhurried.</li>
+									<li><strong>Results:</strong> Cinematic {niche.name.toLowerCase()} images, carefully retouched and delivered privately.</li>
 								</ul>
-								<p class="trust">Trusted by adult clients nationwide for discreet, luxury boudoir work.</p>
+								<p class="trust">Sessions available across the United States.</p>
 							</div>
 							<div>
-								<h2>Get a Quote</h2>
+								<h2>Request a consultation</h2>
 								<LeadForm niche={niche.slug} source={`${niche.slug}-page`} />
 							</div>
 						</section>
@@ -71,11 +72,11 @@ const isAllowed = !requiresGate || hasAdultAccess;
 						<p class="eyebrow">Private Access</p>
 						<h1>Mature Artistic Portfolio</h1>
 						<p>
-							This section contains mature, non-explicit portrait work intended for adults who request it.
-							Continue only if you are 18+ and intentionally reviewing this service.
+							This page contains mature, non-explicit portrait work intended for adults. Please confirm you are 18 or older
+							to continue.
 						</p>
-						<a class="btn btn-solid" href={`/api/adult-access?returnTo=/land/${niche.slug}`}>I am 18+ and want to continue</a>
-						<a class="btn btn-ghost" href="/">Return to Homepage</a>
+						<a class="btn btn-solid" href={`/api/adult-access?returnTo=/land/${niche.slug}`}>I am 18 or older</a>
+						<a class="btn btn-ghost" href="/">Return home</a>
 					</section>
 				)
 			}
@@ -93,6 +94,17 @@ const isAllowed = !requiresGate || hasAdultAccess;
 		grid-template-columns: 1fr 1fr;
 		gap: 1rem;
 		margin-bottom: 1.4rem;
+	}
+	.niche-hero-media {
+		border-radius: var(--radius);
+		overflow: hidden;
+		border: 1px solid var(--stroke);
+		aspect-ratio: 4 / 3;
+	}
+	.niche-hero-media img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
 	}
 	.niche-section {
 		margin-bottom: 1.4rem;

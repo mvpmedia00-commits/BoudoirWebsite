@@ -9,39 +9,47 @@ import { SITE_MEDIA } from '../data/siteMedia';
 <!doctype html>
 <html lang="en">
 	<head>
-		<BaseHead title={`About | ${SITE_TITLE}`} description="Meet Matthew Phillips, photographer behind MVP Media." />
+		<BaseHead
+			title={`About | ${SITE_TITLE}`}
+			description="Meet Matthew Phillips, the photographer and director behind MVP Media, creating fine art boudoir and portrait work across the United States."
+		/>
 	</head>
 	<body>
 		<Header />
 		<main>
 			<section class="about-grid">
-				<img src={SITE_MEDIA.about} alt="Lead photographer holding camera during a shoot." loading="lazy" />
+				<img src={SITE_MEDIA.about} alt="Portrait by Matthew Phillips" loading="lazy" />
 				<div>
 					<p class="eyebrow">Meet the Photographer</p>
-					<h1>Hi, I am Matthew Phillips.</h1>
+					<h1>I'm Matthew Phillips.</h1>
 					<p>
-						I built MVP Media to deliver premium photography with clear direction, consistent quality, and a
-						discreet professional process from inquiry to final delivery.
+						I founded MVP Media to make fine art boudoir and portraiture that feels as considered as an editorial shoot,
+						with a process that stays calm, clear, and private from the first message to the final gallery.
 					</p>
 					<p>
-						My work is dedicated to after dark boudoir and private adult portrait sessions. Every project begins
-						with strategy and ends with intentional images delivered with discretion.
+						My work focuses on boudoir, artistic nude, body paint, and After Dark editorial sessions, alongside short films.
+						Every project begins with a conversation about what you want to feel and what you are comfortable with, and ends
+						with images delivered with discretion.
 					</p>
+					<div class="hero-actions">
+						<a class="btn btn-solid" href="/booking">Book a Consultation</a>
+						<a class="btn btn-ghost" href="/gallery">View Portfolio</a>
+					</div>
 				</div>
 			</section>
 
 			<section class="values">
 				<article>
-					<h2>Guided Experience</h2>
-					<p>You never have to wonder what to do next. I guide pacing, poses, and timeline flow.</p>
+					<h2>Guided from start to finish</h2>
+					<p>You never have to wonder what to do next. I guide the pace, the posing, and every step of the day.</p>
 				</article>
 				<article>
-					<h2>True-to-Life Color</h2>
-					<p>Clean cinematic grading that holds up over time and across platforms.</p>
+					<h2>Color that lasts</h2>
+					<p>Clean, cinematic grading that looks right in print and on screen, today and years from now.</p>
 				</article>
 				<article>
-					<h2>Story-First Delivery</h2>
-					<p>Final galleries are structured for narrative flow, social use, and marketing assets.</p>
+					<h2>A gallery that tells a story</h2>
+					<p>Your final images are sequenced as a set, not a pile of files, and sized for print, web, and social.</p>
 				</article>
 			</section>
 		</main>
