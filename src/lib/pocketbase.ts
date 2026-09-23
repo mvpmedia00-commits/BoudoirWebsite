@@ -1,5 +1,7 @@
-const baseUrl = import.meta.env.POCKETBASE_URL;
-const adminToken = import.meta.env.POCKETBASE_ADMIN_TOKEN;
+import { POCKETBASE_ADMIN_TOKEN as adminToken, POCKETBASE_URL as baseUrl } from 'astro:env/server';
+
+// Fail fast so a slow or unreachable database never hangs a page render.
+const REQUEST_TIMEOUT_MS = 5000;
 
 type LeadPayload = {
 	name: string;
@@ -46,8 +48,12 @@ function getCollectionUrl(collection: string) {
 	return `${baseUrl.replace(/\/+$/, '')}/api/collections/${collection}/records`;
 }
 
+// Escape backslashes before quotes so a value cannot break out of a PocketBase filter string.
+const escapeFilterValue = (value: string) => value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+
 export async function createLead(payload: LeadPayload) {
 	const response = await fetch(getCollectionUrl('leads'), {
+		signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -71,7 +77,8 @@ export async function updateLead(
 	id: string,
 	updates: Partial<{ status: 'new' | 'contacted' | 'booked'; notes: string }>
 ) {
-	const response = await fetch(`${getCollectionUrl('leads')}/${id}`, {
+	const response = await fetch(`${getCollectionUrl('leads')}/${encodeURIComponent(id)}`, {
+		signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
 		method: 'PATCH',
 		headers: {
 			'Content-Type': 'application/json',
@@ -96,6 +103,7 @@ export async function listLeads(limit = 100) {
 	});
 
 	const response = await fetch(`${getCollectionUrl('leads')}?${params.toString()}`, {
+		signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
 		headers: {
 			...(adminToken ? { Authorization: adminToken } : {})
 		}
@@ -118,11 +126,12 @@ export async function listMediaItems(station?: string, niche?: string, limit = 6
 	});
 
 	const filters: string[] = [`is_public = true`];
-	if (station) filters.push(`station = "${station.replace(/"/g, '\\"')}"`);
-	if (niche) filters.push(`(niche = "${niche.replace(/"/g, '\\"')}" || niche = "")`);
+	if (station) filters.push(`station = "${escapeFilterValue(station)}"`);
+	if (niche) filters.push(`(niche = "${escapeFilterValue(niche)}" || niche = "")`);
 	if (filters.length) params.set('filter', filters.join(' && '));
 
 	const response = await fetch(`${getCollectionUrl('media_items')}?${params.toString()}`, {
+		signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
 		headers: {
 			...(adminToken ? { Authorization: adminToken } : {})
 		}
@@ -140,6 +149,7 @@ export async function listMediaItems(station?: string, niche?: string, limit = 6
 export async function createEvent(payload: EventPayload) {
 	try {
 		const response = await fetch(getCollectionUrl('events'), {
+			signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',

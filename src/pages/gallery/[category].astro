@@ -5,9 +5,14 @@ import Header from '../../components/Header.astro';
 import GalleryCanvas from '../../components/gallery/GalleryCanvas.astro';
 import AgeGate from '../../components/AgeGate.astro';
 import { SITE_TITLE } from '../../consts';
-import { getGalleryCategory, getGalleryItemsByCategory } from '../../data/galleryMedia';
+import { GALLERY_CATEGORIES, getGalleryItemsByCategory } from '../../data/galleryMedia';
 
-const category = getGalleryCategory('artistic-nude');
+const category = GALLERY_CATEGORIES.find((entry) => entry.slug === Astro.params.category);
+
+if (!category) {
+	return Astro.redirect('/gallery');
+}
+
 const items = getGalleryItemsByCategory(category.slug);
 ---
 
@@ -26,9 +31,11 @@ const items = getGalleryItemsByCategory(category.slug);
 			<AgeGate redirectTo="/gallery" />
 		</div>
 		<script>
-			const verified = localStorage.getItem("ageVerified") === "true";
-			document.getElementById("ageGate").style.display = verified ? "none" : "block";
-			document.getElementById("gallery").style.display = verified ? "block" : "none";
+			const verified = localStorage.getItem('ageVerified') === 'true';
+			const ageGate = document.getElementById('ageGate');
+			const gallery = document.getElementById('gallery');
+			if (ageGate) ageGate.style.display = verified ? 'none' : 'block';
+			if (gallery) gallery.style.display = verified ? 'block' : 'none';
 		</script>
 	</body>
 </html>

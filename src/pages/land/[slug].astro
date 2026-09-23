@@ -7,6 +7,7 @@ import NicheGallery from '../../components/ui/NicheGallery.astro';
 import VideoPlayer from '../../components/ui/VideoPlayer.astro';
 import { getNicheBySlug } from '../../lib/niches';
 import { SITE_MEDIA } from '../../data/siteMedia';
+import { hasAdultAccess as readAdultAccess } from '../../lib/access';
 
 const slug = Astro.params.slug ?? '';
 const niche = getNicheBySlug(slug);
@@ -15,7 +16,7 @@ if (!niche) {
 	return Astro.redirect('/');
 }
 
-const hasAdultAccess = Astro.cookies.get('mvp_adult_access')?.value === 'granted';
+const hasAdultAccess = readAdultAccess(Astro.cookies);
 const requiresGate = niche.isMature === true;
 const isAllowed = !requiresGate || hasAdultAccess;
 ---

@@ -38,7 +38,6 @@ const INITIAL_RENDER_COUNT = 24;
 					style={`width:${item.w}px; transform: translate3d(${item.x}px, ${item.y}px, 0); z-index:${10 + (index % 25)};`}
 					aria-label={`Open ${item.title}`}
 					aria-describedby="drag-instruction"
-					aria-grabbed="false"
 				>
 					<div class="media-wrap" style={`height:${item.h}px;`}>
 						<img src={item.image} alt={item.title} loading="lazy" draggable="false" />
@@ -71,27 +70,30 @@ const INITIAL_RENDER_COUNT = 24;
 <script type="application/json" id="gallery-items-data" set:html={JSON.stringify(items)}></script>
 
 <script>
+	type CanvasItem = { id: string; title: string; image: string; x: number; y: number; w: number; h: number };
+	type SavedPosition = { x?: number; y?: number; z?: number };
+
 	const dataEl = document.getElementById('gallery-items-data');
-	const galleryItems = dataEl ? JSON.parse(dataEl.textContent || '[]') : [];
-	const cards = Array.from(document.querySelectorAll('[data-draggable-card]'));
+	const galleryItems: CanvasItem[] = dataEl ? JSON.parse(dataEl.textContent || '[]') : [];
+	const cards = Array.from(document.querySelectorAll<HTMLElement>('[data-draggable-card]'));
 	const stage = document.querySelector('[data-stage]');
 	const stageShell = document.querySelector('.stage-shell');
 	const stageSentinel = document.querySelector('[data-stage-sentinel]');
 	const stageCredit = document.querySelector('.credit');
 
-	const lightbox = document.querySelector('[data-lightbox]');
+	const lightbox = document.querySelector<HTMLElement>('[data-lightbox]');
 	const closeButtons = document.querySelectorAll('[data-close-lightbox]');
-	const lightboxImg = document.querySelector('[data-lightbox-image]');
-	const lightboxLoader = document.querySelector('[data-lightbox-loader]');
+	const lightboxImg = document.querySelector<HTMLImageElement>('[data-lightbox-image]');
+	const lightboxLoader = document.querySelector<HTMLElement>('[data-lightbox-loader]');
 	const mediaQuery = window.matchMedia('(max-width: 980px)');
 	const STORAGE_KEY = 'mvp_gallery_positions_v2';
 	const CHUNK_SIZE = 16;
 	let isMobile = mediaQuery.matches;
-	let previouslyFocused = null;
-	let closeTimer = null;
+	let previouslyFocused: Element | null = null;
+	let closeTimer: number | null = null;
 	let renderedCount = cards.length;
 
-	const savedPositions = (() => {
+	const savedPositions: Record<string, SavedPosition> = (() => {
 		try {
 			const raw = localStorage.getItem(STORAGE_KEY);
 			return raw ? JSON.parse(raw) : {};
@@ -106,7 +108,7 @@ const INITIAL_RENDER_COUNT = 24;
 		isMobile = event.matches;
 	});
 
-	const applyTransform = (card, x, y) => {
+	const applyTransform = (card: HTMLElement, x: number, y: number) => {
 		card.style.transform = `translate3d(${x}px, ${y}px, 0)`;
 		card.dataset.x = String(x);
 		card.dataset.y = String(y);
@@ -120,7 +122,7 @@ const INITIAL_RENDER_COUNT = 24;
 		}
 	};
 
-	const hydrateSavedPosition = (card) => {
+	const hydrateSavedPosition = (card: HTMLElement) => {
 		if (!(card instanceof HTMLElement)) return;
 		const id = card.dataset.id;
 		if (!id) return;
@@ -135,7 +137,7 @@ const INITIAL_RENDER_COUNT = 24;
 		}
 	};
 
-	const saveCardPosition = (card) => {
+	const saveCardPosition = (card: HTMLElement) => {
 		const id = card.dataset.id;
 		if (!id) return;
 		savedPositions[id] = {
@@ -146,7 +148,7 @@ const INITIAL_RENDER_COUNT = 24;
 		persistPositions();
 	};
 
-	const createCard = (item, index) => {
+	const createCard = (item: CanvasItem, index: number) => {
 		const card = document.createElement('button');
 		card.type = 'button';
 		card.className = 'project-card';
@@ -157,7 +159,6 @@ const INITIAL_RENDER_COUNT = 24;
 		card.dataset.y = String(item.y);
 		card.setAttribute('aria-label', `Open ${item.title}`);
 		card.setAttribute('aria-describedby', 'drag-instruction');
-		card.setAttribute('aria-grabbed', 'false');
 		card.style.width = `${item.w}px`;
 		card.style.transform = `translate3d(${item.x}px, ${item.y}px, 0)`;
 		card.style.zIndex = String(10 + (index % 25));
@@ -200,7 +201,7 @@ const INITIAL_RENDER_COUNT = 24;
 		renderedCount = end;
 	};
 
-	const openLightbox = (item, triggerElement) => {
+	const openLightbox = (item: CanvasItem | undefined, triggerElement: Element) => {
 		if (!lightbox || !item) return;
 		if (closeTimer) {
 			window.clearTimeout(closeTimer);
@@ -251,9 +252,9 @@ const INITIAL_RENDER_COUNT = 24;
 	}
 
 	if (lightbox) {
-		lightbox.addEventListener('keydown', (event) => {
+		lightbox.addEventListener('keydown', (event: KeyboardEvent) => {
 			if (event.key !== 'Tab' || lightbox.hidden) return;
-			const focusable = lightbox.querySelectorAll(
+			const focusable = lightbox.querySelectorAll<HTMLElement>(
 				'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
 			);
 			if (!focusable.length) return;
@@ -269,7 +270,7 @@ const INITIAL_RENDER_COUNT = 24;
 		});
 	}
 
-	const setupCard = (card) => {
+	const setupCard = (card: HTMLElement) => {
 		hydrateSavedPosition(card);
 
 		let pointerId = -1;
@@ -281,7 +282,7 @@ const INITIAL_RENDER_COUNT = 24;
 		const baseZ = Number(card.style.zIndex || 1);
 		let previousZ = baseZ;
 
-		card.addEventListener('pointerdown', (event) => {
+		card.addEventListener('pointerdown', (event: PointerEvent) => {
 			if (isMobile) return;
 			pointerId = event.pointerId;
 			startClientX = event.clientX;
@@ -291,12 +292,11 @@ const INITIAL_RENDER_COUNT = 24;
 			moved = false;
 			previousZ = Number(card.style.zIndex || baseZ);
 			card.style.zIndex = String(++topLayer);
-			card.setAttribute('aria-grabbed', 'true');
 			card.classList.add('dragging');
 			card.setPointerCapture?.(event.pointerId);
 		});
 
-		card.addEventListener('pointermove', (event) => {
+		card.addEventListener('pointermove', (event: PointerEvent) => {
 			if (event.pointerId !== pointerId) return;
 			const dx = event.clientX - startClientX;
 			const dy = event.clientY - startClientY;
@@ -306,11 +306,10 @@ const INITIAL_RENDER_COUNT = 24;
 			event.preventDefault();
 		});
 
-		card.addEventListener('pointerup', (event) => {
+		card.addEventListener('pointerup', (event: PointerEvent) => {
 			if (event.pointerId !== pointerId) return;
 			card.classList.remove('dragging');
-			card.setAttribute('aria-grabbed', 'false');
-			card.releasePointerCapture?.(event.pointerId);
+				card.releasePointerCapture?.(event.pointerId);
 			pointerId = -1;
 			if (moved) {
 				saveCardPosition(card);
@@ -321,19 +320,18 @@ const INITIAL_RENDER_COUNT = 24;
 			openLightbox(galleryItems[idx], card);
 		});
 
-		card.addEventListener('pointercancel', (event) => {
+		card.addEventListener('pointercancel', (event: PointerEvent) => {
 			if (event.pointerId !== pointerId) return;
 			card.classList.remove('dragging');
-			card.setAttribute('aria-grabbed', 'false');
-			card.style.zIndex = String(previousZ);
+				card.style.zIndex = String(previousZ);
 			pointerId = -1;
 		});
 
-		card.addEventListener('click', (event) => {
+		card.addEventListener('click', (event: MouseEvent) => {
 			event.preventDefault();
 		});
 
-		card.addEventListener('keydown', (event) => {
+		card.addEventListener('keydown', (event: KeyboardEvent) => {
 			if (event.key === 'Enter' || event.key === ' ') {
 				event.preventDefault();
 				const idx = Number(card.dataset.index || -1);

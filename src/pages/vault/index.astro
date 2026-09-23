@@ -2,8 +2,26 @@
 import BaseHead from '../../components/BaseHead.astro';
 import Footer from '../../components/Footer.astro';
 import Header from '../../components/Header.astro';
+import { checkVaultCode, grantVaultAccess, hasVaultAccess, isVaultConfigured } from '../../lib/access';
 
-const vaultCode = String(import.meta.env.PUBLIC_VAULT_CODE ?? 'mvp-after-dark');
+if (hasVaultAccess(Astro.cookies)) {
+	return Astro.redirect('/vault/library');
+}
+
+let errorMessage = '';
+
+if (Astro.request.method === 'POST') {
+	const form = await Astro.request.formData().catch(() => null);
+	const entered = String(form?.get('vault-code') ?? '');
+	if (!isVaultConfigured()) {
+		errorMessage = 'The vault is not open yet. Please check back soon.';
+	} else if (checkVaultCode(entered)) {
+		grantVaultAccess(Astro.cookies);
+		return Astro.redirect('/vault/library', 303);
+	} else {
+		errorMessage = 'Access code is not valid. Try again.';
+	}
+}
 ---
 
 <!doctype html>
@@ -55,10 +73,10 @@ const vaultCode = String(import.meta.env.PUBLIC_VAULT_CODE ?? 'mvp-after-dark');
 				<p class="eyebrow">Private Access</p>
 				<h1>Members Vault</h1>
 				<p>Enter your passcode to unlock private collections and member-only editorial drops.</p>
-				<form id="vault-access-form" data-vault-code={vaultCode}>
+				<form id="vault-access-form" method="post">
 					<label for="vault-code">Access Code</label>
 					<input id="vault-code" name="vault-code" type="password" required autocomplete="off" />
-					<p id="vault-error" class="error"></p>
+					<p id="vault-error" class="error" role="alert">{errorMessage}</p>
 					<div class="entry-actions">
 						<button type="submit" class="btn btn-solid">Unlock Vault</button>
 						<a class="btn btn-ghost" href="/">Return Home</a>
@@ -67,32 +85,5 @@ const vaultCode = String(import.meta.env.PUBLIC_VAULT_CODE ?? 'mvp-after-dark');
 			</section>
 		</main>
 		<Footer />
-		<script is:inline>
-			const form = document.getElementById('vault-access-form');
-			const errorEl = document.getElementById('vault-error');
-			const key = 'mvp_vault_access';
-			const expectedCodeRaw = form instanceof HTMLFormElement ? form.dataset.vaultCode || '' : '';
-			const expectedCode = expectedCodeRaw.trim().toLowerCase();
-
-			if (localStorage.getItem(key) === 'granted') {
-				window.location.href = '/vault/library';
-			}
-
-			form?.addEventListener('submit', (event) => {
-				event.preventDefault();
-				const codeInput = document.getElementById('vault-code');
-				const entered = codeInput instanceof HTMLInputElement ? codeInput.value.trim().toLowerCase() : '';
-				if (!expectedCode) {
-					if (errorEl) errorEl.textContent = 'Vault is not configured yet. Set PUBLIC_VAULT_CODE in .env and restart.';
-					return;
-				}
-				if (entered !== expectedCode) {
-					if (errorEl) errorEl.textContent = 'Access code is not valid. Try again.';
-					return;
-				}
-				localStorage.setItem(key, 'granted');
-				window.location.href = '/vault/library';
-			});
-		</script>
 	</body>
 </html>

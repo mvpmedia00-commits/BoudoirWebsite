@@ -267,8 +267,19 @@ const projects = ROSTER_ENTRIES.flatMap((entry) =>
 		</main>
 		<script type="application/json" id="roster-project-data" set:html={JSON.stringify(projects)}></script>
 		<script>
+			type RosterProject = {
+				slug?: string;
+				image?: string;
+				role?: string;
+				director?: string;
+				brand?: string;
+				title?: string;
+				year?: string | number;
+				location?: string;
+			};
+
 			const dataEl = document.getElementById('roster-project-data');
-			const projects = dataEl ? JSON.parse(dataEl.textContent || '[]') : [];
+			const projects: RosterProject[] = dataEl ? JSON.parse(dataEl.textContent || '[]') : [];
 			const gridEl = document.getElementById('projectGrid');
 			const searchInput = document.getElementById('searchInput');
 			const countEl = document.getElementById('projectCount');
@@ -278,7 +289,7 @@ const projects = ROSTER_ENTRIES.flatMap((entry) =>
 			const previewTitle = document.getElementById('previewTitle');
 			const previewMeta = document.getElementById('previewMeta');
 
-			function setPreview(proj) {
+			function setPreview(proj: RosterProject | null) {
 				if (!proj) return;
 				if (previewImage instanceof HTMLImageElement) {
 					previewImage.src = proj.image || '';
@@ -291,10 +302,11 @@ const projects = ROSTER_ENTRIES.flatMap((entry) =>
 			}
 
 			function render(filterText = '') {
+				if (!gridEl) return;
 				const filterLower = filterText.toLowerCase();
 				let visibleCount = 0;
 				gridEl.innerHTML = '';
-				let firstMatch = null;
+				let firstMatch: RosterProject | null = null;
 
 				projects.forEach((proj) => {
 					const searchable = `${proj.director} ${proj.brand} ${proj.title} ${proj.year} ${proj.location}`.toLowerCase();
@@ -321,7 +333,11 @@ const projects = ROSTER_ENTRIES.flatMap((entry) =>
 
 					const titleSpan = document.createElement('span');
 					titleSpan.className = 'title';
-					titleSpan.innerHTML = proj.title ? `<i>${proj.title}</i>` : '';
+					if (proj.title) {
+						const titleText = document.createElement('i');
+						titleText.textContent = proj.title;
+						titleSpan.appendChild(titleText);
+					}
 
 					item.appendChild(thumb);
 					item.appendChild(dirSpan);
@@ -349,7 +365,7 @@ const projects = ROSTER_ENTRIES.flatMap((entry) =>
 
 			render('');
 			searchInput?.addEventListener('input', (e) => {
-				render(e.target?.value || '');
+				render(e.target instanceof HTMLInputElement ? e.target.value : '');
 			});
 		</script>
 	</body>

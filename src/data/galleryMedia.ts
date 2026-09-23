@@ -146,7 +146,5 @@ export const galleryItems: GalleryItem[] = Array.from({ length: 96 }, (_, idx) =
 	};
 });
 
-export const getGalleryCategory = (slug: GalleryCategory) => categoryMetaBySlug[slug];
-
 export const getGalleryItemsByCategory = (slug: GalleryCategory) =>
 	galleryItems.filter((item) => item.category === slug);

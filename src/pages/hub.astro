@@ -996,8 +996,8 @@ try {
 </style>
 
 <script>
-  const trackEvent = (payload) => {
-    const tracker = window['mvpTrack'];
+  const trackEvent = (payload: MvpTrackPayload) => {
+    const tracker = window.mvpTrack;
     if (typeof tracker === 'function') tracker(payload);
   };
 
@@ -1010,13 +1010,13 @@ try {
     next.addEventListener('click', () => track.scrollBy({ left: step(), behavior: 'smooth' }));
   }
 
-  const revealTargets = document.querySelectorAll('.reveal');
+  const revealTargets = document.querySelectorAll<HTMLElement>('.reveal');
   const revealObserver = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           const stagger = Number(entry.target.getAttribute('data-stagger') || 0);
-          entry.target.style.transitionDelay = `${stagger * 110}ms`;
+          if (entry.target instanceof HTMLElement) entry.target.style.transitionDelay = `${stagger * 110}ms`;
           entry.target.classList.add('is-visible');
           revealObserver.unobserve(entry.target);
         }
@@ -1026,7 +1026,7 @@ try {
   );
   revealTargets.forEach((target) => revealObserver.observe(target));
 
-  const parallaxNodes = Array.from(document.querySelectorAll('.parallax'));
+  const parallaxNodes = Array.from(document.querySelectorAll<HTMLElement>('.parallax'));
   const updateParallax = () => {
     const viewportCenter = window.innerHeight * 0.5;
     parallaxNodes.forEach((node) => {
@@ -1050,19 +1050,19 @@ try {
   window.addEventListener('scroll', onScrollParallax, { passive: true });
   window.addEventListener('resize', onScrollParallax);
 
-  const countTargets = document.querySelectorAll('[data-count]');
-  const formatter = (value, suffix) => {
+  const countTargets = document.querySelectorAll<HTMLElement>('[data-count]');
+  const formatter = (value: number, suffix: string) => {
     if (suffix === 'K') return `${Math.round(value / 1000)}K`;
     if (suffix.includes('Mio.')) return `${(value / 1000000).toFixed(1).replace('.0', '')} Mio.`;
     return `${Math.round(value)}`;
   };
-  const animateCount = (node) => {
+  const animateCount = (node: HTMLElement) => {
     const value = Number(node.dataset.value || 0);
     const prefix = node.dataset.prefix || '';
     const suffix = node.dataset.suffix || '';
     const start = performance.now();
     const duration = 1300;
-    const tick = (now) => {
+    const tick = (now: number) => {
       const progress = Math.min(1, (now - start) / duration);
       const eased = 1 - Math.pow(1 - progress, 3);
       node.textContent = `${prefix}${formatter(value * eased, suffix)}${suffix === 'K' || suffix.includes('Mio.') ? '' : suffix}`;
@@ -1074,7 +1074,7 @@ try {
   const countObserver = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
-        if (entry.isIntersecting) {
+        if (entry.isIntersecting && entry.target instanceof HTMLElement) {
           animateCount(entry.target);
           countObserver.unobserve(entry.target);
         }
@@ -1084,7 +1084,7 @@ try {
   );
   countTargets.forEach((target) => countObserver.observe(target));
 
-  const lightbox = document.querySelector('[data-lightbox]');
+  const lightbox = document.querySelector<HTMLElement>('[data-lightbox]');
   const lightboxContent = document.querySelector('[data-lightbox-content]');
   const closeLightboxButton = document.querySelector('[data-lightbox-close]');
 
@@ -1095,7 +1095,7 @@ try {
     document.body.style.overflow = '';
   };
 
-  const openLightbox = (media) => {
+  const openLightbox = (media: Element) => {
     if (!lightbox || !lightboxContent) return;
     lightboxContent.innerHTML = '';
 
@@ -1174,7 +1174,7 @@ try {
       if (items.length === 0) return;
 
       const firstByStation = new Map();
-      items.forEach((item) => {
+      items.forEach((item: { station?: string }) => {
         if (!item || !item.station || firstByStation.has(item.station)) return;
         firstByStation.set(item.station, item);
       });

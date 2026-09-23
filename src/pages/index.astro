@@ -384,7 +384,7 @@ const homeSchema = {
 		if (!(target instanceof HTMLElement)) return;
 		const el = target.closest('[data-track]');
 		if (!(el instanceof HTMLElement)) return;
-		const tracker = window['mvpTrack'];
+		const tracker = window.mvpTrack;
 		if (typeof tracker !== 'function') return;
 		tracker({
 			event_name: 'cta_click',
@@ -398,14 +398,10 @@ const homeSchema = {
 	const heroWall = document.querySelector('.hero-media-wall');
 	if (heroWall instanceof HTMLElement) {
 		heroWall.classList.add('is-loading');
-		const primeVideos = Array.from(heroWall.querySelectorAll('video[data-hero-prime]')).filter(
-			(el) => el instanceof HTMLVideoElement
-		);
-		const deferredVideos = Array.from(heroWall.querySelectorAll('video[data-src]')).filter(
-			(el) => el instanceof HTMLVideoElement
-		);
+		const primeVideos = Array.from(heroWall.querySelectorAll<HTMLVideoElement>('video[data-hero-prime]'));
+		const deferredVideos = Array.from(heroWall.querySelectorAll<HTMLVideoElement>('video[data-src]'));
 
-		const hydrateVideo = (video) => {
+		const hydrateVideo = (video: HTMLVideoElement) => {
 			if (!(video instanceof HTMLVideoElement)) return;
 			if (video.dataset.hydrated === 'true') return;
 			const src = video.dataset.src;
@@ -427,11 +423,11 @@ const homeSchema = {
 				}
 			};
 			const scheduleBatch = () => window.requestAnimationFrame(runBatch);
-			if ('requestIdleCallback' in window) {
+			if (typeof window.requestIdleCallback === 'function') {
 				window.requestIdleCallback(scheduleBatch, { timeout: 1200 });
 				return;
 			}
-			window.setTimeout(scheduleBatch, 120);
+			setTimeout(scheduleBatch, 120);
 		};
 
 		if (!primeVideos.length) {

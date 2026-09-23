@@ -1,17 +1,9 @@
 import type { APIRoute } from 'astro';
+import { grantAdultAccess, safeReturnPath } from '../../lib/access';
 
 export const prerender = false;
 
 export const GET: APIRoute = async ({ cookies, url, redirect }) => {
-	const returnTo = url.searchParams.get('returnTo') || '/';
-
-	cookies.set('mvp_adult_access', 'granted', {
-		path: '/',
-		httpOnly: true,
-		sameSite: 'lax',
-		secure: import.meta.env.PROD,
-		maxAge: 60 * 60 * 24 * 30
-	});
-
-	return redirect(returnTo);
+	grantAdultAccess(cookies);
+	return redirect(safeReturnPath(url.searchParams.get('returnTo')));
 };

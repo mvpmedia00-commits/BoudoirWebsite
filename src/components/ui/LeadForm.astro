@@ -17,19 +17,19 @@ const { niche, source = '' } = Astro.props;
 </form>
 
 <script>
-	document.querySelectorAll('[data-lead-form]').forEach((formNode) => {
-		const form = formNode;
-		const feedback = form.querySelector('[data-feedback]');
+	document.querySelectorAll<HTMLFormElement>('form[data-lead-form]').forEach((form) => {
+		const feedback = form.querySelector<HTMLElement>('[data-feedback]');
+		const button = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+		if (!feedback || !button) return;
 		form.addEventListener('submit', async (event) => {
 			event.preventDefault();
-			const button = form.querySelector('button[type="submit"]');
 			const data = new FormData(form);
 			const payload = {
 				name: data.get('name'),
 				email: data.get('email'),
 				budget: data.get('budget') ? Number(data.get('budget')) : null,
 				message: data.get('message'),
-				niche: form.dataset.niche,
+				niche: form.dataset.niche || '',
 				source: form.dataset.source || (() => {
 					const path = window.location.pathname;
 					if (path === '/') return 'homepage';
@@ -58,7 +58,7 @@ const { niche, source = '' } = Astro.props;
 					throw new Error('Submission failed');
 				}
 
-				const tracker = window['mvpTrack'];
+				const tracker = window.mvpTrack;
 				if (typeof tracker === 'function') {
 					tracker({
 						event_name: 'lead_submit',

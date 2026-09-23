@@ -4,6 +4,11 @@ import BaseHead from '../../components/BaseHead.astro';
 import Footer from '../../components/Footer.astro';
 import FormattedDate from '../../components/FormattedDate.astro';
 import Header from '../../components/Header.astro';
+import { hasVaultAccess } from '../../lib/access';
+
+if (!hasVaultAccess(Astro.cookies)) {
+	return Astro.redirect('/vault');
+}
 
 const entry = Astro.params.slug ? await getEntry('vault', Astro.params.slug) : undefined;
 
@@ -20,16 +25,12 @@ const { Content } = await render(entry);
 		<BaseHead title={`${entry.data.title} | Vault`} description={entry.data.description} noIndex={true} />
 		<style>
 			.vault-entry {
-				display: none;
 				max-width: 900px;
 				margin: 0 auto;
 				padding: 1.25rem;
 				background: linear-gradient(145deg, var(--surface), var(--surface-elevated));
 				border: 1px solid var(--stroke);
 				border-radius: var(--radius);
-			}
-			.vault-entry.is-ready {
-				display: block;
 			}
 			.meta {
 				display: flex;
@@ -73,14 +74,5 @@ const { Content } = await render(entry);
 			</article>
 		</main>
 		<Footer />
-		<script is:inline>
-			const key = 'mvp_vault_access';
-			if (localStorage.getItem(key) !== 'granted') {
-				window.location.href = '/vault';
-			} else {
-				const entry = document.getElementById('vault-entry');
-				entry?.classList.add('is-ready');
-			}
-		</script>
 	</body>
 </html>

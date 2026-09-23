@@ -26,15 +26,17 @@ const fallbackCards = [
 </div>
 
 <script>
-	const galleries = document.querySelectorAll('[data-niche-gallery]');
+	type MediaItem = { title?: string; thumb_url?: string; media_url?: string };
 
-	const renderGallery = (root, items) => {
+	const galleries = document.querySelectorAll<HTMLElement>('[data-niche-gallery]');
+
+	const renderGallery = (root: HTMLElement, items: MediaItem[]) => {
 		if (!Array.isArray(items) || items.length === 0) return;
 		root.innerHTML = '';
 		items.forEach((item) => {
 			const figure = document.createElement('figure');
 			const img = document.createElement('img');
-			img.src = item.thumb_url || item.media_url;
+			img.src = item.thumb_url || item.media_url || '';
 			img.alt = item.title || 'Gallery media';
 			img.loading = 'lazy';
 			const caption = document.createElement('figcaption');
@@ -44,8 +46,7 @@ const fallbackCards = [
 		});
 	};
 
-	galleries.forEach(async (rootNode) => {
-		const root = rootNode;
+	galleries.forEach(async (root) => {
 		const niche = root.dataset.niche || '';
 		try {
 			const response = await fetch(`/api/media?niche=${encodeURIComponent(niche)}&limit=12`, {
