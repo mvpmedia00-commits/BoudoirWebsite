@@ -42,7 +42,6 @@ src/
 │   ├── hub.astro          Media hub
 │   ├── gallery.astro      Gallery overview
 │   ├── gallery/[category] boudoir, artistic-nude, body-paint, editorial-portrait
-│   ├── roster.astro, roster/[slug]
 │   ├── land/[slug]        Niche landing pages (mature ones are age-gated)
 │   ├── blog/              Blog index, posts, tag and category pages
 │   ├── vault/             Members vault (access checked on the server)
@@ -54,8 +53,7 @@ src/
 ├── lib/
 │   ├── access.ts          Vault, admin, and age-gate cookies (server only)
 │   ├── pocketbase.ts      PocketBase client
-│   ├── niches.ts          Landing page definitions
-│   └── roster.ts          Roster entries
+│   └── niches.ts          Landing page definitions
 └── styles/global.css      Global design tokens and base styles
 backend/                   PocketBase Dockerfile, Fly config, schema
 ```
