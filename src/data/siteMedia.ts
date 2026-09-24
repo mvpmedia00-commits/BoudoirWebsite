@@ -17,11 +17,11 @@ export const SITE_MEDIA = Object.fromEntries(
 ) as { [Key in keyof typeof SITE_MEDIA_ORIGIN]: string };
 
 /**
- * Video in "A session that feels like cinema" near the bottom of the homepage. Host these on an
- * adult-friendly CDN (Bunny.net) and paste the https URLs here; until mp4 is set, the section keeps
- * its current background video. mature: true shows a blurred still and an 18+ confirmation first.
+ * Video beside "From consultation to delivery" on the homepage (vertical 9:16 clip). Host these on
+ * an adult-friendly CDN (Bunny.net storage) and paste the https URLs here; until mp4 is set, the
+ * section keeps its photo. mature: true shows a blurred still and an 18+ confirmation first.
  */
-export const SESSION_VIDEO = {
+export const PROCESS_VIDEO = {
 	mp4: '',
 	webm: '',
 	poster: '',
