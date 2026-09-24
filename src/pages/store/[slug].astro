@@ -20,6 +20,7 @@ const { Content } = await render(item);
 const buyable = buyableOptions(item);
 const images = [data.image, ...data.gallery].filter((src): src is string => Boolean(src));
 const pageTitle = [data.title, data.subtitle].filter(Boolean).join(', ');
+const previewPages = data.preview;
 
 const productSchema = {
 	'@context': 'https://schema.org',
@@ -86,6 +87,9 @@ const productSchema = {
 								<h1>{data.title}</h1>
 								{data.subtitle && <p class="subtitle">{data.subtitle}</p>}
 								<p class="summary">{data.summary}</p>
+								{previewPages.length > 0 && (
+									<a class="btn btn-ghost look-link" href="#look-inside">Look inside</a>
+								)}
 
 								{data.options.length > 0 && (
 									<div class="options">
@@ -126,6 +130,39 @@ const productSchema = {
 							</div>
 						</section>
 
+						{previewPages.length > 0 && (
+							<section class="look-inside" id="look-inside" aria-labelledby="look-inside-title">
+								<div class="look-head">
+									<p class="eyebrow">Preview</p>
+									<h2 id="look-inside-title">Look inside</h2>
+									<p>A few pages from this issue. Select a page to read it full size.</p>
+								</div>
+								<ol class="pages">
+									{previewPages.map((page, index) => (
+										<li class="preview-page" data-page-item>
+											<button
+												type="button"
+												data-page-src={page.src}
+												data-page-caption={page.caption ?? ''}
+												aria-label={`Read ${page.caption ?? `page ${index + 1}`}`}
+											>
+												<img
+													src={page.src}
+													alt=""
+													loading="lazy"
+													decoding="async"
+													width="816"
+													height="1056"
+													onerror="this.closest('[data-page-item]').remove()"
+												/>
+											</button>
+											{page.caption && <span class="page-caption">{page.caption}</span>}
+										</li>
+									))}
+								</ol>
+							</section>
+						)}
+
 						<section class="details">
 							<Content />
 						</section>
@@ -144,6 +181,19 @@ const productSchema = {
 			}
 		</main>
 		<Footer />
+		{isAllowed && previewPages.length > 0 && (
+			<dialog class="reader" data-reader aria-label={`${data.title} preview`}>
+				<div class="reader-bar">
+					<p><span data-reader-count></span> <span class="reader-caption" data-reader-caption></span></p>
+					<button type="button" class="reader-close" data-reader-close>Close</button>
+				</div>
+				<div class="reader-stage">
+					<button type="button" class="reader-nav" data-reader-prev aria-label="Previous page">&larr;</button>
+					<img data-reader-img alt="" width="816" height="1056" />
+					<button type="button" class="reader-nav" data-reader-next aria-label="Next page">&rarr;</button>
+				</div>
+			</dialog>
+		)}
 	</body>
 </html>
 
@@ -158,6 +208,58 @@ const productSchema = {
 			thumbs.forEach((other) => other.classList.toggle('is-active', other === thumb));
 		});
 	});
+
+	// Look inside: a page reader with arrow keys, swipe, and prev/next buttons.
+	const reader = document.querySelector<HTMLDialogElement>('[data-reader]');
+	if (reader) {
+		const img = reader.querySelector<HTMLImageElement>('[data-reader-img]')!;
+		const count = reader.querySelector<HTMLElement>('[data-reader-count]')!;
+		const caption = reader.querySelector<HTMLElement>('[data-reader-caption]')!;
+		const prev = reader.querySelector<HTMLButtonElement>('[data-reader-prev]')!;
+		const next = reader.querySelector<HTMLButtonElement>('[data-reader-next]')!;
+		// Read the list each time: pages whose image failed to load have been removed.
+		const pages = () => Array.from(document.querySelectorAll<HTMLButtonElement>('[data-page-src]'));
+		let current = 0;
+		let opener: HTMLElement | null = null;
+
+		const show = (index: number) => {
+			const list = pages();
+			if (!list.length) return reader.close();
+			current = (index + list.length) % list.length;
+			const page = list[current];
+			img.src = page.dataset.pageSrc ?? '';
+			img.alt = page.dataset.pageCaption || `Page ${current + 1}`;
+			count.textContent = `${current + 1} / ${list.length}`;
+			caption.textContent = page.dataset.pageCaption ?? '';
+			prev.hidden = next.hidden = list.length < 2;
+		};
+
+		document.addEventListener('click', (event) => {
+			const page = (event.target as Element).closest<HTMLButtonElement>('[data-page-src]');
+			if (!page) return;
+			opener = page;
+			show(pages().indexOf(page));
+			reader.showModal();
+		});
+		prev.addEventListener('click', () => show(current - 1));
+		next.addEventListener('click', () => show(current + 1));
+		reader.querySelector('[data-reader-close]')?.addEventListener('click', () => reader.close());
+		// Clicking the dark area around the page closes the reader.
+		reader.addEventListener('click', (event) => {
+			if (event.target === reader) reader.close();
+		});
+		reader.addEventListener('close', () => opener?.focus());
+		reader.addEventListener('keydown', (event) => {
+			if (event.key === 'ArrowLeft') show(current - 1);
+			if (event.key === 'ArrowRight') show(current + 1);
+		});
+		let touchX = 0;
+		reader.addEventListener('touchstart', (event) => (touchX = event.touches[0].clientX), { passive: true });
+		reader.addEventListener('touchend', (event) => {
+			const dx = event.changedTouches[0].clientX - touchX;
+			if (Math.abs(dx) > 50) show(current + (dx < 0 ? 1 : -1));
+		});
+	}
 </script>
 
 <style>
@@ -280,6 +382,155 @@ const productSchema = {
 	.seller {
 		margin-top: 1rem;
 		font-size: 0.88rem;
+	}
+	.look-link {
+		width: fit-content;
+		margin-top: 0.5rem;
+	}
+	.look-inside {
+		margin-top: clamp(2.5rem, 6vw, 4rem);
+		padding-top: 2rem;
+		border-top: 1px solid var(--stroke);
+		scroll-margin-top: calc(var(--header-h, 70px) + 1rem);
+	}
+	/* Hide the section if none of the pages could load. */
+	.look-inside:not(:has(.preview-page)) {
+		display: none;
+	}
+	.look-head h2 {
+		margin: 0 0 0.4rem;
+		font-size: clamp(1.8rem, 4vw, 2.6rem);
+	}
+	.look-head p:last-child {
+		margin: 0;
+	}
+	.pages {
+		display: grid;
+		grid-auto-flow: column;
+		grid-auto-columns: clamp(150px, 22vw, 220px);
+		gap: 1rem;
+		margin: 1.5rem 0 0;
+		padding: 0 0 1rem;
+		list-style: none;
+		overflow-x: auto;
+		scroll-snap-type: x mandatory;
+		overscroll-behavior-x: contain;
+	}
+	.preview-page {
+		display: grid;
+		align-content: start;
+		gap: 0.55rem;
+		scroll-snap-align: start;
+	}
+	.preview-page button {
+		padding: 0;
+		border: 1px solid var(--stroke);
+		border-radius: 6px;
+		overflow: hidden;
+		background: var(--surface);
+		cursor: zoom-in;
+		aspect-ratio: 816 / 1056;
+		transition: border-color 0.2s ease, transform 0.3s ease;
+	}
+	.preview-page button:hover,
+	.preview-page button:focus-visible {
+		border-color: var(--brand-strong);
+		transform: translateY(-3px);
+	}
+	.preview-page img {
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+		object-position: center;
+		border-radius: 0;
+	}
+	.page-caption {
+		font-size: 0.78rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+	}
+	.reader {
+		width: 100vw;
+		max-width: 100vw;
+		height: 100dvh;
+		max-height: 100dvh;
+		margin: 0;
+		padding: 0;
+		border: 0;
+		background: rgba(5, 5, 5, 0.97);
+		color: var(--text-primary);
+	}
+	.reader[open] {
+		display: grid;
+		grid-template-rows: auto minmax(0, 1fr);
+	}
+	.reader::backdrop {
+		background: rgba(0, 0, 0, 0.7);
+	}
+	.reader-bar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		padding: 0.9rem clamp(1rem, 3vw, 2rem);
+		font-size: 0.82rem;
+		letter-spacing: 0.08em;
+	}
+	.reader-bar p {
+		margin: 0;
+	}
+	.reader-caption {
+		color: var(--text-muted);
+		margin-left: 0.6rem;
+	}
+	.reader-close,
+	.reader-nav {
+		background: rgba(20, 20, 20, 0.8);
+		color: var(--text-primary);
+		border: 1px solid var(--stroke);
+		border-radius: 999px;
+		font: inherit;
+		cursor: pointer;
+	}
+	.reader-close {
+		padding: 0.5rem 1rem;
+		font-size: 0.78rem;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+	}
+	.reader-stage {
+		position: relative;
+		display: grid;
+		place-items: center;
+		min-height: 0;
+		padding: 0 clamp(0.5rem, 2vw, 1.5rem) clamp(0.5rem, 2vw, 1.5rem);
+	}
+	.reader-stage img {
+		max-width: 100%;
+		max-height: 100%;
+		width: auto;
+		height: auto;
+		object-fit: contain;
+		border-radius: 4px;
+		box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+	}
+	.reader-nav {
+		position: absolute;
+		top: 50%;
+		transform: translateY(-50%);
+		width: 3rem;
+		height: 3rem;
+		font-size: 1.2rem;
+	}
+	.reader-nav[data-reader-prev] {
+		left: clamp(0.5rem, 2vw, 1.5rem);
+	}
+	.reader-nav[data-reader-next] {
+		right: clamp(0.5rem, 2vw, 1.5rem);
+	}
+	.reader-nav:hover {
+		border-color: var(--brand-strong);
 	}
 	.details {
 		max-width: 70ch;

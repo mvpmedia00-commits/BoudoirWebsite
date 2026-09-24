@@ -8,6 +8,10 @@ category: Print
 # image: https://your-cdn.b-cdn.net/product.jpg
 # gallery:
 #   - https://your-cdn.b-cdn.net/product-2.jpg
+# Look-inside pages (e.g. a few magazine spreads), shown in a page reader:
+# preview:
+#   - src: https://your-cdn.b-cdn.net/page-1.jpg
+#     caption: Cover
 mature: false
 # available | coming-soon | hidden
 status: coming-soon

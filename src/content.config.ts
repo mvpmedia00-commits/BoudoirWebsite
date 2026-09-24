@@ -47,6 +47,16 @@ const store = defineCollection({
 		image: z.string().url().optional(),
 		/** Extra image URLs shown under the main image. */
 		gallery: z.array(z.string().url()).default([]),
+		/** "Look inside" pages shown in a reader on the item page, in reading order. */
+		preview: z
+			.array(
+				z.object({
+					src: z.string().url(),
+					/** Short label, e.g. "Editor's letter". */
+					caption: z.string().optional()
+				})
+			)
+			.default([]),
 		/** Nudity: blurred in the grid and behind the 18+ confirmation. */
 		mature: z.boolean().default(false),
 		/** available shows buy buttons, coming-soon shows the item without them, hidden removes it. */

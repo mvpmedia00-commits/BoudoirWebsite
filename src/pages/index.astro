@@ -2,7 +2,7 @@
 import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
-import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import { BLUR_MATURE_PREVIEWS, SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 import { PORTFOLIO_PHOTOS, PROCESS_VIDEO, SITE_MEDIA } from '../data/siteMedia';
 import { BUNNY_MEDIA_HOST, bunnyMedia } from '../lib/bunnyMedia';
 
@@ -165,7 +165,7 @@ const homeSchema = {
 					</div>
 					<div class="category-grid">
 						<a class="category-card" href="/gallery/boudoir" data-track data-track-element="home_category_boudoir">
-							<div class="art-frame" data-veil>
+							<div class="art-frame" data-veil={BLUR_MATURE_PREVIEWS ? '' : undefined}>
 								<img src={PORTFOLIO_PHOTOS.boudoir[0]} alt="Boudoir category preview" loading="lazy" />
 							</div>
 							<div class="category-copy">
@@ -174,7 +174,7 @@ const homeSchema = {
 							</div>
 						</a>
 						<a class="category-card" href="/gallery/artistic-nude" data-track data-track-element="home_category_artistic_nude">
-							<div class="art-frame" data-veil>
+							<div class="art-frame" data-veil={BLUR_MATURE_PREVIEWS ? '' : undefined}>
 								<img src={PORTFOLIO_PHOTOS.artisticNude[0]} alt="Artistic nude category preview" loading="lazy" />
 							</div>
 							<div class="category-copy">

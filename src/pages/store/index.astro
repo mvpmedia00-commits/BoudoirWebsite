@@ -3,7 +3,7 @@ import BaseHead from '../../components/BaseHead.astro';
 import Footer from '../../components/Footer.astro';
 import Header from '../../components/Header.astro';
 import ProductCover from '../../components/store/ProductCover.astro';
-import { SITE_TITLE } from '../../consts';
+import { BLUR_MATURE_PREVIEWS, SITE_TITLE } from '../../consts';
 import { hasAdultAccess } from '../../lib/access';
 import { buyableOptions, getStoreItems, priceLabel } from '../../lib/store';
 
@@ -52,7 +52,7 @@ const categories = [...new Set(items.map((item) => item.data.category))];
 									title={item.data.title}
 									subtitle={item.data.subtitle}
 									image={item.data.image}
-									veiled={item.data.mature && !adult}
+									veiled={BLUR_MATURE_PREVIEWS && item.data.mature && !adult}
 								/>
 								<div class="card-body">
 									<div class="tags">

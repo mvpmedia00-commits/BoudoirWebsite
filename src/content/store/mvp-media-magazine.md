@@ -5,6 +5,18 @@ summary: The inaugural issue from MVP Media, with fashion, glamour, and fine art
 category: Magazine
 mature: true
 status: coming-soon
+image: https://boudoir123mvp.b-cdn.net/magazine-issue-1-cover.jpg
+preview:
+  - src: https://boudoir123mvp.b-cdn.net/magazine-issue-1-cover.jpg
+    caption: Cover
+  - src: https://boudoir123mvp.b-cdn.net/magazine-issue-1-masthead.jpg
+    caption: Masthead
+  - src: https://boudoir123mvp.b-cdn.net/magazine-issue-1-editors-letter.jpg
+    caption: Editor's letter
+  - src: https://boudoir123mvp.b-cdn.net/magazine-issue-1-mvp-story.jpg
+    caption: The MVP story
+  - src: https://boudoir123mvp.b-cdn.net/magazine-issue-1-how-it-began.jpg
+    caption: How MVP Media began
 order: 1
 options:
   - label: Print
