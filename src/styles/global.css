@@ -459,3 +459,37 @@ figcaption {
     height: 230px;
   }
 }
+
+/*
+ * 18+ previews on public pages: a [data-veil] wrapper blurs its image and shows an 18+ badge until
+ * the visitor has confirmed their age (html.age-ok, set in BaseHead.astro).
+ */
+[data-veil] {
+  position: relative;
+}
+[data-veil] img {
+  filter: blur(22px) brightness(0.85);
+  transform: scale(1.12);
+}
+[data-veil]::after {
+  content: '18+';
+  position: absolute;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(8, 8, 8, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  pointer-events: none;
+}
+html.age-ok [data-veil] img {
+  filter: none;
+  transform: none;
+}
+html.age-ok [data-veil]::after {
+  display: none;
+}

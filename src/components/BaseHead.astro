@@ -43,6 +43,18 @@ const imageURL = typeof image === 'string' ? image : image.src;
 	href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&display=swap"
 />
 
+<!-- 18+ previews: visitors who already confirmed their age (gallery gate, homepage video) see
+     [data-veil] images unblurred. Runs before paint so confirmed visitors never see the blur. -->
+<script is:inline>
+	(function () {
+		try {
+			if (localStorage.getItem('ageVerified') === 'true' || localStorage.getItem('age_gate_ack_v1') === 'true') {
+				document.documentElement.classList.add('age-ok');
+			}
+		} catch (e) {}
+	})();
+</script>
+
 <!-- Font preloads -->
 <link rel="preload" href="/fonts/atkinson-regular.woff" as="font" type="font/woff" crossorigin />
 <link rel="preload" href="/fonts/atkinson-bold.woff" as="font" type="font/woff" crossorigin />

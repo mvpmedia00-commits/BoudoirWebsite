@@ -1,5 +1,5 @@
 ---
-import { SITE_MEDIA } from '../../data/siteMedia';
+import { SITE_MEDIA, photosForSlug } from '../../data/siteMedia';
 
 interface Props {
 	niche: string;
@@ -7,13 +7,17 @@ interface Props {
 
 const { niche } = Astro.props;
 
-const fallbackCards = [
+// Real photos for this niche when uploaded; otherwise the placeholder set.
+const nichePhotos = photosForSlug(niche);
+const fallbackCards = nichePhotos.length
+	? nichePhotos.map((image, index) => ({ title: `${niche.replace('-', ' ')} ${String(index + 1).padStart(2, '0')}`, image }))
+	: [
 	{ title: `${niche} session highlight`, image: SITE_MEDIA.one },
 	{ title: `${niche} detail frame`, image: SITE_MEDIA.two },
 	{ title: `${niche} hero composition`, image: SITE_MEDIA.three },
 	{ title: `${niche} ambient portrait`, image: SITE_MEDIA.four },
 	{ title: `${niche} closing shot`, image: SITE_MEDIA.five }
-];
+	];
 ---
 
 <div class="niche-gallery" data-niche-gallery data-niche={niche}>

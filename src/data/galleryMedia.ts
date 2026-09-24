@@ -1,5 +1,5 @@
 import { bunnyMedia } from '../lib/bunnyMedia';
-import { SITE_MEDIA } from './siteMedia';
+import { PORTFOLIO_PHOTOS, SITE_MEDIA } from './siteMedia';
 
 export type GalleryCategory = 'boudoir' | 'artistic-nude' | 'body-paint' | 'editorial-portrait';
 
@@ -116,5 +116,31 @@ export const galleryItems: GalleryItem[] = Array.from({ length: 96 }, (_, idx) =
 	};
 });
 
-export const getGalleryItemsByCategory = (slug: GalleryCategory) =>
-	galleryItems.filter((item) => item.category === slug);
+// Real portfolio photos per category. A category listed here shows exactly these photos (no
+// repeats); the others fall back to the placeholder set above.
+const CATEGORY_PHOTOS: Partial<Record<GalleryCategory, string[]>> = {
+	boudoir: PORTFOLIO_PHOTOS.boudoir,
+	'artistic-nude': PORTFOLIO_PHOTOS.artisticNude
+};
+
+export const getGalleryItemsByCategory = (slug: GalleryCategory): GalleryItem[] => {
+	const photos = CATEGORY_PHOTOS[slug];
+	if (!photos?.length) return galleryItems.filter((item) => item.category === slug);
+	const meta = categoryMetaBySlug[slug];
+	return photos.map((image, idx) => {
+		const row = Math.floor(idx / cols);
+		const col = idx % cols;
+		return {
+			id: `${slug}-${String(idx + 1).padStart(2, '0')}`,
+			image,
+			title: `${meta.label} No. ${String(idx + 1).padStart(2, '0')}`,
+			description: meta.description,
+			category: slug,
+			sensitive: meta.sensitive,
+			x: startX + col * (gapX + 60) + (row % 2 === 0 ? 0 : 32),
+			y: startY + row * (gapY + 90) + (col % 2 === 0 ? 0 : 18),
+			w: [220, 240, 230][idx % 3],
+			h: [310, 340, 320][idx % 3]
+		};
+	});
+};

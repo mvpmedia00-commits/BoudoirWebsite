@@ -5,7 +5,7 @@ import Header from '../../components/Header.astro';
 import LeadForm from '../../components/ui/LeadForm.astro';
 import NicheGallery from '../../components/ui/NicheGallery.astro';
 import { getNicheBySlug } from '../../lib/niches';
-import { SITE_MEDIA } from '../../data/siteMedia';
+import { SITE_MEDIA, photosForSlug } from '../../data/siteMedia';
 import { hasAdultAccess as readAdultAccess } from '../../lib/access';
 
 const slug = Astro.params.slug ?? '';
@@ -16,6 +16,7 @@ if (!niche) {
 }
 
 const hasAdultAccess = readAdultAccess(Astro.cookies);
+const heroImage = photosForSlug(niche.slug)[0] ?? SITE_MEDIA.two;
 const requiresGate = niche.isMature === true;
 const isAllowed = !requiresGate || hasAdultAccess;
 ---
@@ -42,7 +43,7 @@ const isAllowed = !requiresGate || hasAdultAccess;
 								<p>{niche.hero}</p>
 							</div>
 							<div class="niche-hero-media">
-								<img src={SITE_MEDIA.two} alt={`${niche.name} portrait by MVP Media`} loading="eager" decoding="async" />
+								<img src={heroImage} alt={`${niche.name} portrait by MVP Media`} loading="eager" decoding="async" />
 							</div>
 						</section>
 

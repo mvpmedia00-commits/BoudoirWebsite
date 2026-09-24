@@ -17,6 +17,23 @@ export const SITE_MEDIA = Object.fromEntries(
 ) as { [Key in keyof typeof SITE_MEDIA_ORIGIN]: string };
 
 /**
+ * Portfolio photos uploaded to bunny.net storage. Camera JPGs are large, so each link asks for a
+ * resized copy with ?width=; that takes effect once Bunny Optimizer is enabled on the pull zone
+ * (otherwise Bunny ignores it and sends the original).
+ */
+const BUNNY_PHOTOS = 'https://boudoir123mvp.b-cdn.net';
+const photo = (file: string, width = 1200) => `${BUNNY_PHOTOS}/${file}?width=${width}`;
+
+export const PORTFOLIO_PHOTOS = {
+	boudoir: [photo('5B1A4081.JPG'), photo('5B1A4143.JPG'), photo('5B1A4145.JPG')],
+	artisticNude: [photo('IMG_1982.JPG')]
+};
+
+/** Real photos for a landing page or gallery slug, if any have been uploaded. */
+export const photosForSlug = (slug: string): string[] =>
+	slug === 'boudoir' ? PORTFOLIO_PHOTOS.boudoir : slug === 'artistic-nude' ? PORTFOLIO_PHOTOS.artisticNude : [];
+
+/**
  * Video beside "From consultation to delivery" on the homepage (vertical 9:16 clip). Host these on
  * an adult-friendly CDN (Bunny.net storage) and paste the https URLs here; until mp4 is set, the
  * section keeps its photo. mature: true shows a blurred still and an 18+ confirmation first.
