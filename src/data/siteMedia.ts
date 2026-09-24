@@ -36,7 +36,8 @@ export const photosForSlug = (slug: string): string[] =>
 /**
  * Video beside "From consultation to delivery" on the homepage (vertical 9:16 clip). Host these on
  * an adult-friendly CDN (Bunny.net storage) and paste the https URLs here; until mp4 is set, the
- * section keeps its photo. mature: true shows a blurred still and an 18+ confirmation first.
+ * section keeps its photo. mature: true shows a blurred still and an 18+ confirmation first
+ * (only while BLUR_MATURE_PREVIEWS in consts.ts is on).
  */
 export const PROCESS_VIDEO = {
 	// Converted from the original iPhone clip (IMG_3581, HEVC HDR) so it plays in every browser.

@@ -8,6 +8,9 @@ import { BUNNY_MEDIA_HOST, bunnyMedia } from '../lib/bunnyMedia';
 
 export const prerender = true;
 
+// Blurred still + 18+ confirmation before the process video plays (off while BLUR_MATURE_PREVIEWS is off).
+const gateProcessVideo = PROCESS_VIDEO.mature && BLUR_MATURE_PREVIEWS;
+
 type HeroMediaColumn = {
 	reverse?: boolean;
 	items: string[];
@@ -309,7 +312,7 @@ const homeSchema = {
 						</article>
 					</div>
 					{PROCESS_VIDEO.mp4 ? (
-						<div class="process-visual process-video art-frame" data-gated-video data-mature={PROCESS_VIDEO.mature ? 'true' : undefined}>
+						<div class="process-visual process-video art-frame" data-gated-video data-mature={gateProcessVideo ? 'true' : undefined}>
 							<video
 								muted
 								loop
@@ -322,10 +325,10 @@ const homeSchema = {
 								])}
 								aria-label="Session film"
 							></video>
-							{PROCESS_VIDEO.mature && PROCESS_VIDEO.poster && (
+							{gateProcessVideo && PROCESS_VIDEO.poster && (
 								<img class="gated-still" src={PROCESS_VIDEO.poster} alt="" loading="lazy" decoding="async" />
 							)}
-							{PROCESS_VIDEO.mature && (
+							{gateProcessVideo && (
 								<div class="mature-veil">
 									<p>This video contains artistic nudity.</p>
 									<button class="btn btn-solid" type="button" data-mature-confirm>Confirm 18+ to view</button>
