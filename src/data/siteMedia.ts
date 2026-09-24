@@ -22,7 +22,10 @@ export const SITE_MEDIA = Object.fromEntries(
  * section keeps its photo. mature: true shows a blurred still and an 18+ confirmation first.
  */
 export const PROCESS_VIDEO = {
-	mp4: '',
+	// Original iPhone clip (HEVC HDR .MOV): plays in Safari and on most Apple and many Chrome
+	// devices. For every browser, upload the converted process-body-paint.mp4/.webm/-poster.jpg
+	// files and put those links here instead.
+	mp4: 'https://boudoir123mvp.b-cdn.net/IMG_3581%20(1).MOV',
 	webm: '',
 	poster: '',
 	mature: true
