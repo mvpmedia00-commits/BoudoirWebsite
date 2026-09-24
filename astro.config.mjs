@@ -25,6 +25,8 @@ export default defineConfig({
     allowedDomains: [
       { hostname: new URL(site).hostname },
       { hostname: '*.vercel.app' },
+      { hostname: 'mvp-media.b-cdn.net' },
+      { hostname: '*.b-cdn.net' },
     ],
   },
   env: {

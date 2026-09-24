@@ -1,3 +1,4 @@
+import { bunnyMedia } from '../lib/bunnyMedia';
 import { SITE_MEDIA } from './siteMedia';
 
 export type GalleryCategory = 'boudoir' | 'artistic-nude' | 'body-paint' | 'editorial-portrait';
@@ -68,13 +69,13 @@ const rawBaseSet: BaseMedia[] = [
 ];
 
 const toCloudinaryOptimized = (url: string) =>
-	url.includes('/image/upload/')
+	url.includes('/image/upload/') && !url.includes('/image/upload/f_auto')
 		? url.replace('/image/upload/', '/image/upload/f_auto,q_auto,w_900,c_fill/')
 		: url;
 
 const baseSet: BaseMedia[] = rawBaseSet.map((item) => ({
 	...item,
-	image: toCloudinaryOptimized(item.image)
+	image: bunnyMedia(toCloudinaryOptimized(item.image))
 }));
 
 const cols = 8;

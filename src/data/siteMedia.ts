@@ -1,4 +1,6 @@
-export const SITE_MEDIA = {
+import { bunnyMedia } from '../lib/bunnyMedia';
+
+const SITE_MEDIA_ORIGIN = {
 	one: 'https://res.cloudinary.com/douekbaqn/image/upload/f_auto,q_auto,w_900,c_fill/v1771009257/5B1A0245_yo4xcf.jpg',
 	two: 'https://res.cloudinary.com/douekbaqn/image/upload/f_auto,q_auto,w_900,c_fill/v1771009327/84BC53CD-AC43-4BC4-8C9F-1E2C86489101_m2jwtm.jpg',
 	three: 'https://res.cloudinary.com/dg4xwrzu9/image/upload/f_auto,q_auto,w_900,c_fill/v1772942536/5B1A2340_hocjor.jpg',
@@ -6,6 +8,10 @@ export const SITE_MEDIA = {
 	five: 'https://res.cloudinary.com/douekbaqn/image/upload/f_auto,q_auto,w_1200,c_fill/v1771009327/84BC53CD-AC43-4BC4-8C9F-1E2C86489101_m2jwtm.jpg',
 	about: 'https://res.cloudinary.com/dg4xwrzu9/image/upload/f_auto,q_auto,w_1200,c_fill/v1772942536/5B1A2340_hocjor.jpg'
 } as const;
+
+export const SITE_MEDIA = Object.fromEntries(
+	Object.entries(SITE_MEDIA_ORIGIN).map(([key, url]) => [key, bunnyMedia(url)])
+) as { [Key in keyof typeof SITE_MEDIA_ORIGIN]: string };
 
 /**
  * Video in "A session that feels like cinema" near the bottom of the homepage. Host these on an
