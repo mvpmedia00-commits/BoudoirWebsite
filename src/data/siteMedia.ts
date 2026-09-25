@@ -53,7 +53,12 @@ export const SECTION_VIDEOS = {
 };
 
 export const PORTFOLIO_PHOTOS = {
-	boudoir: [photo('5B1A4081.JPG'), photo('5B1A4143.JPG'), photo('5B1A4145.JPG')],
+	boudoir: [
+		photo('5B1A4081.JPG'),
+		photo('5B1A4143.JPG'),
+		photo('5B1A4145.JPG'),
+		...['boudoir-01.jpg', 'boudoir-02.jpg', 'boudoir-03.jpg', 'boudoir-04.jpg', 'boudoir-05.jpg'].map((file) => photo(file))
+	],
 	artisticNude: [photo('IMG_1982.JPG')]
 };
 
