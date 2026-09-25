@@ -393,6 +393,9 @@ const INITIAL_RENDER_COUNT = 24;
 	}
 	.stage {
 		position: relative;
+		/* Keep the cards' stacking (raised each time one is dragged) inside the canvas, so a moved
+		   card never covers the enlarged image or the sticky header. */
+		isolation: isolate;
 		min-width: 100%;
 		background:
 			radial-gradient(circle at 18% 8%, rgba(212, 194, 161, 0.08), transparent 34%),
