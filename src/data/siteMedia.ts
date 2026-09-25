@@ -22,7 +22,35 @@ export const SITE_MEDIA = Object.fromEntries(
  * (otherwise Bunny ignores it and sends the original).
  */
 const BUNNY_PHOTOS = 'https://boudoir123mvp.b-cdn.net';
+/** Bunny storage pull zone that holds uploaded photos and homepage videos. */
+export const BUNNY_STORAGE_ORIGIN = BUNNY_PHOTOS;
 const photo = (file: string, width = 1200) => `${BUNNY_PHOTOS}/${file}?width=${width}`;
+
+/**
+ * Homepage videos on Bunny storage: short muted loops made from the original clips (480px wide for
+ * the hero wall, 720px for the larger section videos), each with a first-frame poster. Upload
+ * hero-<code>.mp4 and hero-<code>.jpg to the root of the storage zone.
+ */
+type Clip = { src: string; poster: string };
+const clip = (code: string): Clip => ({
+	src: `${BUNNY_PHOTOS}/hero-${code}.mp4`,
+	poster: `${BUNNY_PHOTOS}/hero-${code}.jpg`
+});
+
+/** Hero wall: four scrolling columns; reverse columns scroll upward. All clips are 18+. */
+export const HERO_COLUMNS: { reverse?: boolean; clips: Clip[] }[] = [
+	{ clips: ['lj5m91', 'b0ucez', 'ja5w2s', 'nheho7'].map(clip) },
+	{ reverse: true, clips: ['xclx4p', 'fjp7bx', 'mlpgmf', 'mgwdsn'].map(clip) },
+	{ clips: ['piongb', 'b29nwo', 'rilxzp', 'enob5b'].map(clip) },
+	{ reverse: true, clips: ['nqtvab', 'nejhyj', 'ufc7db', 'wac5uk'].map(clip) }
+];
+
+/** Section videos further down the homepage. All 18+. */
+export const SECTION_VIDEOS = {
+	editorial: clip('zsw8ku'),
+	cinematic: clip('zc25xe'),
+	signature: clip('vrrjjo')
+};
 
 export const PORTFOLIO_PHOTOS = {
 	boudoir: [photo('5B1A4081.JPG'), photo('5B1A4143.JPG'), photo('5B1A4145.JPG')],

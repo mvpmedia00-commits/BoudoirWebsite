@@ -3,67 +3,24 @@ import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
-import { PORTFOLIO_PHOTOS, PROCESS_VIDEO, SITE_MEDIA } from '../data/siteMedia';
-import { BUNNY_MEDIA_HOST, bunnyMedia } from '../lib/bunnyMedia';
+import {
+	BUNNY_STORAGE_ORIGIN,
+	HERO_COLUMNS,
+	PORTFOLIO_PHOTOS,
+	PROCESS_VIDEO,
+	SECTION_VIDEOS,
+	SITE_MEDIA
+} from '../data/siteMedia';
+import { BUNNY_MEDIA_HOST } from '../lib/bunnyMedia';
 
 export const prerender = true;
 
-type HeroMediaColumn = {
-	reverse?: boolean;
-	items: string[];
-};
-
-const rawHeroMediaColumns: HeroMediaColumn[] = [
-	{
-		items: [
-			'https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771778844/grok-video-b1e546eb-43ae-4c20-9334-53847268f6f0_lj5m91.mp4',
-			'https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771783064/grok-video-9235aa62-6fdd-4f45-bd14-ebb3fd08ae08_vrrjjo.mp4',
-			'https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771783074/grok-video-90ae5076-b9d3-4b9b-a7e0-015658114076_1_b0ucez.mp4'
-		]
-	},
-	{
-		reverse: true,
-		items: [
-			'https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771780425/grok-video-b6dc0a9c-926f-47cd-bd74-288c65925979_xclx4p.mp4',
-			'https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771783064/grok-video-ad3c66dd-7957-4c7b-b49e-afa366007980_fjp7bx.mp4',
-			'https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771780675/grok-video-e37a5a66-37c9-4e0a-9efb-7acdf0e92ed1_mlpgmf.mp4'
-		]
-	},
-	{
-		items: [
-			'https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771784294/grok-video-a77ba723-ed82-47fb-a44c-da394706ef53_zsw8ku.mp4',
-			'https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771788759/grok-video-98796eaa-50b7-43b8-ad25-7712f95fefb7_1_b29nwo.mp4',
-			'https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771789682/grok-video-615b8d45-bf96-464e-a1ec-9af35c32e448_1_zc25xe.mp4'
-		]
-	},
-	{
-		reverse: true,
-		items: [
-			'https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771778842/grok-video-7f5538a0-9516-462e-bc15-c1ff8d65729d_ja5w2s.mp4',
-			'https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771788591/grok-video-27858631-03b8-406f-bde2-16ea3742d393_nqtvab.mp4',
-			'https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_480,c_fill,vc_auto/v1771789106/grok-video-9564afee-04d3-4d2a-af37-8fd002e6a40e_nejhyj.mp4'
-		]
-	}
-];
-
-const heroMediaColumns = rawHeroMediaColumns.map((column) => ({
+// Each column's clips are listed twice so the scrolling loop is seamless; the copies reuse the
+// same downloads.
+const heroMediaColumns = HERO_COLUMNS.map((column) => ({
 	...column,
-	items: [...column.items, ...column.items].map((src) => bunnyMedia(src))
+	clips: [...column.clips, ...column.clips]
 }));
-
-// Hero clips are listed with a 480px Cloudinary transform. Each tile picks its real size in the
-// browser (see the hero script), so the markup carries a template with a {w} width placeholder.
-// q_auto:eco trims file size on these small background tiles, ac_none drops the unused audio, and
-// c_limit never upscales past the original clip.
-const HERO_TRANSFORM = /\/video\/upload\/[^/]+\//;
-const heroVideoTemplate = (src: string) =>
-	src.replace(HERO_TRANSFORM, '/video/upload/f_auto,q_auto:eco,ac_none,w_{w},c_limit,vc_auto/');
-// Muted section videos further down the page: same savings at a fixed width.
-const lightVideo = (src: string, width: number) =>
-	bunnyMedia(src.replace(HERO_TRANSFORM, `/video/upload/f_auto,q_auto:eco,ac_none,w_${width},c_fill,vc_auto/`));
-// First frame (so_0) as a still, so the poster matches the moment playback starts.
-const getVideoPoster = (src: string, width = 720) =>
-	src.replace(HERO_TRANSFORM, `/video/upload/so_0,f_auto,q_auto,w_${width},c_limit/`).replace(/\.mp4$/, '.jpg');
 
 const homeSchema = {
 	'@context': 'https://schema.org',
@@ -81,6 +38,7 @@ const homeSchema = {
 <html lang="en">
 	<head>
 		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+		<link rel="preconnect" href={BUNNY_STORAGE_ORIGIN} crossorigin />
 		<link rel="preconnect" href={`https://${BUNNY_MEDIA_HOST}`} crossorigin />
 		<link rel="preload" as="image" href="/media/hero/hero-light-poster.jpg" />
 		<script type="application/ld+json" set:html={JSON.stringify(homeSchema)} />
@@ -89,23 +47,23 @@ const homeSchema = {
 		<Header />
 		<main class="homepage">
 			<section class="hero">
-				<div class="hero-media-wall" aria-hidden="true">
+				<div class="hero-media-wall" aria-hidden="true" data-veil-quiet>
 					{
 						heroMediaColumns.map((column) => (
 							<div class:list={['hero-media-col', { reverse: column.reverse }]}>
 								<div class="hero-media-track">
 									{
-										column.items.map((src, index) => {
+										column.clips.map((clip, index) => {
 											const isPrime = index === 0;
 											return (
 												<video
-													data-src={heroVideoTemplate(src)}
+													data-src={clip.src}
 													autoplay
 													muted
 													loop
 													playsinline
 													preload="none"
-													poster={getVideoPoster(src)}
+													poster={clip.poster}
 													data-hero-prime={isPrime ? 'true' : undefined}
 													aria-hidden={index >= 3 ? 'true' : undefined}
 												></video>
@@ -214,9 +172,10 @@ const homeSchema = {
 						<h2 class="heading-accent">Color, motion, and mood</h2>
 					</div>
 					<div class="reel-grid">
-						<article class="reel-card">
+						<article class="reel-card" data-veil-quiet>
 							<video
-								data-lazy-src={lightVideo('https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_900,c_fill,vc_auto/v1771784294/grok-video-a77ba723-ed82-47fb-a44c-da394706ef53_zsw8ku.mp4', 900)}
+								data-lazy-src={SECTION_VIDEOS.editorial.src}
+								poster={SECTION_VIDEOS.editorial.poster}
 								autoplay
 								muted
 								loop
@@ -237,9 +196,10 @@ const homeSchema = {
 								<p>Styling, texture, and light shaping that keeps every frame polished and intentional.</p>
 							</div>
 						</article>
-						<article class="reel-card">
+						<article class="reel-card" data-veil-quiet>
 							<video
-								data-lazy-src={lightVideo('https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_900,c_fill,vc_auto/v1771789682/grok-video-615b8d45-bf96-464e-a1ec-9af35c32e448_1_zc25xe.mp4', 900)}
+								data-lazy-src={SECTION_VIDEOS.cinematic.src}
+								poster={SECTION_VIDEOS.cinematic.poster}
 								autoplay
 								muted
 								loop
@@ -335,9 +295,10 @@ const homeSchema = {
 					)}
 				</section>
 
-				<section class="signature-moment fade-up">
+				<section class="signature-moment fade-up" data-veil-quiet>
 					<video
-						data-lazy-src={lightVideo('https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_1400,c_fill,vc_auto/v1771783064/grok-video-9235aa62-6fdd-4f45-bd14-ebb3fd08ae08_vrrjjo.mp4', 1400)}
+						data-lazy-src={SECTION_VIDEOS.signature.src}
+						poster={SECTION_VIDEOS.signature.poster}
 						autoplay
 						muted
 						loop
@@ -494,19 +455,10 @@ const homeSchema = {
 			heroWall.querySelectorAll<HTMLVideoElement>('video[data-src]:not([data-hero-prime])')
 		);
 
-		// Pick the smallest clip that stays sharp at the tile's on-screen size. Density is capped
-		// at 2x and tiles at 720px wide to keep bandwidth low; c_limit stops at the original resolution.
-		const WIDTHS = [480, 720];
-		const pickWidth = (video: HTMLVideoElement) => {
-			const needed = video.getBoundingClientRect().width * Math.min(window.devicePixelRatio || 1, 2);
-			return WIDTHS.find((width) => width >= needed) ?? WIDTHS[WIDTHS.length - 1];
-		};
-
 		const hydrateVideo = (video: HTMLVideoElement) => {
 			if (video.dataset.hydrated === 'true') return;
-			const template = video.dataset.src;
-			if (!template) return;
-			video.src = template.replace('{w}', String(pickWidth(video)));
+			if (!video.dataset.src) return;
+			video.src = video.dataset.src;
 			video.dataset.hydrated = 'true';
 			video.load();
 			if (!heroWall.classList.contains('is-offscreen')) void video.play().catch(() => {});
@@ -897,6 +849,7 @@ const homeSchema = {
 		margin-top: 0.9rem;
 	}
 	.reel-card {
+		overflow: hidden;
 		background: rgba(255, 255, 255, 0.03);
 		border: 1px solid rgba(255, 255, 255, 0.1);
 		display: grid;
