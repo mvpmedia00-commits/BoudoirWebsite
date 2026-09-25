@@ -2,7 +2,7 @@
 import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
-import { BLUR_MATURE_PREVIEWS, SITE_TITLE } from '../consts';
+import { SITE_TITLE } from '../consts';
 import { GALLERY_CATEGORIES } from '../data/galleryMedia';
 import { PORTFOLIO_PHOTOS, SITE_MEDIA } from '../data/siteMedia';
 
@@ -58,7 +58,7 @@ const featuredStrip = [SITE_MEDIA.one, SITE_MEDIA.two, SITE_MEDIA.three, SITE_ME
 			<section class="gallery-grid fade-up">
 				{GALLERY_CATEGORIES.map((category) => (
 					<a class="category-card" href={`/gallery/${category.slug}`}>
-						<div class="category-media" data-veil={BLUR_MATURE_PREVIEWS && 'veil' in categoryVisuals[category.slug] ? '' : undefined}>
+						<div class="category-media" data-veil={'veil' in categoryVisuals[category.slug] ? '' : undefined}>
 							<img src={categoryVisuals[category.slug].image} alt={`${category.label} portfolio preview`} loading="lazy" />
 							<div class="category-wash"></div>
 						</div>

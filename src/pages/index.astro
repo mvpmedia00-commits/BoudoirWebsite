@@ -2,14 +2,11 @@
 import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
-import { BLUR_MATURE_PREVIEWS, SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 import { PORTFOLIO_PHOTOS, PROCESS_VIDEO, SITE_MEDIA } from '../data/siteMedia';
 import { BUNNY_MEDIA_HOST, bunnyMedia } from '../lib/bunnyMedia';
 
 export const prerender = true;
-
-// Blurred still + 18+ confirmation before the process video plays (off while BLUR_MATURE_PREVIEWS is off).
-const gateProcessVideo = PROCESS_VIDEO.mature && BLUR_MATURE_PREVIEWS;
 
 type HeroMediaColumn = {
 	reverse?: boolean;
@@ -168,7 +165,7 @@ const homeSchema = {
 					</div>
 					<div class="category-grid">
 						<a class="category-card" href="/gallery/boudoir" data-track data-track-element="home_category_boudoir">
-							<div class="art-frame" data-veil={BLUR_MATURE_PREVIEWS ? '' : undefined}>
+							<div class="art-frame" data-veil>
 								<img src={PORTFOLIO_PHOTOS.boudoir[0]} alt="Boudoir category preview" loading="lazy" />
 							</div>
 							<div class="category-copy">
@@ -177,7 +174,7 @@ const homeSchema = {
 							</div>
 						</a>
 						<a class="category-card" href="/gallery/artistic-nude" data-track data-track-element="home_category_artistic_nude">
-							<div class="art-frame" data-veil={BLUR_MATURE_PREVIEWS ? '' : undefined}>
+							<div class="art-frame" data-veil>
 								<img src={PORTFOLIO_PHOTOS.artisticNude[0]} alt="Artistic nude category preview" loading="lazy" />
 							</div>
 							<div class="category-copy">
@@ -312,7 +309,7 @@ const homeSchema = {
 						</article>
 					</div>
 					{PROCESS_VIDEO.mp4 ? (
-						<div class="process-visual process-video art-frame" data-gated-video data-mature={gateProcessVideo ? 'true' : undefined}>
+						<div class="process-visual process-video art-frame" data-gated-video data-veil={PROCESS_VIDEO.mature ? '' : undefined}>
 							<video
 								muted
 								loop
@@ -325,15 +322,6 @@ const homeSchema = {
 								])}
 								aria-label="Session film"
 							></video>
-							{gateProcessVideo && PROCESS_VIDEO.poster && (
-								<img class="gated-still" src={PROCESS_VIDEO.poster} alt="" loading="lazy" decoding="async" />
-							)}
-							{gateProcessVideo && (
-								<div class="mature-veil">
-									<p>This video contains artistic nudity.</p>
-									<button class="btn btn-solid" type="button" data-mature-confirm>Confirm 18+ to view</button>
-								</div>
-							)}
 						</div>
 					) : (
 						<div class="process-visual art-frame">
@@ -420,26 +408,10 @@ const homeSchema = {
 		});
 	});
 
-	// Process video: only downloads once visible, and for mature clips only after an 18+ confirmation
-	// (shared with the gallery age gate).
+	// Process video: only downloads once visible, and pauses when scrolled away.
 	const processBox = document.querySelector<HTMLElement>('[data-gated-video]');
 	const processVideo = processBox?.querySelector<HTMLVideoElement>('video');
 	if (processBox && processVideo) {
-		const AGE_KEYS = ['ageVerified', 'age_gate_ack_v1'];
-		const hasAck = () => {
-			try {
-				return AGE_KEYS.some((key) => localStorage.getItem(key) === 'true');
-			} catch {
-				return false;
-			}
-		};
-		const saveAck = () => {
-			try {
-				AGE_KEYS.forEach((key) => localStorage.setItem(key, 'true'));
-			} catch {
-				// Storage unavailable: the confirmation lasts for this page view only.
-			}
-		};
 		const start = () => {
 			if (!processVideo.dataset.loaded) {
 				const sources: { src: string; type: string }[] = JSON.parse(processVideo.dataset.sources || '[]');
@@ -454,27 +426,16 @@ const homeSchema = {
 			}
 			if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) void processVideo.play().catch(() => {});
 		};
-		const unlock = () => {
-			processBox.classList.add('is-unlocked');
-			if ('IntersectionObserver' in window) {
-				const seen = new IntersectionObserver((entries) => {
-					entries.forEach((entry) => {
-						if (entry.isIntersecting) start();
-						else processVideo.pause();
-					});
-				}, { rootMargin: '150px 0px' });
-				seen.observe(processBox);
-			} else {
-				start();
-			}
-		};
-		if (processBox.dataset.mature !== 'true' || hasAck()) {
-			unlock();
+		if ('IntersectionObserver' in window) {
+			const seen = new IntersectionObserver((entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting) start();
+					else processVideo.pause();
+				});
+			}, { rootMargin: '150px 0px' });
+			seen.observe(processBox);
 		} else {
-			processBox.querySelector('[data-mature-confirm]')?.addEventListener('click', () => {
-				saveAck();
-				unlock();
-			});
+			start();
 		}
 	}
 
@@ -1070,44 +1031,6 @@ const homeSchema = {
 		object-fit: cover;
 		border-radius: 0;
 		background: #0b0b0b;
-	}
-	/* Mature clips: a blurred still (an <img>, which browsers render reliably under a filter)
-	   and a confirmation until the visitor confirms 18+. */
-	.gated-still {
-		position: absolute;
-		inset: 0;
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-		border-radius: 0;
-		filter: blur(22px) brightness(0.95) saturate(1.1);
-		transform: scale(1.12);
-	}
-	[data-gated-video][data-mature]:not(.is-unlocked) video {
-		visibility: hidden;
-	}
-	.is-unlocked .gated-still {
-		display: none;
-	}
-	.mature-veil {
-		position: absolute;
-		inset: 0;
-		z-index: 2;
-		display: grid;
-		place-content: center;
-		justify-items: center;
-		gap: 0.8rem;
-		padding: 1.25rem;
-		text-align: center;
-		background: rgba(8, 8, 8, 0.35);
-	}
-	.mature-veil p {
-		margin: 0;
-		color: #f1ece6;
-		font-size: 0.9rem;
-	}
-	.is-unlocked .mature-veil {
-		display: none;
 	}
 	.signature-moment {
 		position: relative;

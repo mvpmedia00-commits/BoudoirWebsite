@@ -1,6 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
-import { SITE_TITLE } from '../consts';
+import { BLUR_PREF_KEY, SITE_TITLE } from '../consts';
 import { getStoreItems } from '../lib/store';
 import HeaderLink from './HeaderLink.astro';
 
@@ -38,10 +38,38 @@ const links = [
 					<li><HeaderLink href={link.href}>{link.label}</HeaderLink></li>
 				))}
 			</ul>
+			<button class="blur-switch" type="button" role="switch" aria-checked="false" data-blur-switch>
+				<span class="blur-label">18+ blur</span>
+				<span class="blur-track" aria-hidden="true"><span class="blur-thumb"></span></span>
+				<span class="blur-state" aria-hidden="true" data-blur-state>Off</span>
+			</button>
 			<a class="book-link" href="/booking">Book a Consultation</a>
 		</div>
 	</nav>
 </header>
+
+<script define:vars={{ blurKey: BLUR_PREF_KEY }}>
+	// 18+ blur switch: BaseHead.astro sets html.blur-on before paint; this keeps the switch in sync
+	// and saves the visitor's choice.
+	const blurSwitch = document.querySelector('[data-blur-switch]');
+	const blurState = document.querySelector('[data-blur-state]');
+	const root = document.documentElement;
+	const syncBlurSwitch = () => {
+		const on = root.classList.contains('blur-on');
+		blurSwitch?.setAttribute('aria-checked', String(on));
+		if (blurState) blurState.textContent = on ? 'On' : 'Off';
+	};
+	syncBlurSwitch();
+	blurSwitch?.addEventListener('click', () => {
+		const on = root.classList.toggle('blur-on');
+		try {
+			localStorage.setItem(blurKey, on ? 'on' : 'off');
+		} catch (e) {
+			// Storage unavailable: the choice lasts for this page view only.
+		}
+		syncBlurSwitch();
+	});
+</script>
 
 <script>
 	// Publish the header's height so sticky sub-navigation (e.g. on /films) can sit right below it.
@@ -145,6 +173,56 @@ const links = [
 	.book-link:hover {
 		background: #f1dfbe;
 	}
+	.blur-switch {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.55rem;
+		padding: 0.45rem 0.2rem;
+		background: none;
+		border: 0;
+		color: var(--text-muted);
+		font: inherit;
+		font-size: 0.72rem;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		white-space: nowrap;
+		cursor: pointer;
+		transition: color 0.2s ease;
+	}
+	.blur-switch:hover {
+		color: var(--text-primary);
+	}
+	.blur-track {
+		position: relative;
+		width: 34px;
+		height: 18px;
+		border-radius: 999px;
+		background: #2a2522;
+		border: 1px solid var(--stroke);
+		transition: background 0.2s ease, border-color 0.2s ease;
+	}
+	.blur-thumb {
+		position: absolute;
+		top: 2px;
+		left: 2px;
+		width: 12px;
+		height: 12px;
+		border-radius: 50%;
+		background: var(--text-muted);
+		transition: transform 0.2s ease, background 0.2s ease;
+	}
+	.blur-switch[aria-checked='true'] .blur-track {
+		background: rgba(212, 194, 161, 0.25);
+		border-color: var(--brand-strong);
+	}
+	.blur-switch[aria-checked='true'] .blur-thumb {
+		transform: translateX(16px);
+		background: var(--brand-strong);
+	}
+	.blur-state {
+		min-width: 1.8em;
+		color: var(--text-primary);
+	}
 	.menu-toggle {
 		display: none;
 		align-items: center;
@@ -233,6 +311,14 @@ const links = [
 		.book-link {
 			text-align: center;
 			padding: 0.95rem 1.15rem;
+		}
+		.blur-switch {
+			justify-content: space-between;
+			padding: 0.4rem 0;
+			font-size: 0.82rem;
+		}
+		.blur-label {
+			margin-right: auto;
 		}
 	}
 	:global(body.menu-open) {

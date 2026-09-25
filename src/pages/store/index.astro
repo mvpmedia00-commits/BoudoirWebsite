@@ -3,8 +3,7 @@ import BaseHead from '../../components/BaseHead.astro';
 import Footer from '../../components/Footer.astro';
 import Header from '../../components/Header.astro';
 import ProductCover from '../../components/store/ProductCover.astro';
-import { BLUR_MATURE_PREVIEWS, SITE_TITLE } from '../../consts';
-import { hasAdultAccess } from '../../lib/access';
+import { SITE_TITLE } from '../../consts';
 import { buyableOptions, getStoreItems, priceLabel } from '../../lib/store';
 
 const items = await getStoreItems();
@@ -12,7 +11,6 @@ if (items.length === 0) {
 	return Astro.redirect('/');
 }
 
-const adult = hasAdultAccess(Astro.cookies);
 const categories = [...new Set(items.map((item) => item.data.category))];
 ---
 
@@ -52,7 +50,7 @@ const categories = [...new Set(items.map((item) => item.data.category))];
 									title={item.data.title}
 									subtitle={item.data.subtitle}
 									image={item.data.image}
-									veiled={BLUR_MATURE_PREVIEWS && item.data.mature && !adult}
+									mature={item.data.mature}
 								/>
 								<div class="card-body">
 									<div class="tags">
@@ -150,7 +148,7 @@ const categories = [...new Set(items.map((item) => item.data.category))];
 	.card:hover :global(.cover img) {
 		transform: scale(1.04);
 	}
-	.card:hover :global(.veiled img) {
+	:global(html.blur-on) .card:hover :global([data-veil] img) {
 		transform: scale(1.12);
 	}
 	.card-body {

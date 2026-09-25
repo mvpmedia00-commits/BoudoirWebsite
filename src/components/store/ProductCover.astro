@@ -5,15 +5,15 @@ interface Props {
 	title: string;
 	subtitle?: string;
 	image?: string;
-	/** Blur the image and show an 18+ badge (mature item, visitor has not confirmed). */
-	veiled?: boolean;
+	/** 18+ item: blurred with an 18+ badge while the visitor has the 18+ blur switch on. */
+	mature?: boolean;
 	eager?: boolean;
 }
 
-const { title, subtitle, image, veiled = false, eager = false } = Astro.props;
+const { title, subtitle, image, mature = false, eager = false } = Astro.props;
 ---
 
-<div class:list={['cover', { veiled }]}>
+<div class="cover" data-veil={mature && image ? '' : undefined}>
 	<div class="title-card" aria-hidden="true">
 		<span class="brand">{SITE_TITLE}</span>
 		<span class="name">{title}</span>
@@ -22,13 +22,12 @@ const { title, subtitle, image, veiled = false, eager = false } = Astro.props;
 	{image && (
 		<img
 			src={image}
-			alt={veiled ? '' : title}
+			alt={title}
 			loading={eager ? 'eager' : 'lazy'}
 			decoding="async"
-			onerror="this.parentElement.classList.remove('veiled');this.remove()"
+			onerror="this.parentElement.removeAttribute('data-veil');this.remove()"
 		/>
 	)}
-	{veiled && image && <span class="badge">18+</span>}
 </div>
 
 <style>
@@ -47,26 +46,6 @@ const { title, subtitle, image, veiled = false, eager = false } = Astro.props;
 		object-fit: cover;
 		border-radius: 0;
 		transition: transform 0.5s ease;
-	}
-	.veiled img {
-		filter: blur(22px) brightness(0.85);
-		transform: scale(1.12);
-	}
-	.cover:not(.veiled) .badge,
-	.cover:not(:has(img)) .badge {
-		display: none;
-	}
-	.badge {
-		position: absolute;
-		inset: 50% auto auto 50%;
-		transform: translate(-50%, -50%);
-		padding: 0.35rem 0.8rem;
-		border-radius: 999px;
-		background: rgba(8, 8, 8, 0.7);
-		border: 1px solid rgba(255, 255, 255, 0.25);
-		color: var(--text-primary);
-		font-size: 0.75rem;
-		letter-spacing: 0.14em;
 	}
 	/* Styled stand-in until the item has a photo. */
 	.title-card {

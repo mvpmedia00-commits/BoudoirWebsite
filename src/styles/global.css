@@ -461,17 +461,17 @@ figcaption {
 }
 
 /*
- * 18+ previews on public pages: a [data-veil] wrapper blurs its image and shows an 18+ badge until
- * the visitor has confirmed their age (html.age-ok, set in BaseHead.astro).
+ * 18+ media on public pages sits in a [data-veil] wrapper. While the visitor has the "18+ blur" switch
+ * on (html.blur-on, set in BaseHead.astro and Header.astro) it is blurred and shows an 18+ badge.
  */
 [data-veil] {
   position: relative;
 }
-[data-veil] img {
+html.blur-on [data-veil] :is(img, video) {
   filter: blur(22px) brightness(0.85);
   transform: scale(1.12);
 }
-[data-veil]::after {
+html.blur-on [data-veil]::after {
   content: '18+';
   position: absolute;
   inset: 50% auto auto 50%;
@@ -485,11 +485,4 @@ figcaption {
   font-size: 0.75rem;
   letter-spacing: 0.14em;
   pointer-events: none;
-}
-html.age-ok [data-veil] img {
-  filter: none;
-  transform: none;
-}
-html.age-ok [data-veil]::after {
-  display: none;
 }
