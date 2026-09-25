@@ -53,9 +53,14 @@ const heroMediaColumns = rawHeroMediaColumns.map((column) => ({
 
 // Hero clips are listed with a 480px Cloudinary transform. Each tile picks its real size in the
 // browser (see the hero script), so the markup carries a template with a {w} width placeholder.
+// q_auto:eco trims file size on these small background tiles, ac_none drops the unused audio, and
 // c_limit never upscales past the original clip.
 const HERO_TRANSFORM = /\/video\/upload\/[^/]+\//;
-const heroVideoTemplate = (src: string) => src.replace(HERO_TRANSFORM, '/video/upload/f_auto,q_auto,w_{w},c_limit,vc_auto/');
+const heroVideoTemplate = (src: string) =>
+	src.replace(HERO_TRANSFORM, '/video/upload/f_auto,q_auto:eco,ac_none,w_{w},c_limit,vc_auto/');
+// Muted section videos further down the page: same savings at a fixed width.
+const lightVideo = (src: string, width: number) =>
+	bunnyMedia(src.replace(HERO_TRANSFORM, `/video/upload/f_auto,q_auto:eco,ac_none,w_${width},c_fill,vc_auto/`));
 // First frame (so_0) as a still, so the poster matches the moment playback starts.
 const getVideoPoster = (src: string, width = 720) =>
 	src.replace(HERO_TRANSFORM, `/video/upload/so_0,f_auto,q_auto,w_${width},c_limit/`).replace(/\.mp4$/, '.jpg');
@@ -211,12 +216,12 @@ const homeSchema = {
 					<div class="reel-grid">
 						<article class="reel-card">
 							<video
-								src={bunnyMedia('https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_900,c_fill,vc_auto/v1771784294/grok-video-a77ba723-ed82-47fb-a44c-da394706ef53_zsw8ku.mp4')}
+								data-lazy-src={lightVideo('https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_900,c_fill,vc_auto/v1771784294/grok-video-a77ba723-ed82-47fb-a44c-da394706ef53_zsw8ku.mp4', 900)}
 								autoplay
 								muted
 								loop
 								playsinline
-								preload="metadata"
+								preload="none"
 							></video>
 							<div class="reel-copy">
 								<h3>Editorial Energy</h3>
@@ -234,12 +239,12 @@ const homeSchema = {
 						</article>
 						<article class="reel-card">
 							<video
-								src={bunnyMedia('https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_900,c_fill,vc_auto/v1771789682/grok-video-615b8d45-bf96-464e-a1ec-9af35c32e448_1_zc25xe.mp4')}
+								data-lazy-src={lightVideo('https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_900,c_fill,vc_auto/v1771789682/grok-video-615b8d45-bf96-464e-a1ec-9af35c32e448_1_zc25xe.mp4', 900)}
 								autoplay
 								muted
 								loop
 								playsinline
-								preload="metadata"
+								preload="none"
 							></video>
 							<div class="reel-copy">
 								<h3>Cinematic Finish</h3>
@@ -332,12 +337,12 @@ const homeSchema = {
 
 				<section class="signature-moment fade-up">
 					<video
-						src={bunnyMedia('https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_1400,c_fill,vc_auto/v1771783064/grok-video-9235aa62-6fdd-4f45-bd14-ebb3fd08ae08_vrrjjo.mp4')}
+						data-lazy-src={lightVideo('https://res.cloudinary.com/dg4xwrzu9/video/upload/f_auto,q_auto,w_1400,c_fill,vc_auto/v1771783064/grok-video-9235aa62-6fdd-4f45-bd14-ebb3fd08ae08_vrrjjo.mp4', 1400)}
 						autoplay
 						muted
 						loop
 						playsinline
-						preload="metadata"
+						preload="none"
 					></video>
 					<div class="signature-overlay"></div>
 					<div class="signature-copy">
@@ -439,13 +444,43 @@ const homeSchema = {
 		}
 	}
 
+	// Section videos below the hero download only when they come near the screen, and pause when
+	// they leave it.
+	const lazyVideos = document.querySelectorAll<HTMLVideoElement>('video[data-lazy-src]');
+	if ('IntersectionObserver' in window) {
+		const lazyObserver = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					const video = entry.target as HTMLVideoElement;
+					if (entry.isIntersecting) {
+						if (!video.src && video.dataset.lazySrc) video.src = video.dataset.lazySrc;
+						void video.play().catch(() => {});
+					} else if (video.src) {
+						video.pause();
+					}
+				});
+			},
+			{ rootMargin: '300px 0px' }
+		);
+		lazyVideos.forEach((video) => lazyObserver.observe(video));
+	} else {
+		lazyVideos.forEach((video) => {
+			if (video.dataset.lazySrc) video.src = video.dataset.lazySrc;
+		});
+	}
+
 	const heroWall = document.querySelector('.hero-media-wall');
 	if (heroWall instanceof HTMLElement) {
 		heroWall.classList.add('is-loading');
-		const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
-		// Visitors on data saver or with reduced motion keep the still poster frames.
+		const connection = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } })
+			.connection;
+		// Visitors on data saver, a slow connection, or with reduced motion keep the still poster frames.
 		const stillsOnly =
-			connection?.saveData === true || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+			connection?.saveData === true ||
+			['slow-2g', '2g', '3g'].includes(connection?.effectiveType ?? '') ||
+			window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		// Columns hidden on smaller screens (see the CSS) never load their clips.
+		const isShown = (video: HTMLVideoElement) => video.getClientRects().length > 0;
 		const titleVideo = document.querySelector<HTMLVideoElement>('[data-hero-title-video]');
 		if (titleVideo && stillsOnly) {
 			titleVideo.pause();
@@ -454,14 +489,14 @@ const homeSchema = {
 
 		const primeVideos = stillsOnly
 			? []
-			: Array.from(heroWall.querySelectorAll<HTMLVideoElement>('video[data-hero-prime]'));
+			: Array.from(heroWall.querySelectorAll<HTMLVideoElement>('video[data-hero-prime]')).filter(isShown);
 		const deferredVideos = Array.from(
 			heroWall.querySelectorAll<HTMLVideoElement>('video[data-src]:not([data-hero-prime])')
 		);
 
 		// Pick the smallest clip that stays sharp at the tile's on-screen size. Density is capped
-		// at 2x to keep bandwidth sensible; c_limit in the URL stops at the original resolution.
-		const WIDTHS = [480, 720, 960, 1280];
+		// at 2x and tiles at 720px wide to keep bandwidth low; c_limit stops at the original resolution.
+		const WIDTHS = [480, 720];
 		const pickWidth = (video: HTMLVideoElement) => {
 			const needed = video.getBoundingClientRect().width * Math.min(window.devicePixelRatio || 1, 2);
 			return WIDTHS.find((width) => width >= needed) ?? WIDTHS[WIDTHS.length - 1];
@@ -474,6 +509,7 @@ const homeSchema = {
 			video.src = template.replace('{w}', String(pickWidth(video)));
 			video.dataset.hydrated = 'true';
 			video.load();
+			if (!heroWall.classList.contains('is-offscreen')) void video.play().catch(() => {});
 		};
 
 		const hydrateDeferredVideos = () => {
@@ -492,8 +528,21 @@ const homeSchema = {
 				},
 				{ rootMargin: '200px 0px' }
 			);
-			deferredVideos.forEach((video) => observer.observe(video));
+			deferredVideos.filter(isShown).forEach((video) => observer.observe(video));
 		};
+
+		// Once the visitor scrolls past the hero, stop the wall: paused clips and animation use no
+		// data or battery. They resume when the hero comes back into view.
+		if ('IntersectionObserver' in window) {
+			new IntersectionObserver(([entry]) => {
+				const offscreen = !entry.isIntersecting;
+				heroWall.classList.toggle('is-offscreen', offscreen);
+				heroWall.querySelectorAll<HTMLVideoElement>('video[data-hydrated]').forEach((video) => {
+					if (offscreen) video.pause();
+					else void video.play().catch(() => {});
+				});
+			}).observe(heroWall);
+		}
 
 		if (!primeVideos.length) {
 			heroWall.classList.remove('is-loading');
@@ -577,7 +626,8 @@ const homeSchema = {
 		will-change: transform;
 		transform: translateZ(0);
 	}
-	.hero-media-wall.is-loading .hero-media-track {
+	.hero-media-wall.is-loading .hero-media-track,
+	.hero-media-wall.is-offscreen .hero-media-track {
 		animation-play-state: paused;
 	}
 	.hero-media-col.reverse .hero-media-track {
@@ -1528,6 +1578,10 @@ const homeSchema = {
 	@media (max-width: 980px) {
 		.hero-media-wall {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+		/* Two columns (six clips) on tablets and phones instead of four. */
+		.hero-media-col:nth-child(n + 3) {
+			display: none;
 		}
 		.hero-copy {
 			text-align: center;
