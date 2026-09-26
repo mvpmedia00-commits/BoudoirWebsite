@@ -17,6 +17,8 @@ export type GalleryItem = {
 	description: string;
 	category: GalleryCategory;
 	sensitive: boolean;
+	/** Landscape photo: spans two columns in the gallery grid. */
+	wide?: boolean;
 	x: number;
 	y: number;
 	w: number;
@@ -137,6 +139,7 @@ export const getGalleryItemsByCategory = (slug: GalleryCategory): GalleryItem[] 
 			description: meta.description,
 			category: slug,
 			sensitive: meta.sensitive,
+			wide: /-wide\.[a-z]+(\?|$)/i.test(image),
 			x: startX + col * (gapX + 60) + (row % 2 === 0 ? 0 : 32),
 			y: startY + row * (gapY + 90) + (col % 2 === 0 ? 0 : 18),
 			w: [220, 240, 230][idx % 3],

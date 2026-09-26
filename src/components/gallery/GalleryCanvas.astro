@@ -23,11 +23,11 @@ const INITIAL_RENDER_COUNT = 24;
 
 	<section class="stage-shell">
 		<p id="drag-instruction" class="sr-only">Drag to reposition cards. Press Enter to open image preview.</p>
-		<div class="stage" data-stage style={`min-height:${stageHeight}px;`}>
+		<div class="stage" data-stage data-layout="pending" style={`min-height:${stageHeight}px;`}>
 			{items.slice(0, INITIAL_RENDER_COUNT).map((item, index) => (
 				<button
 					type="button"
-					class="project-card"
+					class:list={['project-card', { 'is-wide': item.wide }]}
 					data-draggable-card
 					data-index={index}
 					data-id={item.id}
@@ -65,10 +65,13 @@ const INITIAL_RENDER_COUNT = 24;
 	</div>
 </div>
 
+<noscript><style>.stage[data-layout='pending'] .project-card { opacity: 1 !important; }</style></noscript>
+
 <script type="application/json" id="gallery-items-data" set:html={JSON.stringify(items)}></script>
 
 <script>
-	type CanvasItem = { id: string; title: string; image: string; x: number; y: number; w: number; h: number };
+	type CanvasItem = { id: string; title: string; image: string; wide?: boolean };
+	type Slot = { x: number; y: number; w: number; h: number };
 	type SavedPosition = { x?: number; y?: number; z?: number };
 
 	const dataEl = document.getElementById('gallery-items-data');
@@ -84,7 +87,8 @@ const INITIAL_RENDER_COUNT = 24;
 	const lightboxImg = document.querySelector<HTMLImageElement>('[data-lightbox-image]');
 	const lightboxLoader = document.querySelector<HTMLElement>('[data-lightbox-loader]');
 	const mediaQuery = window.matchMedia('(max-width: 980px)');
-	const STORAGE_KEY = 'mvp_gallery_positions_v2';
+	// v3: default layout became a screen-width grid, so older saved positions no longer line up.
+	const STORAGE_KEY = 'mvp_gallery_positions_v3';
 	const CHUNK_SIZE = 16;
 	let isMobile = mediaQuery.matches;
 	let previouslyFocused: Element | null = null;
@@ -106,6 +110,54 @@ const INITIAL_RENDER_COUNT = 24;
 		isMobile = event.matches;
 	});
 
+	// Desktop default layout: a grid of five columns sized to the canvas width, filling row by row.
+	// Wide (landscape) photos span two columns. Cards the visitor has dragged keep their saved spot.
+	const COLUMNS = 5;
+	const GAP = 18;
+	const PAD = 24;
+	const CAPTION = 34;
+	// Room under the grid for the "MVP Media" credit in the canvas's bottom-left corner.
+	const CREDIT_SPACE = 96;
+	let slots: Slot[] = [];
+
+	const computeLayout = () => {
+		if (!(stage instanceof HTMLElement)) return;
+		const inner = stage.clientWidth - PAD * 2;
+		const colW = (inner - GAP * (COLUMNS - 1)) / COLUMNS;
+		const mediaH = Math.round(colW * 1.25);
+		const rowH = mediaH + CAPTION + GAP;
+		let col = 0;
+		let row = 0;
+		slots = galleryItems.map((item) => {
+			const span = item.wide ? 2 : 1;
+			if (col + span > COLUMNS) {
+				col = 0;
+				row += 1;
+			}
+			const slot = {
+				x: Math.round(PAD + col * (colW + GAP)),
+				y: PAD + row * rowH,
+				w: Math.round(span * colW + (span - 1) * GAP),
+				h: mediaH
+			};
+			col += span;
+			if (col >= COLUMNS) {
+				col = 0;
+				row += 1;
+			}
+			return slot;
+		});
+		const rows = col === 0 ? row : row + 1;
+		stage.style.minHeight = `${PAD * 2 + rows * rowH - GAP + CREDIT_SPACE}px`;
+	};
+
+	// Grow the canvas if a card was dropped below the current bottom.
+	const fitStageHeight = (card: HTMLElement) => {
+		if (!(stage instanceof HTMLElement)) return;
+		const bottom = Number(card.dataset.y || 0) + card.offsetHeight + PAD + CREDIT_SPACE;
+		if (bottom > stage.offsetHeight) stage.style.minHeight = `${bottom}px`;
+	};
+
 	const applyTransform = (card: HTMLElement, x: number, y: number) => {
 		card.style.transform = `translate3d(${x}px, ${y}px, 0)`;
 		card.dataset.x = String(x);
@@ -126,12 +178,24 @@ const INITIAL_RENDER_COUNT = 24;
 		if (!id) return;
 		const saved = savedPositions[id];
 		if (!saved) return;
-		if (typeof saved.x === 'number' && typeof saved.y === 'number' && !isMobile) {
-			applyTransform(card, saved.x, saved.y);
-		}
 		if (typeof saved.z === 'number') {
 			card.style.zIndex = String(saved.z);
 			topLayer = Math.max(topLayer, saved.z);
+		}
+	};
+
+	const placeCard = (card: HTMLElement) => {
+		const slot = slots[Number(card.dataset.index || -1)];
+		if (!slot || isMobile) return;
+		card.style.width = `${slot.w}px`;
+		const wrap = card.querySelector<HTMLElement>('.media-wrap');
+		if (wrap) wrap.style.height = `${slot.h}px`;
+		const saved = savedPositions[card.dataset.id || ''];
+		if (saved && typeof saved.x === 'number' && typeof saved.y === 'number') {
+			applyTransform(card, saved.x, saved.y);
+			fitStageHeight(card);
+		} else {
+			applyTransform(card, slot.x, slot.y);
 		}
 	};
 
@@ -149,21 +213,16 @@ const INITIAL_RENDER_COUNT = 24;
 	const createCard = (item: CanvasItem, index: number) => {
 		const card = document.createElement('button');
 		card.type = 'button';
-		card.className = 'project-card';
+		card.className = item.wide ? 'project-card is-wide' : 'project-card';
 		card.dataset.draggableCard = '';
 		card.dataset.index = String(index);
 		card.dataset.id = item.id;
-		card.dataset.x = String(item.x);
-		card.dataset.y = String(item.y);
 		card.setAttribute('aria-label', `Open ${item.title}`);
 		card.setAttribute('aria-describedby', 'drag-instruction');
-		card.style.width = `${item.w}px`;
-		card.style.transform = `translate3d(${item.x}px, ${item.y}px, 0)`;
 		card.style.zIndex = String(10 + (index % 25));
 
 		const mediaWrap = document.createElement('div');
 		mediaWrap.className = 'media-wrap';
-		mediaWrap.style.height = `${item.h}px`;
 
 		const image = document.createElement('img');
 		image.src = item.image;
@@ -270,6 +329,7 @@ const INITIAL_RENDER_COUNT = 24;
 
 	const setupCard = (card: HTMLElement) => {
 		hydrateSavedPosition(card);
+		placeCard(card);
 
 		let pointerId = -1;
 		let startClientX = 0;
@@ -300,7 +360,9 @@ const INITIAL_RENDER_COUNT = 24;
 			const dy = event.clientY - startClientY;
 			if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
 			if (!moved) return;
-			applyTransform(card, originX + dx, originY + dy);
+			// Keep the card inside the canvas: no sideways overflow, and not above the top edge.
+			const maxX = stage instanceof HTMLElement ? stage.clientWidth - card.offsetWidth : Infinity;
+			applyTransform(card, Math.min(Math.max(originX + dx, 0), Math.max(maxX, 0)), Math.max(originY + dy, 0));
 			event.preventDefault();
 		});
 
@@ -311,6 +373,7 @@ const INITIAL_RENDER_COUNT = 24;
 			pointerId = -1;
 			if (moved) {
 				saveCardPosition(card);
+				fitStageHeight(card);
 				return;
 			}
 			card.style.zIndex = String(previousZ);
@@ -338,7 +401,24 @@ const INITIAL_RENDER_COUNT = 24;
 		});
 	};
 
+	computeLayout();
 	cards.forEach((card) => setupCard(card));
+	if (stage instanceof HTMLElement) {
+		stage.dataset.layout = 'ready';
+		// Re-flow the grid when the window width changes.
+		let lastWidth = stage.clientWidth;
+		new ResizeObserver(() => {
+			if (stage.clientWidth === lastWidth) return;
+			lastWidth = stage.clientWidth;
+			computeLayout();
+			stage.querySelectorAll<HTMLElement>('[data-draggable-card]').forEach(placeCard);
+		}).observe(stage);
+	}
+	mediaQuery.addEventListener('change', () => {
+		if (isMobile) return;
+		computeLayout();
+		stage?.querySelectorAll<HTMLElement>('[data-draggable-card]').forEach(placeCard);
+	});
 
 	if (stageSentinel && stageShell) {
 		const observer = new IntersectionObserver(
@@ -347,7 +427,7 @@ const INITIAL_RENDER_COUNT = 24;
 					if (entry.isIntersecting) renderMoreCards();
 				});
 			},
-			{ root: stageShell, rootMargin: '280px' }
+			{ rootMargin: '280px' }
 		);
 		observer.observe(stageSentinel);
 	}
@@ -385,8 +465,7 @@ const INITIAL_RENDER_COUNT = 24;
 	}
 	.stage-shell {
 		margin: 0 1rem;
-		height: min(92vh, 1200px);
-		overflow: auto;
+		overflow: hidden;
 		background: #0b0b0b;
 		border: 1px solid rgba(255, 255, 255, 0.1);
 		border-radius: 24px;
@@ -419,6 +498,10 @@ const INITIAL_RENDER_COUNT = 24;
 		cursor: grab;
 		touch-action: none;
 		user-select: none;
+	}
+	/* Hidden for the moment between page load and the script laying out the grid. */
+	.stage[data-layout='pending'] .project-card {
+		opacity: 0;
 	}
 	.project-card.dragging {
 		cursor: grabbing;
@@ -560,6 +643,8 @@ const INITIAL_RENDER_COUNT = 24;
 		.stage {
 			display: grid;
 			grid-template-columns: repeat(2, minmax(0, 1fr));
+			/* Let later photos fill the gap a two-column (wide) photo leaves behind. */
+			grid-auto-flow: dense;
 			gap: 0.85rem;
 			padding: 0.9rem;
 			min-height: 0 !important;
@@ -573,6 +658,15 @@ const INITIAL_RENDER_COUNT = 24;
 		.media-wrap {
 			height: auto !important;
 			aspect-ratio: 4 / 5;
+		}
+		.stage[data-layout='pending'] .project-card {
+			opacity: 1;
+		}
+		.project-card.is-wide {
+			grid-column: span 2;
+		}
+		.project-card.is-wide .media-wrap {
+			aspect-ratio: 3 / 2;
 		}
 		.credit {
 			position: static;
