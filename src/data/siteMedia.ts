@@ -45,11 +45,15 @@ export const HERO_COLUMNS: { reverse?: boolean; clips: Clip[] }[] = [
 	{ reverse: true, clips: ['nqtvab', 'nejhyj', 'ufc7db', 'wac5uk'].map(clip) }
 ];
 
-/** Section videos further down the homepage. All 18+. */
+/** Section videos further down the homepage. Editorial and cinematic are 18+. */
 export const SECTION_VIDEOS = {
 	editorial: clip('zsw8ku'),
 	cinematic: clip('zc25xe'),
-	signature: clip('vrrjjo')
+	/** "A session that feels like cinema": MVP Media branded clip, no nudity. */
+	signature: {
+		src: `${BUNNY_PHOTOS}/signature-mvp.mp4`,
+		poster: `${BUNNY_PHOTOS}/signature-mvp.jpg`
+	}
 };
 
 export const PORTFOLIO_PHOTOS = {
@@ -57,10 +61,14 @@ export const PORTFOLIO_PHOTOS = {
 		photo('5B1A4081.JPG'),
 		photo('5B1A4143.JPG'),
 		photo('5B1A4145.JPG'),
-		...['boudoir-01.jpg', 'boudoir-02.jpg', 'boudoir-03.jpg', 'boudoir-04.jpg', 'boudoir-05.jpg'].map((file) => photo(file))
+		...['boudoir-01.jpg', 'boudoir-02.jpg', 'boudoir-03.jpg', 'boudoir-04.jpg', 'boudoir-05.jpg', 'boudoir-06.jpg', 'boudoir-07.jpg'].map(
+			(file) => photo(file)
+		)
 	],
 	artisticNude: [photo('IMG_1982.JPG')],
 	// Files ending in -wide.jpg are landscape and take two columns in the gallery.
+	// Editorial is shown without an 18+ gate, so it only takes photos with no nudity.
+	editorial: ['editorial-01-wide.jpg', 'editorial-02.jpg', 'editorial-03.jpg'].map((file) => photo(file)),
 	bodyPaint: ['bodypaint-01.jpg', 'bodypaint-02-wide.jpg', 'bodypaint-03.jpg', 'bodypaint-04.jpg', 'bodypaint-05.jpg'].map(
 		(file) => photo(file)
 	)
@@ -71,7 +79,8 @@ export const photosForSlug = (slug: string): string[] =>
 	({
 		boudoir: PORTFOLIO_PHOTOS.boudoir,
 		'artistic-nude': PORTFOLIO_PHOTOS.artisticNude,
-		'body-paint': PORTFOLIO_PHOTOS.bodyPaint
+		'body-paint': PORTFOLIO_PHOTOS.bodyPaint,
+		'editorial-portrait': PORTFOLIO_PHOTOS.editorial
 	})[slug] ?? [];
 
 /**

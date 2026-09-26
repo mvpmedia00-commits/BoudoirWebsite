@@ -123,7 +123,8 @@ export const galleryItems: GalleryItem[] = Array.from({ length: 96 }, (_, idx) =
 const CATEGORY_PHOTOS: Partial<Record<GalleryCategory, string[]>> = {
 	boudoir: PORTFOLIO_PHOTOS.boudoir,
 	'artistic-nude': PORTFOLIO_PHOTOS.artisticNude,
-	'body-paint': PORTFOLIO_PHOTOS.bodyPaint
+	'body-paint': PORTFOLIO_PHOTOS.bodyPaint,
+	'editorial-portrait': PORTFOLIO_PHOTOS.editorial
 };
 
 export const getGalleryItemsByCategory = (slug: GalleryCategory): GalleryItem[] => {
