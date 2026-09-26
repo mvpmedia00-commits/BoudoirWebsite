@@ -59,12 +59,20 @@ export const PORTFOLIO_PHOTOS = {
 		photo('5B1A4145.JPG'),
 		...['boudoir-01.jpg', 'boudoir-02.jpg', 'boudoir-03.jpg', 'boudoir-04.jpg', 'boudoir-05.jpg'].map((file) => photo(file))
 	],
-	artisticNude: [photo('IMG_1982.JPG')]
+	artisticNude: [photo('IMG_1982.JPG')],
+	// Files ending in -wide.jpg are landscape and take two columns in the gallery.
+	bodyPaint: ['bodypaint-01.jpg', 'bodypaint-02-wide.jpg', 'bodypaint-03.jpg', 'bodypaint-04.jpg', 'bodypaint-05.jpg'].map(
+		(file) => photo(file)
+	)
 };
 
 /** Real photos for a landing page or gallery slug, if any have been uploaded. */
 export const photosForSlug = (slug: string): string[] =>
-	slug === 'boudoir' ? PORTFOLIO_PHOTOS.boudoir : slug === 'artistic-nude' ? PORTFOLIO_PHOTOS.artisticNude : [];
+	({
+		boudoir: PORTFOLIO_PHOTOS.boudoir,
+		'artistic-nude': PORTFOLIO_PHOTOS.artisticNude,
+		'body-paint': PORTFOLIO_PHOTOS.bodyPaint
+	})[slug] ?? [];
 
 /**
  * Video beside "From consultation to delivery" on the homepage (vertical 9:16 clip). Host these on

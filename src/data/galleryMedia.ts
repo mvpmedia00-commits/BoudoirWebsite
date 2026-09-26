@@ -122,7 +122,8 @@ export const galleryItems: GalleryItem[] = Array.from({ length: 96 }, (_, idx) =
 // repeats); the others fall back to the placeholder set above.
 const CATEGORY_PHOTOS: Partial<Record<GalleryCategory, string[]>> = {
 	boudoir: PORTFOLIO_PHOTOS.boudoir,
-	'artistic-nude': PORTFOLIO_PHOTOS.artisticNude
+	'artistic-nude': PORTFOLIO_PHOTOS.artisticNude,
+	'body-paint': PORTFOLIO_PHOTOS.bodyPaint
 };
 
 export const getGalleryItemsByCategory = (slug: GalleryCategory): GalleryItem[] => {
