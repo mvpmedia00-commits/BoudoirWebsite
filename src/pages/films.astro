@@ -3,7 +3,8 @@ import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import { SITE_TITLE } from '../consts';
-import { SITE_MEDIA } from '../data/siteMedia';
+import StripMedia from '../components/ui/StripMedia.astro';
+import { SITE_MEDIA, STRIP_MEDIA } from '../data/siteMedia';
 
 const FEATURED_FILM = 'https://drive.google.com/file/d/1RizgFs5c6eV4A7hWAinKD7jsAl_k-xmI/preview';
 
@@ -90,10 +91,9 @@ const steps = [
 	{ title: 'Edit and Delivery', copy: 'The film is edited and graded, then your final files are delivered privately.' }
 ];
 
-// Photos for the scrolling strips between sections. One loop must be wider than the widest screen
-// (about 3,300px here), and the strip is drawn twice so the loop is seamless.
-const stripPhotos = [SITE_MEDIA.one, SITE_MEDIA.two, SITE_MEDIA.three, SITE_MEDIA.four, SITE_MEDIA.five, SITE_MEDIA.about];
-const stripLoop = [...stripPhotos, ...stripPhotos, ...stripPhotos, ...stripPhotos];
+// Photos and clips for the scrolling strips between sections. One loop must be wider than the widest
+// screen (about 3,300px here), and the strip is drawn twice so the loop is seamless.
+const stripLoop = Array.from({ length: 5 }, () => STRIP_MEDIA).flat();
 const stripTrack = [...stripLoop, ...stripLoop];
 
 const sectionNav = [
@@ -179,7 +179,7 @@ const filmsSchema = {
 				<>
 					<div class="photo-divider" aria-hidden="true">
 						<div class:list={['photo-track', { reverse: index % 2 === 1 }]}>
-							{stripTrack.map((src) => <img src={src} alt="" loading="lazy" decoding="async" />)}
+							{stripTrack.map((item) => <StripMedia item={item} />)}
 						</div>
 					</div>
 
@@ -224,7 +224,7 @@ const filmsSchema = {
 
 			<div class="photo-divider" aria-hidden="true">
 				<div class="photo-track">
-					{stripTrack.map((src) => <img src={src} alt="" loading="lazy" decoding="async" />)}
+					{stripTrack.map((item) => <StripMedia item={item} />)}
 				</div>
 			</div>
 
@@ -585,7 +585,7 @@ const filmsSchema = {
 	.photo-track.reverse {
 		animation-direction: reverse;
 	}
-	.photo-track img {
+	.photo-track > :global(*) {
 		width: 128px;
 		height: 160px;
 		object-fit: cover;

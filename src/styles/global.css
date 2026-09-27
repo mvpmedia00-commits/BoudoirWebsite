@@ -472,7 +472,8 @@ html.blur-on [data-veil] :is(img, video) {
   transform: scale(1.12);
 }
 /* Background and section videos: blurred with the switch, without the 18+ badge. */
-html.blur-on [data-veil-quiet] video {
+html.blur-on [data-veil-quiet] video,
+html.blur-on :is(img, video)[data-veil-quiet] {
   filter: blur(18px) brightness(0.85);
 }
 html.blur-on [data-veil]::after {

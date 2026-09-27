@@ -1,0 +1,50 @@
+---
+import type { StripItem } from '../../data/siteMedia';
+
+interface Props {
+	item: StripItem;
+}
+
+const { item } = Astro.props;
+// 18+ items blur while the visitor has the 18+ blur switch on (see global.css).
+const veil = item.mature ? '' : undefined;
+---
+
+{
+	item.kind === 'video' ? (
+		<video
+			data-strip-video
+			data-src={item.src}
+			poster={item.poster}
+			muted
+			loop
+			playsinline
+			preload="none"
+			aria-hidden="true"
+			data-veil-quiet={veil}
+		/>
+	) : (
+		<img src={item.src} alt="" loading="lazy" decoding="async" data-veil-quiet={veil} />
+	)
+}
+
+<script>
+	// Strip videos load on first view and play only while on screen, so a long strip of copies
+	// costs one small download per clip and no hidden decoding.
+	const stripVideos = document.querySelectorAll<HTMLVideoElement>('video[data-strip-video]');
+	const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	if (stripVideos.length && !reducedMotion && 'IntersectionObserver' in window) {
+		const observer = new IntersectionObserver((entries) => {
+			entries.forEach((entry) => {
+				const video = entry.target as HTMLVideoElement;
+				if (entry.isIntersecting) {
+					if (!video.src && video.dataset.src) video.src = video.dataset.src;
+					void video.play().catch(() => {});
+				} else if (video.src) {
+					video.pause();
+				}
+			});
+		});
+		stripVideos.forEach((video) => observer.observe(video));
+	}
+</script>

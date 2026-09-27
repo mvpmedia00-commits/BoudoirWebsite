@@ -4,7 +4,8 @@ import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import { SITE_TITLE } from '../consts';
 import { GALLERY_CATEGORIES } from '../data/galleryMedia';
-import { PORTFOLIO_PHOTOS, SITE_MEDIA } from '../data/siteMedia';
+import StripMedia from '../components/ui/StripMedia.astro';
+import { PORTFOLIO_PHOTOS, SITE_MEDIA, STRIP_MEDIA } from '../data/siteMedia';
 
 const categoryVisuals = {
 	boudoir: {
@@ -28,7 +29,8 @@ const categoryVisuals = {
 	}
 } as const;
 
-const featuredStrip = [SITE_MEDIA.one, SITE_MEDIA.two, SITE_MEDIA.three, SITE_MEDIA.four, SITE_MEDIA.five, SITE_MEDIA.about];
+// The strip is drawn twice for a seamless loop; one loop must be wider than the strip (1,220px).
+const featuredStrip = [...STRIP_MEDIA, ...STRIP_MEDIA];
 ---
 
 <!doctype html>
@@ -76,8 +78,7 @@ const featuredStrip = [SITE_MEDIA.one, SITE_MEDIA.two, SITE_MEDIA.three, SITE_ME
 
 			<section class="featured-strip fade-up" aria-label="Featured Work Preview">
 				<div class="featured-track">
-					{featuredStrip.map((src) => <img src={src} alt="" loading="lazy" />)}
-					{featuredStrip.map((src) => <img src={src} alt="" loading="lazy" />)}
+					{[...featuredStrip, ...featuredStrip].map((item) => <StripMedia item={item} />)}
 				</div>
 			</section>
 
@@ -276,7 +277,7 @@ const featuredStrip = [SITE_MEDIA.one, SITE_MEDIA.two, SITE_MEDIA.three, SITE_ME
 		padding: 0.55rem;
 		animation: featured-scroll 26s linear infinite;
 	}
-	.featured-track img {
+	.featured-track > :global(*) {
 		width: 160px;
 		height: 200px;
 		object-fit: cover;

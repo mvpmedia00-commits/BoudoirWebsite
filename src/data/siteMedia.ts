@@ -45,6 +45,18 @@ export const HERO_COLUMNS: { reverse?: boolean; clips: Clip[] }[] = [
 	{ reverse: true, clips: ['nqtvab', 'nejhyj', 'ufc7db', 'wac5uk'].map(clip) }
 ];
 
+/** One image or short muted video in the scrolling strips on the Films and Portfolio pages. */
+export type StripItem = { kind: 'image' | 'video'; src: string; poster?: string; mature?: boolean };
+
+/** Scrolling strips (Films and Portfolio pages). Small files sized for the strip tiles. */
+export const STRIP_MEDIA: StripItem[] = [
+	{ kind: 'image', src: `${BUNNY_PHOTOS}/strip-01.jpg`, mature: true },
+	{ kind: 'video', src: `${BUNNY_PHOTOS}/strip-bts.mp4`, poster: `${BUNNY_PHOTOS}/strip-bts.jpg`, mature: true },
+	{ kind: 'image', src: `${BUNNY_PHOTOS}/strip-02.jpg`, mature: true },
+	{ kind: 'video', src: `${BUNNY_PHOTOS}/strip-photographer.mp4`, poster: `${BUNNY_PHOTOS}/strip-photographer.jpg` },
+	{ kind: 'image', src: `${BUNNY_PHOTOS}/strip-03.jpg` }
+];
+
 /** Section videos further down the homepage. Editorial and cinematic are 18+. */
 export const SECTION_VIDEOS = {
 	editorial: clip('zsw8ku'),
