@@ -10,13 +10,20 @@ const FEATURED_FILM = 'https://drive.google.com/file/d/1RizgFs5c6eV4A7hWAinKD7js
 // Google Drive's embeddable player for a file ID. The file must be shared as "Anyone with the link".
 const drivePreview = (fileId: string) => `https://drive.google.com/file/d/${fileId}/preview`;
 
+// Bunny Stream's embeddable player for a video in a library. The library and video IDs are the two
+// parts of the video's share link: player.mediadelivery.net/play/<library>/<video>.
+const bunnyStream = (libraryId: string, videoId: string) =>
+	`https://player.mediadelivery.net/embed/${libraryId}/${videoId}?autoplay=false&preload=false&responsive=true`;
+
 type FilmType = {
 	id: string;
 	nav: string;
 	title: string;
 	copy: string;
 	image: string;
-	/** Optional Google Drive file ID; shows the film instead of the photo. */
+	/** Optional Bunny Stream embed URL (see bunnyStream); shows the film instead of the photo. */
+	streamVideo?: string;
+	/** Optional Google Drive file ID; used when there is no streamVideo. */
 	driveVideo?: string;
 	/** Shape of the video player box; '16 / 9' for horizontal films, '9 / 16' for vertical ones. */
 	videoAspect?: string;
@@ -60,7 +67,7 @@ const filmTypes: FilmType[] = [
 		title: 'Editorial and Brand Films',
 		copy: 'Portrait-led motion for creators, campaigns, and lookbooks, with no nudity and cut for every platform you publish on.',
 		image: SITE_MEDIA.about,
-		driveVideo: '1HxsW9_NkIe0DxcP97pw2X227Jqe9v-BD',
+		streamVideo: bunnyStream('762418', 'abfb40ce-93fa-4214-81e2-33b83220b148'),
 		videoAspect: '9 / 16'
 	}
 ];
@@ -183,16 +190,16 @@ const filmsSchema = {
 								</header>
 								<div class:list={['content-row', { reverse: index % 2 === 1 }]}>
 									<div class="media-col reveal" data-stagger="1">
-										{film.driveVideo ? (
+										{film.streamVideo || film.driveVideo ? (
 											<div
 												class:list={['film-media', 'is-video', { 'is-vertical': isVertical(film.videoAspect) }]}
 												style={`aspect-ratio: ${film.videoAspect ?? '16 / 9'};`}
 											>
 												<iframe
-													src={drivePreview(film.driveVideo)}
+													src={film.streamVideo ?? drivePreview(film.driveVideo ?? '')}
 													title={`${film.title} by ${SITE_TITLE}`}
 													loading="lazy"
-													allow="autoplay; encrypted-media; picture-in-picture"
+													allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
 													allowfullscreen
 												></iframe>
 											</div>
