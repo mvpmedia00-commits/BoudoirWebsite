@@ -80,7 +80,17 @@ export const PORTFOLIO_PHOTOS = {
 	artisticNude: [photo('IMG_1982.JPG')],
 	// Files ending in -wide.jpg are landscape and take two columns in the gallery.
 	// Editorial is shown without an 18+ gate, so it only takes photos with no nudity.
-	editorial: ['editorial-01-wide.jpg', 'editorial-02.jpg', 'editorial-03.jpg'].map((file) => photo(file)),
+	// Ordered so wide photos fill whole rows of the five-column gallery grid.
+	editorial: [
+		'editorial-01-wide.jpg',
+		'editorial-02.jpg',
+		'editorial-03.jpg',
+		'editorial-05.jpg',
+		'editorial-04-wide.jpg',
+		'editorial-06.jpg',
+		'editorial-07-wide.jpg',
+		'editorial-08.jpg'
+	].map((file) => photo(file)),
 	bodyPaint: ['bodypaint-01.jpg', 'bodypaint-02-wide.jpg', 'bodypaint-03.jpg', 'bodypaint-04.jpg', 'bodypaint-05.jpg'].map(
 		(file) => photo(file)
 	)
