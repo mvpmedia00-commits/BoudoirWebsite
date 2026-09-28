@@ -99,7 +99,7 @@ const links = [
 				toggle.focus();
 			}
 		});
-		window.matchMedia('(min-width: 861px)').addEventListener('change', (event) => {
+		window.matchMedia('(min-width: 1181px)').addEventListener('change', (event) => {
 			if (event.matches) setOpen(false);
 		});
 	}
@@ -275,7 +275,8 @@ const links = [
 		transform: translateY(-5px) rotate(-45deg);
 	}
 
-	@media (max-width: 860px) {
+	/* The full menu (links, 18+ switch, booking button) needs about 1,150px; below that it collapses into the Menu button. */
+	@media (max-width: 1180px) {
 		.menu-toggle {
 			display: inline-flex;
 		}
