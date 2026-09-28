@@ -4,7 +4,7 @@ import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import { SITE_TITLE } from '../consts';
 import StripMedia from '../components/ui/StripMedia.astro';
-import { SITE_MEDIA, STRIP_MEDIA } from '../data/siteMedia';
+import { BOUDOIR_FILM_STRIP, SITE_MEDIA, STRIP_MEDIA, type StripItem } from '../data/siteMedia';
 
 const FEATURED_FILM = 'https://drive.google.com/file/d/1RizgFs5c6eV4A7hWAinKD7jsAl_k-xmI/preview';
 
@@ -26,6 +26,8 @@ type FilmType = {
 	streamVideo?: string;
 	/** Optional Google Drive file ID; used when there is no streamVideo. */
 	driveVideo?: string;
+	/** Photos and clips for the strip right under this section; defaults to STRIP_MEDIA. */
+	stripBelow?: StripItem[];
 	/** Shape of the video player box; '16 / 9' for horizontal films, '9 / 16' for vertical ones. */
 	videoAspect?: string;
 };
@@ -44,6 +46,7 @@ const filmTypes: FilmType[] = [
 		copy: 'A short, private film made alongside your photo session. Slow movement, soft light, and the same guided direction as the stills.',
 		image: SITE_MEDIA.one,
 		driveVideo: '1Xc4hwhyGhcHDP34ZsdFyllC5S9t8Nol2',
+		stripBelow: BOUDOIR_FILM_STRIP,
 		videoAspect: '16 / 9'
 	},
 	{
@@ -93,8 +96,16 @@ const steps = [
 
 // Photos and clips for the scrolling strips between sections. One loop must be wider than the widest
 // screen (about 3,300px here), and the strip is drawn twice so the loop is seamless.
-const stripLoop = Array.from({ length: 5 }, () => STRIP_MEDIA).flat();
-const stripTrack = [...stripLoop, ...stripLoop];
+const toTrack = (items: StripItem[]) => {
+	const loop = Array.from({ length: Math.ceil(25 / items.length) }, () => items).flat();
+	return [...loop, ...loop];
+};
+const stripTrack = toTrack(STRIP_MEDIA);
+// The strip above each section is the one below the previous section.
+const trackAbove = (index: number) => {
+	const below = filmTypes[index - 1]?.stripBelow;
+	return below ? toTrack(below) : stripTrack;
+};
 
 const sectionNav = [
 	{ href: '#reel', label: 'The Reel' },
@@ -179,7 +190,7 @@ const filmsSchema = {
 				<>
 					<div class="photo-divider" aria-hidden="true">
 						<div class:list={['photo-track', { reverse: index % 2 === 1 }]}>
-							{stripTrack.map((item) => <StripMedia item={item} />)}
+							{trackAbove(index).map((item) => <StripMedia item={item} />)}
 						</div>
 					</div>
 

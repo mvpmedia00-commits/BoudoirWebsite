@@ -57,6 +57,11 @@ export const STRIP_MEDIA: StripItem[] = [
 	{ kind: 'image', src: `${BUNNY_PHOTOS}/strip-03.jpg` }
 ];
 
+/** Strip under the Boudoir Films section on /films. No nudity. */
+export const BOUDOIR_FILM_STRIP: StripItem[] = ['strip-boudoir-01.jpg', 'strip-boudoir-02.jpg', 'strip-boudoir-03.jpg'].map(
+	(file) => ({ kind: 'image', src: `${BUNNY_PHOTOS}/${file}` })
+);
+
 /** Section videos further down the homepage. Editorial and cinematic are 18+. */
 export const SECTION_VIDEOS = {
 	editorial: clip('zsw8ku'),
