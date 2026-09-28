@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import { BLUR_PREF_KEY, SITE_TITLE } from '../consts';
 import { getStoreItems } from '../lib/store';
+import EntryGate from './EntryGate.astro';
 import HeaderLink from './HeaderLink.astro';
 
 // Only link the journal once there is something to read.
@@ -18,6 +19,8 @@ const links = [
 	{ href: '/vault', label: 'Vault' }
 ];
 ---
+
+<EntryGate />
 
 <header class="site-header">
 	<nav class="nav-shell" aria-label="Primary">

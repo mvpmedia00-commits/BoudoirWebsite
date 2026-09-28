@@ -43,7 +43,7 @@ const imageURL = typeof image === 'string' ? image : image.src;
 	href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&display=swap"
 />
 
-<!-- 18+ blur switch (Header.astro): html.blur-on blurs [data-veil] media. Runs before paint so
+<!-- 18+ blur switch (Header.astro) and entry screen (EntryGate.astro) state. Runs before paint so
      the page never flashes the wrong state. -->
 <script is:inline define:vars={{ blurDefault: BLUR_MATURE_PREVIEWS, blurKey: BLUR_PREF_KEY }}>
 	var blurOn = blurDefault;
@@ -52,6 +52,18 @@ const imageURL = typeof image === 'string' ? image : image.src;
 		if (saved === 'on' || saved === 'off') blurOn = saved === 'on';
 	} catch (e) {}
 	document.documentElement.classList.toggle('blur-on', blurOn);
+
+	// Entry screen (EntryGate.astro): skip it when the visitor already confirmed 18+ and has
+	// already seen the loading screen during this visit.
+	var ageOk = false;
+	var entered = false;
+	try {
+		ageOk = localStorage.getItem('ageVerified') === 'true' || localStorage.getItem('age_gate_ack_v1') === 'true';
+		entered = sessionStorage.getItem('mvp_entered') === '1';
+	} catch (e) {}
+	if (!ageOk) ageOk = document.cookie.indexOf('mvp_adult_access=granted') !== -1;
+	if (ageOk) document.documentElement.classList.add('age-confirmed');
+	if (ageOk && entered) document.documentElement.classList.add('entry-skip');
 </script>
 
 <!-- Font preloads -->

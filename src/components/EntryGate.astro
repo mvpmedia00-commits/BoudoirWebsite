@@ -1,0 +1,215 @@
+---
+import { SITE_TITLE } from '../consts';
+---
+
+<!--
+	Site entry screen (included by Header.astro, so it is on every public page).
+	- First visit: asks "Are you 18 or older?" over a loading screen. The site is revealed once the
+	  visitor enters and the page has finished loading.
+	- Entering is remembered for the whole site: it also unlocks the gallery age gate (localStorage)
+	  and the server-checked 18+ pages (mvp_adult_access cookie), so nobody is asked twice.
+	- Returning visitors see only the loading screen, on the first page of each visit.
+	BaseHead.astro sets html.entry-skip before paint when the screen is not needed.
+-->
+<div class="entry-gate" data-entry-gate>
+	<div class="entry-inner">
+		<p class="entry-brand">{SITE_TITLE}</p>
+
+		<div class="entry-loading" data-entry-loading>
+			<span class="entry-bar" aria-hidden="true"></span>
+			<p class="entry-status" role="status">Loading</p>
+		</div>
+
+		<div class="entry-dialog" role="dialog" aria-modal="true" aria-labelledby="entry-title" data-entry-dialog hidden>
+			<p class="entry-kicker">18+ Only</p>
+			<h2 id="entry-title">Are you 18 or older?</h2>
+			<p>
+				This website contains artistic nudity and mature themes. You must be at least 18 years old, and of legal age
+				where you live, to enter.
+			</p>
+			<div class="entry-actions">
+				<button type="button" class="btn btn-solid" data-entry-accept>I am 18 or older, enter</button>
+				<a class="btn btn-ghost" href="https://www.google.com" rel="noreferrer">Leave</a>
+			</div>
+			<p class="entry-fine">By entering you confirm you are an adult and agree to view this content.</p>
+		</div>
+	</div>
+</div>
+
+<noscript><style>.entry-gate { display: none !important; }</style></noscript>
+
+<script is:inline>
+	(function () {
+		var gate = document.querySelector('[data-entry-gate]');
+		var root = document.documentElement;
+		if (!gate || root.classList.contains('entry-skip')) return;
+
+		var dialog = gate.querySelector('[data-entry-dialog]');
+		var loading = gate.querySelector('[data-entry-loading]');
+		var accept = gate.querySelector('[data-entry-accept]');
+		var confirmed = root.classList.contains('age-confirmed');
+		var loaded = document.readyState === 'complete';
+		var MAX_WAIT = 6000; // never keep visitors waiting longer than this for slow media
+
+		root.classList.add('entry-open');
+
+		var reveal = function () {
+			if (!confirmed || !loaded || gate.classList.contains('is-leaving')) return;
+			try { sessionStorage.setItem('mvp_entered', '1'); } catch (e) {}
+			gate.classList.add('is-leaving');
+			root.classList.remove('entry-open');
+			setTimeout(function () { gate.remove(); }, 600);
+		};
+
+		if (!confirmed) {
+			dialog.hidden = false;
+			loading.hidden = true;
+			setTimeout(function () { accept && accept.focus(); }, 50);
+		}
+
+		accept && accept.addEventListener('click', function () {
+			confirmed = true;
+			try {
+				localStorage.setItem('ageVerified', 'true');
+				localStorage.setItem('age_gate_ack_v1', 'true');
+			} catch (e) {}
+			document.cookie = 'mvp_adult_access=granted; path=/; max-age=2592000; samesite=lax' + (location.protocol === 'https:' ? '; secure' : '');
+			dialog.hidden = true;
+			loading.hidden = false;
+			reveal();
+		});
+
+		var markLoaded = function () { loaded = true; reveal(); };
+		if (!loaded) window.addEventListener('load', markLoaded, { once: true });
+		setTimeout(markLoaded, MAX_WAIT);
+	})();
+</script>
+
+<style>
+	.entry-gate {
+		position: fixed;
+		inset: 0;
+		z-index: 1000;
+		display: grid;
+		place-items: center;
+		padding: 1.25rem;
+		background:
+			radial-gradient(circle at 50% 35%, rgba(212, 194, 161, 0.1), transparent 55%),
+			#070707;
+		color: var(--text-primary);
+		transition: opacity 0.55s ease, visibility 0.55s ease;
+	}
+	.entry-gate.is-leaving {
+		opacity: 0;
+		visibility: hidden;
+	}
+	:global(html.entry-skip) .entry-gate {
+		display: none;
+	}
+	:global(html.entry-open) {
+		overflow: hidden;
+	}
+	.entry-inner {
+		width: min(100%, 460px);
+		display: grid;
+		justify-items: center;
+		gap: 1.6rem;
+		text-align: center;
+	}
+	.entry-brand {
+		margin: 0;
+		font-weight: 700;
+		letter-spacing: 0.28em;
+		text-transform: uppercase;
+		font-size: 0.95rem;
+	}
+	.entry-loading {
+		display: grid;
+		justify-items: center;
+		gap: 0.8rem;
+	}
+	.entry-loading[hidden],
+	.entry-dialog[hidden] {
+		display: none;
+	}
+	.entry-bar {
+		position: relative;
+		width: 160px;
+		height: 2px;
+		overflow: hidden;
+		background: rgba(255, 255, 255, 0.12);
+		border-radius: 2px;
+	}
+	.entry-bar::after {
+		content: '';
+		position: absolute;
+		inset: 0 auto 0 0;
+		width: 40%;
+		background: var(--brand-strong);
+		animation: entry-sweep 1.1s ease-in-out infinite;
+	}
+	.entry-status {
+		margin: 0;
+		font-size: 0.72rem;
+		letter-spacing: 0.24em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+	}
+	.entry-dialog {
+		display: grid;
+		gap: 0.9rem;
+		padding: clamp(1.4rem, 5vw, 2.2rem);
+		border: 1px solid rgba(212, 194, 161, 0.3);
+		border-radius: 18px;
+		background: linear-gradient(160deg, #15100e, #0a0a0a);
+		box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+	}
+	.entry-kicker {
+		margin: 0;
+		color: var(--brand-strong);
+		font-size: 0.75rem;
+		letter-spacing: 0.22em;
+		text-transform: uppercase;
+	}
+	.entry-dialog h2 {
+		margin: 0;
+		font-size: clamp(1.8rem, 6vw, 2.4rem);
+	}
+	.entry-dialog p {
+		margin: 0;
+		color: #d8d2cb;
+		line-height: 1.6;
+	}
+	.entry-actions {
+		display: grid;
+		gap: 0.6rem;
+		margin-top: 0.4rem;
+	}
+	.entry-actions .btn {
+		width: 100%;
+		justify-content: center;
+		text-align: center;
+	}
+	.entry-dialog .entry-fine {
+		font-size: 0.75rem;
+		color: var(--text-muted);
+	}
+	@keyframes entry-sweep {
+		from {
+			transform: translateX(-100%);
+		}
+		to {
+			transform: translateX(250%);
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.entry-bar::after {
+			animation: none;
+			width: 100%;
+			opacity: 0.6;
+		}
+		.entry-gate {
+			transition: none;
+		}
+	}
+</style>
