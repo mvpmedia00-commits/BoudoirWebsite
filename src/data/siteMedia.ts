@@ -57,6 +57,13 @@ export const STRIP_MEDIA: StripItem[] = [
 	{ kind: 'image', src: `${BUNNY_PHOTOS}/strip-03.jpg` }
 ];
 
+/** Homepage "Art Direction" moodboard: three different sets. The blacklight one has nudity. */
+export const ART_DIRECTION = {
+	feathers: photo('editorial-07-wide.jpg'),
+	blacklight: photo('bodypaint-03.jpg'),
+	crown: photo('editorial-06.jpg')
+};
+
 /** Strip under the Boudoir Films section on /films. No nudity. */
 export const BOUDOIR_FILM_STRIP: StripItem[] = ['strip-boudoir-01.jpg', 'strip-boudoir-02.jpg', 'strip-boudoir-03.jpg'].map(
 	(file) => ({ kind: 'image', src: `${BUNNY_PHOTOS}/${file}` })

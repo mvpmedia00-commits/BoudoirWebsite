@@ -4,6 +4,7 @@ import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 import {
+	ART_DIRECTION,
 	BUNNY_STORAGE_ORIGIN,
 	HERO_COLUMNS,
 	PORTFOLIO_PHOTOS,
@@ -189,7 +190,12 @@ const homeSchema = {
 						</article>
 						<article class="reel-card">
 							<div class="art-frame">
-								<img src={SITE_MEDIA.two} alt="Cinematic portrait detail" loading="lazy" />
+								<img
+									class="detail-crop"
+									src={PORTFOLIO_PHOTOS.editorial[1]}
+									alt="Close-up of lace, styling, and hands in soft light"
+									loading="lazy"
+								/>
 							</div>
 							<div class="reel-copy">
 								<h3>Luxury Detail</h3>
@@ -224,9 +230,9 @@ const homeSchema = {
 						around atmosphere, confidence, and intention.
 					</p>
 					<div class="identity-moodboard">
-						<div class="art-frame"><img src={SITE_MEDIA.three} alt="Moody studio silhouette" loading="lazy" /></div>
-						<div class="art-frame"><img src={SITE_MEDIA.four} alt="Body paint editorial detail" loading="lazy" /></div>
-						<div class="art-frame"><img src={SITE_MEDIA.about} alt="Cinematic close-up portrait" loading="lazy" /></div>
+						<div class="art-frame"><img src={ART_DIRECTION.feathers} alt="Portrait framed by white feather wings against a glowing backdrop" loading="lazy" /></div>
+						<div class="art-frame" data-veil><img src={ART_DIRECTION.blacklight} alt="Body paint session under blacklight in front of painted wings" loading="lazy" /></div>
+						<div class="art-frame"><img src={ART_DIRECTION.crown} alt="Crowned portrait in front of a sunburst backdrop" loading="lazy" /></div>
 					</div>
 				</section>
 
@@ -904,6 +910,11 @@ const homeSchema = {
 	}
 	.identity-moodboard .art-frame {
 		aspect-ratio: 4 / 5;
+	}
+	/* Luxury Detail card: zooms into the styling (lace, hands) of a full portrait. */
+	.reel-card img.detail-crop {
+		transform: scale(1.9);
+		transform-origin: 56% 44%;
 	}
 	.category-grid {
 		display: grid;
