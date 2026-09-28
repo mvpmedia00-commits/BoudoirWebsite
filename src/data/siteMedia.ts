@@ -76,6 +76,11 @@ export const SECTION_VIDEOS = {
 		src: `${BUNNY_PHOTOS}/reel-editorial.mp4`,
 		poster: `${BUNNY_PHOTOS}/reel-editorial.jpg`
 	},
+	/** "Luxury Detail" card: white robe clip, no nudity. */
+	luxury: {
+		src: `${BUNNY_PHOTOS}/reel-luxury.mp4`,
+		poster: `${BUNNY_PHOTOS}/reel-luxury.jpg`
+	},
 	cinematic: clip('zc25xe'),
 	/** "A session that feels like cinema": MVP Media branded clip, no nudity. */
 	signature: {

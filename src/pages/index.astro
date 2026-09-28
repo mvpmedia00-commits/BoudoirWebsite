@@ -189,14 +189,15 @@ const homeSchema = {
 							</div>
 						</article>
 						<article class="reel-card">
-							<div class="art-frame">
-								<img
-									class="detail-crop"
-									src={PORTFOLIO_PHOTOS.editorial[1]}
-									alt="Close-up of lace, styling, and hands in soft light"
-									loading="lazy"
-								/>
-							</div>
+							<video
+								data-lazy-src={SECTION_VIDEOS.luxury.src}
+								poster={SECTION_VIDEOS.luxury.poster}
+								autoplay
+								muted
+								loop
+								playsinline
+								preload="none"
+							></video>
 							<div class="reel-copy">
 								<h3>Luxury Detail</h3>
 								<p>Styling, texture, and light shaping that keeps every frame polished and intentional.</p>
@@ -910,11 +911,6 @@ const homeSchema = {
 	}
 	.identity-moodboard .art-frame {
 		aspect-ratio: 4 / 5;
-	}
-	/* Luxury Detail card: a head-to-waist crop of a full portrait, framed on the face, lace, and hands. */
-	.reel-card img.detail-crop {
-		transform: scale(1.45);
-		transform-origin: 54% 4%;
 	}
 	.category-grid {
 		display: grid;
