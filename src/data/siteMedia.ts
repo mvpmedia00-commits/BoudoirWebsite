@@ -69,9 +69,13 @@ export const BOUDOIR_FILM_STRIP: StripItem[] = ['strip-boudoir-01.jpg', 'strip-b
 	(file) => ({ kind: 'image', src: `${BUNNY_PHOTOS}/${file}` })
 );
 
-/** Section videos further down the homepage. Editorial and cinematic are 18+. */
+/** Section videos further down the homepage. Cinematic is 18+. */
 export const SECTION_VIDEOS = {
-	editorial: clip('zsw8ku'),
+	/** "Editorial Energy" card: feather-wings clip, no nudity. */
+	editorial: {
+		src: `${BUNNY_PHOTOS}/reel-editorial.mp4`,
+		poster: `${BUNNY_PHOTOS}/reel-editorial.jpg`
+	},
 	cinematic: clip('zc25xe'),
 	/** "A session that feels like cinema": MVP Media branded clip, no nudity. */
 	signature: {
