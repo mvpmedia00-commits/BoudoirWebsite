@@ -75,6 +75,19 @@ const links = [
 </script>
 
 <script>
+	// iPhones in Low Power Mode (and some Android battery savers) block autoplaying video until the
+	// visitor touches the page. On the first tap or click anywhere, start every loaded background
+	// video that is on screen; later plays started by scrolling then work normally.
+	const unlockVideos = () => {
+		document.querySelectorAll<HTMLVideoElement>('video[autoplay]').forEach((video) => {
+			if (!video.currentSrc && !video.src) return;
+			const box = video.getBoundingClientRect();
+			const onScreen = box.bottom > 0 && box.top < window.innerHeight && box.width > 0;
+			if (onScreen && video.paused) void video.play().catch(() => {});
+		});
+	};
+	['touchend', 'click'].forEach((type) => document.addEventListener(type, unlockVideos, { once: true, passive: true }));
+
 	// Publish the header's height so sticky sub-navigation (e.g. on /films) can sit right below it.
 	const siteHeader = document.querySelector<HTMLElement>('.site-header');
 	if (siteHeader) {
