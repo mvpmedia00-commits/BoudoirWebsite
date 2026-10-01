@@ -246,7 +246,48 @@
 		<div class="status" id="status2"></div>
 	</section>
 
-	<p class="note">Works with JPEG, PNG, and WebP in Chrome, Edge, Firefox, and Safari. iPhone HEIC photos work in Safari on a Mac; in other browsers, export them as JPEG first. Camera RAW files (CR2, CR3, NEF, ARW, DNG, and others) are skipped in steps 1 and 2: convert them in step 0 first. If the browser asks to allow multiple downloads, choose Allow.</p>
+	<section>
+		<h2><span>3</span>Video contact sheets and stills</h2>
+		<ol>
+			<li>Choose a folder of videos (subfolders included) or individual video files.</li>
+			<li>Press <b>Make video contact sheets</b>. Each video gets its own sheet(s) of numbered frames with their time in the clip.</li>
+			<li>Send the zips to Claude (or look yourself), then paste the frame numbers below and press <b>Save frames as photos</b> to get full-size stills.</li>
+		</ol>
+		<label class="file">Choose video folder<input type="file" id="vFolder" webkitdirectory multiple /></label>
+		<label class="file">Choose video files<input type="file" id="vFiles" multiple accept="video/*,.mov,.mp4,.m4v,.mkv,.webm" /></label>
+		<div class="status" id="vFound">No videos chosen yet.</div>
+		<div class="row">
+			<div>
+				<label for="vEvery">Frames</label>
+				<select id="vEvery">
+					<option value="auto" selected>24 per video, spread evenly (recommended)</option>
+					<option value="1">One every second</option>
+					<option value="2">One every 2 seconds</option>
+					<option value="5">One every 5 seconds</option>
+					<option value="10">One every 10 seconds</option>
+				</select>
+			</div>
+			<div>
+				<label for="vEdit">Automatic editing of saved stills</label>
+				<select id="vEdit">
+					<option value="off" selected>Off: exactly as filmed</option>
+					<option value="light">Gentle: color and light only</option>
+					<option value="full">On: color, light, and sharpening</option>
+					<option value="editorial">Editorial: the MVP magazine finish</option>
+				</select>
+			</div>
+		</div>
+		<button id="vMake" disabled>Make video contact sheets</button>
+		<progress id="vProg" value="0" max="1" hidden></progress>
+		<div class="status" id="vStatus"></div>
+		<label for="vPicks">Frame numbers to save as photos</label>
+		<textarea id="vPicks" placeholder="3, 17, 40-44"></textarea>
+		<button id="vExport" disabled>Save frames as photos</button>
+		<progress id="vProg2" value="0" max="1" hidden></progress>
+		<div class="status" id="vStatus2"></div>
+	</section>
+
+	<p class="note">Works with JPEG, PNG, and WebP in Chrome, Edge, Firefox, and Safari. iPhone HEIC photos work in Safari on a Mac; in other browsers, export them as JPEG first. Camera RAW files (CR2, CR3, NEF, ARW, DNG, and others) are skipped in steps 1 and 2: convert them in step 0 first. Videos (step 3) work in the formats your browser can play: MP4 and MOV from phones and most cameras, and WebM. Some pro camera formats (for example Sony XAVC S-I or 10-bit 4:2:2 footage) do not play in browsers; export a copy as MP4 first. If the browser asks to allow multiple downloads, choose Allow.</p>
 </main>
 
 <script>
@@ -841,6 +882,189 @@
 		$('make').disabled = false;
 	});
 	$('perSheet').addEventListener('change', () => $('folder1').files.length && $('folder1').dispatchEvent(new Event('change')));
+
+	// ---------- Step 3: video contact sheets and stills.
+	const VIDEO = /\.(mp4|mov|m4v|webm|mkv|avi|mts|m2ts|3gp)$/i;
+	let vList = [], vFrames = [], vFramesKey = '';
+	const pickVideos = (fileList) => {
+		vList = Array.from(fileList)
+			.filter((f) => VIDEO.test(f.name) && !f.name.startsWith('._'))
+			.sort((a, b) => (a.webkitRelativePath || a.name).localeCompare(b.webkitRelativePath || b.name, 'en', { numeric: true }));
+		vFrames = [];
+		const total = vList.reduce((n, f) => n + f.size, 0);
+		$('vFound').className = 'status' + (vList.length ? '' : ' bad');
+		$('vFound').textContent = vList.length
+			? `${vList.length} video(s) (${total >= 1073741824 ? (total / 1073741824).toFixed(2) + ' GB' : mb(total)}).`
+			: 'No videos found there.';
+		$('vMake').disabled = !vList.length;
+		refreshV();
+	};
+	const refreshV = () => { $('vExport').disabled = !(vList.length && parseNumbers($('vPicks').value).length); };
+	$('vFolder').addEventListener('change', (e) => pickVideos(e.target.files));
+	$('vFiles').addEventListener('change', (e) => pickVideos(e.target.files));
+	$('vPicks').addEventListener('input', refreshV);
+
+	const openVideo = (file) =>
+		new Promise((resolve) => {
+			const v = document.createElement('video');
+			v.muted = true;
+			v.playsInline = true;
+			v.preload = 'auto';
+			const url = URL.createObjectURL(file);
+			const done = (ok) => { clearTimeout(timer); if (!ok) URL.revokeObjectURL(url); resolve(ok ? v : null); };
+			const timer = setTimeout(() => done(false), 20000);
+			v.onloadeddata = () => done(v.videoWidth > 0 && Number.isFinite(v.duration) && v.duration > 0);
+			v.onerror = () => done(false);
+			v.src = url;
+		});
+	const closeVideo = (v) => { URL.revokeObjectURL(v.src); v.removeAttribute('src'); v.load(); };
+	const seekTo = (v, t) =>
+		new Promise((resolve) => {
+			const finish = () => { clearTimeout(timer); v.removeEventListener('seeked', finish); resolve(); };
+			const timer = setTimeout(finish, 10000);
+			v.addEventListener('seeked', finish);
+			v.currentTime = t;
+		});
+	const clock = (t) => {
+		const m = Math.floor(t / 60), s = t - m * 60;
+		return `${m}:${s < 10 ? '0' : ''}${s.toFixed(1)}`;
+	};
+	// Frame times for one clip: the same files and setting always give the same numbers.
+	const frameTimes = (duration, every) => {
+		if (every === 'auto') {
+			const n = Math.max(1, Math.min(24, Math.floor(duration * 4)));
+			return Array.from({ length: n }, (_, i) => (duration * (i + 0.5)) / n);
+		}
+		const step = Number(every), times = [];
+		for (let t = step / 2; t < duration && times.length < 600; t += step) times.push(t);
+		return times.length ? times : [duration / 2];
+	};
+	// Numbers every frame across all videos (needs each video's length, read quickly from the file).
+	const buildFrames = async () => {
+		const key = $('vEvery').value + '|' + vList.map((f) => f.name + f.size).join('/');
+		if (vFramesKey === key && vFrames.length) return { frames: vFrames, failed: [] };
+		const frames = [], failed = [];
+		for (const file of vList) {
+			const v = await openVideo(file);
+			if (!v) { failed.push(file.name); continue; }
+			for (const t of frameTimes(v.duration, $('vEvery').value)) frames.push({ file, t, duration: v.duration });
+			closeVideo(v);
+		}
+		vFrames = frames;
+		vFramesKey = key;
+		return { frames, failed };
+	};
+
+	$('vMake').addEventListener('click', async () => {
+		$('vMake').disabled = true;
+		$('vStatus').className = 'status';
+		$('vStatus').textContent = 'Reading video lengths…';
+		const { frames, failed } = await buildFrames();
+		const cols = 6, cellW = 320, cellH = 220, label = 28, header = 64, per = 42;
+		// One video per sheet (long videos continue on more sheets).
+		const sheets = [];
+		frames.forEach((fr, i) => {
+			const last = sheets[sheets.length - 1];
+			if (!last || last.file !== fr.file || last.items.length >= per) sheets.push({ file: fr.file, items: [] });
+			sheets[sheets.length - 1].items.push({ ...fr, number: i + 1 });
+		});
+		$('vProg').hidden = false;
+		$('vProg').max = Math.max(1, frames.length);
+		const out = zipper('video-contact-sheets');
+		const index = ['number,video,seconds'];
+		frames.forEach((fr, i) => index.push(`${i + 1},"${(fr.file.webkitRelativePath || fr.file.name).replace(/"/g, '""')}",${fr.t.toFixed(2)}`));
+		let done = 0;
+		for (let s = 0; s < sheets.length; s++) {
+			const sheet = sheets[s];
+			const v = await openVideo(sheet.file);
+			const rows = Math.ceil(sheet.items.length / cols);
+			const canvas = document.createElement('canvas');
+			canvas.width = cols * cellW;
+			canvas.height = header + rows * (cellH + label);
+			const ctx = canvas.getContext('2d');
+			ctx.fillStyle = '#0b0b0b';
+			ctx.fillRect(0, 0, canvas.width, canvas.height);
+			ctx.fillStyle = '#d4c2a1';
+			ctx.font = 'bold 26px system-ui, sans-serif';
+			ctx.fillText(`Video sheet ${s + 1} of ${sheets.length} · frames ${sheet.items[0].number}–${sheet.items[sheet.items.length - 1].number}`, 16, 32);
+			ctx.fillStyle = '#a79e96';
+			ctx.font = '18px system-ui, sans-serif';
+			ctx.fillText(`${(sheet.file.webkitRelativePath || sheet.file.name).slice(-80)} · ${clock(sheet.items[0].duration)} long`, 16, 54);
+			for (let i = 0; i < sheet.items.length; i++) {
+				const item = sheet.items[i];
+				const x = (i % cols) * cellW, y = header + Math.floor(i / cols) * (cellH + label);
+				if (v) {
+					await seekTo(v, item.t);
+					const scale = Math.min((cellW - 8) / v.videoWidth, (cellH - 8) / v.videoHeight);
+					const dw = v.videoWidth * scale, dh = v.videoHeight * scale;
+					ctx.drawImage(v, x + (cellW - dw) / 2, y + (cellH - dh) / 2, dw, dh);
+				}
+				ctx.fillStyle = '#f2ede8';
+				ctx.font = 'bold 20px system-ui, sans-serif';
+				ctx.fillText(String(item.number), x + 8, y + cellH + 20);
+				ctx.fillStyle = '#a79e96';
+				ctx.font = '17px system-ui, sans-serif';
+				ctx.fillText(clock(item.t), x + 70, y + cellH + 20);
+				$('vProg').value = ++done;
+			}
+			if (v) closeVideo(v);
+			out.add(`video-sheet-${String(s + 1).padStart(4, '0')}.jpg`, await toJpeg(canvas, 0.74));
+			$('vStatus').textContent = `Video sheet ${s + 1} of ${sheets.length} done.`;
+		}
+		out.add('frame-numbers.csv', new TextEncoder().encode(index.join('\n')));
+		const zips = out.finish();
+		$('vStatus').className = 'status' + (failed.length ? ' bad' : '');
+		$('vStatus').textContent =
+			`Finished: ${frames.length} frames on ${sheets.length} sheet(s), in ${zips.length} zip file(s) saved to Downloads.` +
+			(failed.length ? `\n${failed.length} video(s) would not play in this browser (export them as MP4 first): ${failed.slice(0, 5).join(', ')}${failed.length > 5 ? ' …' : ''}` : '') +
+			'\nSend the zips to Claude, or paste frame numbers below to save them as photos.';
+		$('vMake').disabled = false;
+	});
+
+	$('vExport').addEventListener('click', async () => {
+		$('vExport').disabled = true;
+		$('vStatus2').className = 'status';
+		$('vStatus2').textContent = 'Reading video lengths…';
+		const { frames } = await buildFrames();
+		const numbers = parseNumbers($('vPicks').value);
+		const wanted = numbers.filter((n) => n >= 1 && n <= frames.length);
+		const missing = numbers.filter((n) => n < 1 || n > frames.length);
+		const mode = $('vEdit').value;
+		$('vProg2').hidden = false;
+		$('vProg2').max = Math.max(1, wanted.length);
+		const out = zipper('video-stills');
+		let v = null, open = null, failed = 0;
+		for (let i = 0; i < wanted.length; i++) {
+			const fr = frames[wanted[i] - 1];
+			if (open !== fr.file) {
+				if (v) closeVideo(v);
+				v = await openVideo(fr.file);
+				open = fr.file;
+			}
+			if (!v) { failed++; continue; }
+			await seekTo(v, fr.t);
+			// Full resolution of the video.
+			const canvas = document.createElement('canvas');
+			canvas.width = v.videoWidth;
+			canvas.height = v.videoHeight;
+			const ctx = canvas.getContext('2d', { willReadFrequently: true });
+			ctx.drawImage(v, 0, 0);
+			autoEdit(ctx, canvas.width, canvas.height, mode);
+			const base = fr.file.name.replace(/\.[^.]+$/, '');
+			const stamp = clock(fr.t).replace(':', 'm') + 's';
+			out.add(`${base}-frame-${String(wanted[i]).padStart(4, '0')}-${stamp}.jpg`, await toJpeg(canvas, 0.95));
+			$('vProg2').value = i + 1;
+			$('vStatus2').textContent = `Saved ${i + 1} of ${wanted.length}.`;
+		}
+		if (v) closeVideo(v);
+		const zips = out.finish();
+		$('vStatus2').className = 'status' + (failed || missing.length ? ' bad' : '');
+		$('vStatus2').textContent =
+			`Finished: ${wanted.length - failed} still(s) in ${zips.length} zip file(s), saved to Downloads.` +
+			(missing.length ? `\nNot found (choose the same videos and frame setting as for the sheets): ${missing.slice(0, 20).join(', ')}` : '') +
+			(failed ? `\n${failed} frame(s) came from a video this browser cannot play.` : '');
+		refreshV();
+	});
 
 	// ---------- Step 2: export picks.
 	let list2 = [];
