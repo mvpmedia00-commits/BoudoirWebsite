@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MVP Media Photo Picker</title>
+<style>
+	:root {
+		--bg: #0b0b0b;
+		--panel: #151312;
+		--line: #2c2725;
+		--text: #f2ede8;
+		--muted: #a79e96;
+		--gold: #d4c2a1;
+		--bad: #e08a8a;
+	}
+	* { box-sizing: border-box; }
+	body {
+		margin: 0;
+		background: var(--bg);
+		color: var(--text);
+		font: 16px/1.55 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+	}
+	main { max-width: 860px; margin: 0 auto; padding: 32px 16px 64px; }
+	h1 { margin: 0 0 4px; font-size: 28px; letter-spacing: 0.04em; }
+	.sub { color: var(--muted); margin: 0 0 28px; }
+	section {
+		background: var(--panel);
+		border: 1px solid var(--line);
+		border-radius: 14px;
+		padding: 22px;
+		margin-bottom: 22px;
+	}
+	h2 { margin: 0 0 6px; font-size: 20px; }
+	h2 span { color: var(--gold); margin-right: 6px; }
+	p { margin: 0 0 14px; }
+	ol { margin: 0 0 16px; padding-left: 22px; color: var(--muted); }
+	label { display: block; font-size: 14px; color: var(--muted); margin: 14px 0 6px; }
+	select, input[type='number'], textarea {
+		width: 100%;
+		background: #0f0e0d;
+		color: var(--text);
+		border: 1px solid var(--line);
+		border-radius: 8px;
+		padding: 10px;
+		font: inherit;
+	}
+	textarea { min-height: 110px; resize: vertical; }
+	.row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+	.file {
+		display: inline-block;
+		margin-top: 8px;
+		padding: 12px 18px;
+		border-radius: 999px;
+		background: var(--gold);
+		color: #111;
+		font-weight: 700;
+		cursor: pointer;
+	}
+	.file input { display: none; }
+	button {
+		margin-top: 16px;
+		padding: 12px 22px;
+		border: 0;
+		border-radius: 999px;
+		background: var(--gold);
+		color: #111;
+		font: inherit;
+		font-weight: 700;
+		cursor: pointer;
+	}
+	button:disabled { opacity: 0.4; cursor: default; }
+	.status { margin-top: 14px; color: var(--muted); font-size: 14px; white-space: pre-line; }
+	.status.bad { color: var(--bad); }
+	progress { width: 100%; height: 10px; margin-top: 12px; accent-color: var(--gold); }
+	.note { font-size: 13px; color: var(--muted); }
+	@media (max-width: 560px) { .row { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+	<h1>MVP Media Photo Picker</h1>
+	<p class="sub">Runs entirely in this browser window. Your photos are never uploaded anywhere; the tool only saves files to your Downloads folder.</p>
+
+	<section>
+		<h2><span>1</span>Make contact sheets</h2>
+		<ol>
+			<li>Choose the folder that holds your photos. Subfolders are included, and each subfolder (shoot) gets its own sheets.</li>
+			<li>Press <b>Make contact sheets</b>. Every photo gets a number printed under its thumbnail.</li>
+			<li>Zip files land in your Downloads folder, each under 24 MB. Send them to Claude one at a time.</li>
+		</ol>
+		<label class="file">Choose photo folder<input type="file" id="folder1" webkitdirectory multiple /></label>
+		<div class="status" id="found1">No folder chosen yet.</div>
+		<div class="row">
+			<div>
+				<label for="perSheet">Photos per sheet</label>
+				<select id="perSheet">
+					<option value="48">48 (bigger thumbnails, more sheets)</option>
+					<option value="64" selected>64 (recommended)</option>
+					<option value="100">100 (smaller thumbnails, fewer sheets)</option>
+				</select>
+			</div>
+			<div>
+				<label for="startSheet">Start at sheet number (to resume)</label>
+				<input type="number" id="startSheet" min="1" value="1" />
+			</div>
+		</div>
+		<button id="make" disabled>Make contact sheets</button>
+		<progress id="prog1" value="0" max="1" hidden></progress>
+		<div class="status" id="status1"></div>
+	</section>
+
+	<section>
+		<h2><span>2</span>Export the picks</h2>
+		<ol>
+			<li>Choose the <b>same folder</b> as in step 1, so the numbers match.</li>
+			<li>Paste the numbers Claude picked. Commas, spaces, new lines, and ranges like <b>120-135</b> all work.</li>
+			<li>Press <b>Export picks</b>. You get web-ready JPEGs (location and camera data removed) in zips under 24 MB.</li>
+		</ol>
+		<label class="file">Choose photo folder<input type="file" id="folder2" webkitdirectory multiple /></label>
+		<div class="status" id="found2">No folder chosen yet.</div>
+		<label for="picks">Picked numbers</label>
+		<textarea id="picks" placeholder="12, 45, 46, 120-135"></textarea>
+		<div class="row">
+			<div>
+				<label for="size">Long edge (pixels)</label>
+				<select id="size">
+					<option value="1600">1600 (lighter)</option>
+					<option value="2000" selected>2000 (recommended)</option>
+					<option value="2400">2400 (sharper, larger files)</option>
+				</select>
+			</div>
+			<div>
+				<label for="quality">JPEG quality</label>
+				<select id="quality">
+					<option value="0.8">80%</option>
+					<option value="0.86" selected>86% (recommended)</option>
+					<option value="0.92">92%</option>
+				</select>
+			</div>
+		</div>
+		<button id="export" disabled>Export picks</button>
+		<progress id="prog2" value="0" max="1" hidden></progress>
+		<div class="status" id="status2"></div>
+	</section>
+
+	<p class="note">Works with JPEG, PNG, and WebP in Chrome, Edge, Firefox, and Safari. iPhone HEIC photos work in Safari on a Mac; in other browsers, export them as JPEG first. Camera RAW files (CR2, CR3, NEF, ARW, DNG) are skipped: export JPEGs from your editing app. If the browser asks to allow multiple downloads, choose Allow.</p>
+</main>
+
+<script>
+	// ---------- File list: same order (and so the same numbers) every time the same folder is chosen.
+	const IMAGE = /\.(jpe?g|png|webp|heic|heif)$/i;
+	const RAW = /\.(cr2|cr3|nef|arw|dng|raf|orf|rw2|srw|pef)$/i;
+
+	const collect = (fileList) => {
+		const all = Array.from(fileList);
+		const images = all
+			.filter((f) => IMAGE.test(f.name) && !f.name.startsWith('._'))
+			.sort((a, b) => (a.webkitRelativePath || a.name).localeCompare(b.webkitRelativePath || b.name, 'en', { numeric: true }));
+		return { images, raw: all.filter((f) => RAW.test(f.name)).length };
+	};
+	const folderOf = (file) => {
+		const parts = (file.webkitRelativePath || file.name).split('/');
+		return parts.length > 1 ? parts.slice(0, -1).join('/') : '(top folder)';
+	};
+	const mb = (bytes) => (bytes / 1048576).toFixed(1) + ' MB';
+
+	// ---------- Minimal ZIP writer (stored, no compression: JPEGs do not compress further).
+	const CRC_TABLE = (() => {
+		const t = new Uint32Array(256);
+		for (let n = 0; n < 256; n++) {
+			let c = n;
+			for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+			t[n] = c >>> 0;
+		}
+		return t;
+	})();
+	const crc32 = (bytes) => {
+		let c = 0xffffffff;
+		for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xff] ^ (c >>> 8);
+		return (c ^ 0xffffffff) >>> 0;
+	};
+	class Zip {
+		constructor() { this.parts = []; this.central = []; this.offset = 0; this.size = 0; this.count = 0; }
+		add(name, bytes) {
+			const nameBytes = new TextEncoder().encode(name);
+			const crc = crc32(bytes);
+			const d = new Date();
+			const time = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+			const date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+			const local = new DataView(new ArrayBuffer(30));
+			local.setUint32(0, 0x04034b50, true); local.setUint16(4, 20, true); local.setUint16(6, 0x0800, true);
+			local.setUint16(8, 0, true); local.setUint16(10, time, true); local.setUint16(12, date, true);
+			local.setUint32(14, crc, true); local.setUint32(18, bytes.length, true); local.setUint32(22, bytes.length, true);
+			local.setUint16(26, nameBytes.length, true); local.setUint16(28, 0, true);
+			const central = new DataView(new ArrayBuffer(46));
+			central.setUint32(0, 0x02014b50, true); central.setUint16(4, 20, true); central.setUint16(6, 20, true);
+			central.setUint16(8, 0x0800, true); central.setUint16(10, 0, true); central.setUint16(12, time, true);
+			central.setUint16(14, date, true); central.setUint32(16, crc, true); central.setUint32(20, bytes.length, true);
+			central.setUint32(24, bytes.length, true); central.setUint16(28, nameBytes.length, true);
+			central.setUint32(42, this.offset, true);
+			this.parts.push(local, nameBytes, bytes);
+			this.central.push(central, nameBytes);
+			const added = 30 + nameBytes.length + bytes.length;
+			this.offset += added; this.size += added + 46 + nameBytes.length; this.count++;
+		}
+		blob() {
+			const centralSize = this.central.reduce((n, p) => n + p.byteLength, 0);
+			const end = new DataView(new ArrayBuffer(22));
+			end.setUint32(0, 0x06054b50, true); end.setUint16(8, this.count, true); end.setUint16(10, this.count, true);
+			end.setUint32(12, centralSize, true); end.setUint32(16, this.offset, true);
+			return new Blob([...this.parts, ...this.central, end], { type: 'application/zip' });
+		}
+	}
+	const LIMIT = 24 * 1048576;
+	const download = (blob, name) => {
+		const a = document.createElement('a');
+		a.href = URL.createObjectURL(blob);
+		a.download = name;
+		document.body.appendChild(a);
+		a.click();
+		a.remove();
+		setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+	};
+	// Collects files into zips under 24 MB, downloading each as soon as it is full.
+	const zipper = (prefix) => {
+		let zip = new Zip();
+		let part = 0;
+		const names = [];
+		const flush = () => {
+			if (!zip.count) return;
+			part++;
+			const name = `${prefix}-part-${String(part).padStart(3, '0')}.zip`;
+			download(zip.blob(), name);
+			names.push(name);
+			zip = new Zip();
+		};
+		return {
+			add(name, bytes) {
+				if (zip.count && zip.size + bytes.length + 200 > LIMIT) flush();
+				zip.add(name, bytes);
+			},
+			finish() { flush(); return names; }
+		};
+	};
+
+	// ---------- Image helpers.
+	const decode = async (file) => {
+		try {
+			return await createImageBitmap(file, { imageOrientation: 'from-image' });
+		} catch {
+			// Some browsers (e.g. Safari with HEIC) only decode through an <img>.
+			return new Promise((resolve) => {
+				const url = URL.createObjectURL(file);
+				const img = new Image();
+				img.onload = () => { resolve(img); URL.revokeObjectURL(url); };
+				img.onerror = () => { resolve(null); URL.revokeObjectURL(url); };
+				img.src = url;
+			});
+		}
+	};
+	const dims = (img) => [img.naturalWidth || img.width, img.naturalHeight || img.height];
+	const toJpeg = (canvas, quality) =>
+		new Promise((resolve) => canvas.toBlob(async (b) => resolve(new Uint8Array(await b.arrayBuffer())), 'image/jpeg', quality));
+	const parseNumbers = (text) => {
+		const set = new Set();
+		for (const token of text.split(/[\s,;]+/).filter(Boolean)) {
+			const range = token.match(/^#?(\d+)\s*-\s*#?(\d+)$/);
+			if (range) {
+				const [a, b] = [Number(range[1]), Number(range[2])].sort((x, y) => x - y);
+				for (let n = a; n <= b && n - a < 5000; n++) set.add(n);
+			} else if (/^#?\d+$/.test(token)) set.add(Number(token.replace('#', '')));
+		}
+		return [...set].sort((a, b) => a - b);
+	};
+	const $ = (id) => document.getElementById(id);
+
+	// ---------- Step 1: contact sheets.
+	let list1 = [];
+	$('folder1').addEventListener('change', (e) => {
+		const { images, raw } = collect(e.target.files);
+		list1 = images;
+		const per = Number($('perSheet').value);
+		const folders = new Set(images.map(folderOf)).size;
+		$('found1').className = 'status' + (images.length ? '' : ' bad');
+		$('found1').textContent = images.length
+			? `${images.length.toLocaleString()} photos in ${folders} folder(s), about ${Math.ceil(images.length / per) + folders} sheets.` +
+				(raw ? `\n${raw.toLocaleString()} RAW files skipped (export them as JPEG to include them).` : '')
+			: 'No JPEG, PNG, WebP, or HEIC photos found in that folder.';
+		$('make').disabled = !images.length;
+	});
+
+	$('make').addEventListener('click', async () => {
+		const per = Number($('perSheet').value);
+		const cols = per === 48 ? 8 : per === 64 ? 8 : 10;
+		const cell = per === 100 ? 200 : 240;
+		const label = 26;
+		const header = 64;
+		const startAt = Math.max(1, Number($('startSheet').value) || 1);
+
+		// Group photos into sheets, starting a new sheet for each folder.
+		const sheets = [];
+		let current = null;
+		list1.forEach((file, index) => {
+			const folder = folderOf(file);
+			if (!current || current.folder !== folder || current.items.length >= per) {
+				current = { folder, items: [] };
+				sheets.push(current);
+			}
+			current.items.push({ file, number: index + 1 });
+		});
+
+		$('make').disabled = true;
+		$('prog1').hidden = false;
+		$('prog1').max = sheets.length;
+		const out = zipper('contact-sheets');
+		const index = ['number,file'];
+		list1.forEach((f, i) => index.push(`${i + 1},"${(f.webkitRelativePath || f.name).replace(/"/g, '""')}"`));
+		let unreadable = 0;
+		const started = Date.now();
+
+		for (let s = startAt - 1; s < sheets.length; s++) {
+			const sheet = sheets[s];
+			const rows = Math.ceil(sheet.items.length / cols);
+			const canvas = document.createElement('canvas');
+			canvas.width = cols * cell;
+			canvas.height = header + rows * (cell + label);
+			const ctx = canvas.getContext('2d');
+			ctx.fillStyle = '#0b0b0b';
+			ctx.fillRect(0, 0, canvas.width, canvas.height);
+			ctx.fillStyle = '#d4c2a1';
+			ctx.font = 'bold 26px system-ui, sans-serif';
+			const first = sheet.items[0].number;
+			const last = sheet.items[sheet.items.length - 1].number;
+			ctx.fillText(`Sheet ${s + 1} of ${sheets.length} · photos ${first}–${last}`, 16, 32);
+			ctx.fillStyle = '#a79e96';
+			ctx.font = '18px system-ui, sans-serif';
+			ctx.fillText(sheet.folder.slice(-90), 16, 54);
+
+			for (let i = 0; i < sheet.items.length; i++) {
+				const { file, number } = sheet.items[i];
+				const x = (i % cols) * cell;
+				const y = header + Math.floor(i / cols) * (cell + label);
+				const img = await decode(file);
+				if (img) {
+					const [w, h] = dims(img);
+					const scale = Math.min((cell - 8) / w, (cell - 8) / h);
+					const dw = w * scale, dh = h * scale;
+					ctx.drawImage(img, x + (cell - dw) / 2, y + (cell - dh) / 2, dw, dh);
+					if (img.close) img.close();
+				} else {
+					unreadable++;
+					ctx.fillStyle = '#2c2725';
+					ctx.fillRect(x + 4, y + 4, cell - 8, cell - 8);
+					ctx.fillStyle = '#e08a8a';
+					ctx.font = '16px system-ui, sans-serif';
+					ctx.fillText('cannot preview', x + 14, y + cell / 2);
+				}
+				ctx.fillStyle = '#f2ede8';
+				ctx.font = 'bold 20px system-ui, sans-serif';
+				ctx.fillText(String(number), x + 8, y + cell + 19);
+			}
+			out.add(`sheet-${String(s + 1).padStart(4, '0')}.jpg`, await toJpeg(canvas, 0.72));
+			$('prog1').value = s + 1;
+			const done = s + 2 - startAt, left = sheets.length - s - 1;
+			const eta = Math.round(((Date.now() - started) / done) * left / 60000);
+			$('status1').textContent = `Sheet ${s + 1} of ${sheets.length} done.` + (left ? ` About ${eta} min left. Keep this tab open.` : '');
+		}
+		out.add('photo-numbers.csv', new TextEncoder().encode(index.join('\n')));
+		const zips = out.finish();
+		$('status1').textContent =
+			`Finished: ${zips.length} zip file(s) saved to Downloads (${zips[0]} …).` +
+			(unreadable ? `\n${unreadable} photo(s) could not be previewed and show a red note on the sheet.` : '') +
+			'\nSend the zips to Claude, then use step 2 with the numbers you get back.';
+		$('make').disabled = false;
+	});
+	$('perSheet').addEventListener('change', () => $('folder1').files.length && $('folder1').dispatchEvent(new Event('change')));
+
+	// ---------- Step 2: export picks.
+	let list2 = [];
+	const refresh2 = () => { $('export').disabled = !(list2.length && parseNumbers($('picks').value).length); };
+	$('folder2').addEventListener('change', (e) => {
+		list2 = collect(e.target.files).images;
+		$('found2').className = 'status' + (list2.length ? '' : ' bad');
+		$('found2').textContent = list2.length ? `${list2.length.toLocaleString()} photos found (numbers 1–${list2.length}).` : 'No photos found in that folder.';
+		refresh2();
+	});
+	$('picks').addEventListener('input', refresh2);
+
+	$('export').addEventListener('click', async () => {
+		const numbers = parseNumbers($('picks').value);
+		const longEdge = Number($('size').value);
+		const quality = Number($('quality').value);
+		const missing = numbers.filter((n) => n < 1 || n > list2.length);
+		const wanted = numbers.filter((n) => n >= 1 && n <= list2.length);
+		$('export').disabled = true;
+		$('prog2').hidden = false;
+		$('prog2').max = wanted.length;
+		const out = zipper('picked-photos');
+		let failed = 0;
+		for (let i = 0; i < wanted.length; i++) {
+			const n = wanted[i];
+			const img = await decode(list2[n - 1]);
+			if (!img) { failed++; continue; }
+			const [w, h] = dims(img);
+			const scale = Math.min(1, longEdge / Math.max(w, h));
+			const canvas = document.createElement('canvas');
+			canvas.width = Math.round(w * scale);
+			canvas.height = Math.round(h * scale);
+			const ctx = canvas.getContext('2d');
+			ctx.imageSmoothingQuality = 'high';
+			ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+			if (img.close) img.close();
+			// Re-encoding through a canvas drops all hidden data (GPS location, camera serial, dates).
+			out.add(`photo-${String(n).padStart(5, '0')}.jpg`, await toJpeg(canvas, quality));
+			$('prog2').value = i + 1;
+			$('status2').textContent = `Exported ${i + 1} of ${wanted.length}.`;
+		}
+		const zips = out.finish();
+		$('status2').className = 'status';
+		$('status2').textContent =
+			`Finished: ${wanted.length - failed} photo(s) in ${zips.length} zip file(s), saved to Downloads.` +
+			(missing.length ? `\nNot in this folder (check you chose the same folder as step 1): ${missing.slice(0, 20).join(', ')}${missing.length > 20 ? ' …' : ''}` : '') +
+			(failed ? `\n${failed} photo(s) could not be read.` : '');
+		$('export').disabled = false;
+	});
+</script>
+</body>
+</html>
