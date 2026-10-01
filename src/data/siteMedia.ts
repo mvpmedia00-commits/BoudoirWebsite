@@ -55,7 +55,9 @@ export const STRIP_MEDIA: StripItem[] = [
 	{ kind: 'video', src: `${BUNNY_PHOTOS}/strip-bts.mp4`, poster: `${BUNNY_PHOTOS}/strip-bts.jpg`, mature: true },
 	{ kind: 'image', src: `${BUNNY_PHOTOS}/strip-02.jpg`, mature: true },
 	{ kind: 'video', src: `${BUNNY_PHOTOS}/strip-photographer.mp4`, poster: `${BUNNY_PHOTOS}/strip-photographer.jpg` },
-	{ kind: 'image', src: `${BUNNY_PHOTOS}/strip-03.jpg` }
+	{ kind: 'image', src: `${BUNNY_PHOTOS}/strip-03.jpg` },
+	{ kind: 'image', src: `${BUNNY_PHOTOS}/pg13-06.jpg` },
+	{ kind: 'image', src: `${BUNNY_PHOTOS}/pg13-02.jpg` }
 ];
 
 /** Homepage "Art Direction" moodboard: three different sets. The blacklight one has nudity. */
@@ -76,7 +78,7 @@ export const BOUDOIR_FILM_STRIP: StripItem[] = ['strip-boudoir-01.jpg', 'strip-b
  */
 const bunny = (file: string) => `${BUNNY_PHOTOS}/${file}`;
 export const SAFE_MEDIA = {
-	boudoirCover: bunny('strip-boudoir-01.jpg'),
+	boudoirCover: bunny('pg13-03.jpg'),
 	cinematic: photo('editorial-04-wide.jpg'),
 	process: bunny('strip-boudoir-02.jpg')
 };
@@ -87,15 +89,19 @@ const heroImage = (url: string): HeroTile => ({ kind: 'image', src: url });
 
 /** Rolling hero in PG-13 mode: the non-nude clips plus non-nude photos. Each column starts with a clip where possible. */
 export const SAFE_HERO_COLUMNS: { reverse?: boolean; tiles: HeroTile[] }[] = [
-	{ tiles: [heroVideo('reel-luxury.mp4', 'reel-luxury.jpg'), heroImage(bunny('strip-boudoir-01.jpg')), heroImage(photo('editorial-03.jpg'))] },
 	{
-		reverse: true,
-		tiles: [heroVideo('reel-editorial.mp4', 'reel-editorial.jpg'), heroImage(photo('editorial-02.jpg')), heroImage(bunny('strip-boudoir-02.jpg'))]
+		tiles: [heroVideo('reel-luxury.mp4', 'reel-luxury.jpg'), heroImage(bunny('pg13-03.jpg')), heroImage(bunny('strip-boudoir-01.jpg')), heroImage(photo('editorial-03.jpg'))]
 	},
-	{ tiles: [heroVideo('signature-mvp.mp4', 'signature-mvp.jpg'), heroImage(photo('editorial-06.jpg')), heroImage(photo('editorial-08.jpg'))] },
 	{
 		reverse: true,
-		tiles: [heroImage(photo('editorial-05.jpg')), heroImage(bunny('strip-boudoir-03.jpg')), heroImage(photo('editorial-07-wide.jpg'))]
+		tiles: [heroVideo('reel-editorial.mp4', 'reel-editorial.jpg'), heroImage(bunny('pg13-02.jpg')), heroImage(photo('editorial-02.jpg')), heroImage(bunny('strip-boudoir-02.jpg'))]
+	},
+	{
+		tiles: [heroVideo('signature-mvp.mp4', 'signature-mvp.jpg'), heroImage(bunny('pg13-05.jpg')), heroImage(photo('editorial-06.jpg')), heroImage(photo('editorial-08.jpg'))]
+	},
+	{
+		reverse: true,
+		tiles: [heroImage(bunny('pg13-06.jpg')), heroImage(bunny('pg13-04.jpg')), heroImage(bunny('pg13-01.jpg')), heroImage(photo('editorial-05.jpg'))]
 	}
 ];
 
@@ -124,7 +130,7 @@ export const PORTFOLIO_PHOTOS = {
 		photo('5B1A4081.JPG'),
 		photo('5B1A4143.JPG'),
 		photo('5B1A4145.JPG'),
-		...['boudoir-01.jpg', 'boudoir-02.jpg', 'boudoir-03.jpg', 'boudoir-04.jpg', 'boudoir-05.jpg', 'boudoir-06.jpg', 'boudoir-07.jpg'].map(
+		...['boudoir-01.jpg', 'boudoir-02.jpg', 'boudoir-03.jpg', 'boudoir-04.jpg', 'boudoir-05.jpg', 'boudoir-06.jpg', 'boudoir-07.jpg', 'boudoir-08.jpg', 'boudoir-09.jpg', 'boudoir-10.jpg'].map(
 			(file) => photo(file)
 		)
 	],
