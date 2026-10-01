@@ -72,6 +72,16 @@
 	button:disabled { opacity: 0.4; cursor: default; }
 	.status { margin-top: 14px; color: var(--muted); font-size: 14px; white-space: pre-line; }
 	.status.bad { color: var(--bad); }
+	.tools button { margin-top: 0; }
+	.grid-wrap { margin-top: 16px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+	.grid-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; padding: 10px; font-size: 14px; color: var(--muted); background: #0f0e0d; }
+	button.mini { margin: 0 0 0 6px; padding: 6px 12px; font-size: 13px; background: #2c2725; color: var(--text); }
+	.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 6px; padding: 8px; max-height: 70vh; overflow-y: auto; }
+	.cell { position: relative; aspect-ratio: 1; background: #1b1816; border-radius: 6px; overflow: hidden; cursor: pointer; border: 2px solid transparent; }
+	.cell img { width: 100%; height: 100%; object-fit: contain; display: block; }
+	.cell b { position: absolute; left: 4px; bottom: 4px; font-size: 12px; background: rgba(0,0,0,0.7); padding: 1px 5px; border-radius: 4px; }
+	.cell.picked { border-color: var(--gold); }
+	.cell.picked::after { content: '✓'; position: absolute; top: 4px; right: 6px; color: #111; background: var(--gold); border-radius: 50%; width: 22px; height: 22px; display: grid; place-items: center; font-weight: 700; font-size: 14px; }
 	.check { display: flex; gap: 8px; align-items: center; margin-top: 14px; color: var(--muted); font-size: 14px; }
 	progress { width: 100%; height: 10px; margin-top: 12px; accent-color: var(--gold); }
 	.note { font-size: 13px; color: var(--muted); }
@@ -112,14 +122,31 @@
 	</section>
 
 	<section>
-		<h2><span>2</span>Export and auto-edit the picks</h2>
+		<h2><span>2</span>Pick, auto-edit, and export</h2>
 		<ol>
 			<li>Choose the <b>same folder</b> as in step 1, so the numbers match.</li>
-			<li>Paste the numbers Claude picked. Commas, spaces, new lines, and ranges like <b>120-135</b> all work.</li>
+			<li>Choose the photos, any of three ways: paste the numbers Claude picked (ranges like <b>120-135</b> work), press <b>Auto-pick the best</b>, or press <b>Review photos</b> and tap the ones you want. You can mix them.</li>
 			<li>Press <b>Export picks</b>. Each photo is automatically edited (color cast removed, brightness and contrast balanced, lightly sharpened), cropped if you choose a shape, resized, and saved as a web-ready JPEG with location and camera data removed, in zips under 24 MB.</li>
 		</ol>
 		<label class="file">Choose photo folder<input type="file" id="folder2" webkitdirectory multiple /></label>
 		<div class="status" id="found2">No folder chosen yet.</div>
+		<div class="row tools">
+			<button type="button" id="autopick" disabled>Auto-pick the best</button>
+			<button type="button" id="review" disabled>Review photos</button>
+		</div>
+		<p class="note">Auto-pick groups burst shots of the same pose and keeps the sharpest, best-exposed frame of each group. It judges technical quality only (focus, exposure, duplicates), not taste, so look over the picks in Review.</p>
+		<div class="grid-wrap" id="gridWrap" hidden>
+			<div class="grid-bar">
+				<span id="gridInfo"></span>
+				<span>
+					<button type="button" class="mini" id="gridPrev">Previous</button>
+					<button type="button" class="mini" id="gridNext">Next</button>
+					<button type="button" class="mini" id="gridOnly">Show picks only</button>
+					<button type="button" class="mini" id="gridClear">Clear picks</button>
+				</span>
+			</div>
+			<div class="grid" id="grid"></div>
+		</div>
 		<label for="picks">Picked numbers</label>
 		<textarea id="picks" placeholder="12, 45, 46, 120-135"></textarea>
 		<div class="row">
@@ -489,9 +516,190 @@
 		list2 = collect(e.target.files).images;
 		$('found2').className = 'status' + (list2.length ? '' : ' bad');
 		$('found2').textContent = list2.length ? `${list2.length.toLocaleString()} photos found (numbers 1–${list2.length}).` : 'No photos found in that folder.';
+		$('autopick').disabled = $('review').disabled = !list2.length;
+		thumbCache.clear();
+		$('gridWrap').hidden = true;
 		refresh2();
 	});
-	$('picks').addEventListener('input', refresh2);
+	$('picks').addEventListener('input', () => { refresh2(); syncGrid(); });
+
+	// Picks live in the textarea; these helpers read and write it as compact ranges.
+	const formatNumbers = (nums) => {
+		const sorted = [...nums].sort((a, b) => a - b);
+		const out = [];
+		for (let i = 0; i < sorted.length; i++) {
+			let j = i;
+			while (j + 1 < sorted.length && sorted[j + 1] === sorted[j] + 1) j++;
+			out.push(j > i + 1 ? `${sorted[i]}-${sorted[j]}` : j === i + 1 ? `${sorted[i]}, ${sorted[j]}` : `${sorted[i]}`);
+			i = j;
+		}
+		return out.join(', ');
+	};
+	const setPicks = (set) => { $('picks').value = formatNumbers(set); refresh2(); syncGrid(); };
+	const getPicks = () => new Set(parseNumbers($('picks').value));
+
+	// ---------- Review grid: thumbnails in pages of 120, tap to pick or unpick.
+	const PAGE = 120;
+	let page = 0;
+	let onlyPicks = false;
+	const thumbCache = new Map();
+	const thumb = async (index) => {
+		if (thumbCache.has(index)) return thumbCache.get(index);
+		let url = '';
+		try {
+			const bmp = await createImageBitmap(list2[index], { resizeWidth: 240, resizeQuality: 'medium', imageOrientation: 'from-image' });
+			const c = document.createElement('canvas');
+			c.width = bmp.width; c.height = bmp.height;
+			c.getContext('2d').drawImage(bmp, 0, 0);
+			bmp.close();
+			url = c.toDataURL('image/jpeg', 0.7);
+		} catch {
+			url = '';
+		}
+		if (thumbCache.size > 1500) thumbCache.delete(thumbCache.keys().next().value);
+		thumbCache.set(index, url);
+		return url;
+	};
+	let renderToken = 0;
+	const renderGrid = async () => {
+		const token = ++renderToken;
+		const picks = getPicks();
+		const numbers = onlyPicks ? [...picks].filter((n) => n <= list2.length).sort((a, b) => a - b) : list2.map((_, i) => i + 1);
+		const pages = Math.max(1, Math.ceil(numbers.length / PAGE));
+		page = Math.min(page, pages - 1);
+		const shown = numbers.slice(page * PAGE, page * PAGE + PAGE);
+		$('gridInfo').textContent = `${onlyPicks ? 'Picks' : 'Photos'} ${numbers.length ? page * PAGE + 1 : 0}–${page * PAGE + shown.length} of ${numbers.length} · ${picks.size} picked`;
+		$('gridPrev').disabled = page === 0;
+		$('gridNext').disabled = page >= pages - 1;
+		$('gridOnly').textContent = onlyPicks ? 'Show all photos' : 'Show picks only';
+		const grid = $('grid');
+		grid.innerHTML = '';
+		grid.scrollTop = 0;
+		for (const n of shown) {
+			const cell = document.createElement('div');
+			cell.className = 'cell' + (picks.has(n) ? ' picked' : '');
+			cell.dataset.n = n;
+			cell.innerHTML = `<img alt=""><b>${n}</b>`;
+			grid.appendChild(cell);
+		}
+		for (const cell of grid.children) {
+			if (token !== renderToken) return;
+			const url = await thumb(Number(cell.dataset.n) - 1);
+			if (url) cell.querySelector('img').src = url;
+		}
+	};
+	const syncGrid = () => {
+		if ($('gridWrap').hidden) return;
+		const picks = getPicks();
+		for (const cell of $('grid').children) cell.classList.toggle('picked', picks.has(Number(cell.dataset.n)));
+		$('gridInfo').textContent = $('gridInfo').textContent.replace(/\d+ picked$/, `${picks.size} picked`);
+	};
+	$('grid').addEventListener('click', (e) => {
+		const cell = e.target.closest('.cell');
+		if (!cell) return;
+		const n = Number(cell.dataset.n);
+		const picks = getPicks();
+		picks.has(n) ? picks.delete(n) : picks.add(n);
+		setPicks(picks);
+	});
+	$('review').addEventListener('click', () => { $('gridWrap').hidden = false; page = 0; void renderGrid(); });
+	$('gridPrev').addEventListener('click', () => { page--; void renderGrid(); });
+	$('gridNext').addEventListener('click', () => { page++; void renderGrid(); });
+	$('gridOnly').addEventListener('click', () => { onlyPicks = !onlyPicks; page = 0; void renderGrid(); });
+	$('gridClear').addEventListener('click', () => { if (confirm('Clear all picks?')) setPicks(new Set()); });
+
+	// ---------- Auto-pick: score each photo on a small copy, group bursts by similarity, keep the best of each.
+	const analyse = async (file) => {
+		let bmp;
+		try {
+			bmp = await createImageBitmap(file, { resizeWidth: 256, resizeQuality: 'medium', imageOrientation: 'from-image' });
+		} catch {
+			return null;
+		}
+		const w = bmp.width, h = bmp.height;
+		const c = document.createElement('canvas');
+		c.width = w; c.height = h;
+		const ctx = c.getContext('2d', { willReadFrequently: true });
+		ctx.drawImage(bmp, 0, 0);
+		bmp.close();
+		const d = ctx.getImageData(0, 0, w, h).data;
+		const lum = new Float32Array(w * h);
+		let clipped = 0, sum = 0;
+		for (let i = 0, p = 0; i < d.length; i += 4, p++) {
+			const l = 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+			lum[p] = l;
+			sum += l;
+			if (l < 6 || l > 250) clipped++;
+		}
+		// Sharpness: variance of the Laplacian over the central area (where the subject usually is).
+		let lsum = 0, lsq = 0, ln = 0;
+		for (let y = Math.floor(h * 0.15); y < Math.floor(h * 0.85); y++) {
+			for (let x = Math.floor(w * 0.15); x < Math.floor(w * 0.85); x++) {
+				const i = y * w + x;
+				const v = 4 * lum[i] - lum[i - 1] - lum[i + 1] - lum[i - w] - lum[i + w];
+				lsum += v; lsq += v * v; ln++;
+			}
+		}
+		const sharpness = lsq / ln - (lsum / ln) ** 2;
+		const mean = sum / lum.length;
+		// Exposure: best near mid-grey, penalise lots of pure black or blown-out pixels.
+		const exposure = 1 - Math.min(1, Math.abs(mean - 120) / 120) - (clipped / lum.length) * 2;
+		// Difference hash (9x8 grayscale) to spot near-identical frames.
+		const tiny = document.createElement('canvas');
+		tiny.width = 9; tiny.height = 8;
+		const tctx = tiny.getContext('2d', { willReadFrequently: true });
+		tctx.drawImage(c, 0, 0, 9, 8);
+		const t = tctx.getImageData(0, 0, 9, 8).data;
+		const bits = [];
+		for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) {
+			const a = (t[(y * 9 + x) * 4] + t[(y * 9 + x) * 4 + 1] + t[(y * 9 + x) * 4 + 2]);
+			const b = (t[(y * 9 + x + 1) * 4] + t[(y * 9 + x + 1) * 4 + 1] + t[(y * 9 + x + 1) * 4 + 2]);
+			bits.push(a > b ? 1 : 0);
+		}
+		return { sharpness, exposure, bits };
+	};
+	const hamming = (a, b) => a.reduce((n, bit, i) => n + (bit !== b[i] ? 1 : 0), 0);
+
+	$('autopick').addEventListener('click', async () => {
+		const btn = $('autopick');
+		btn.disabled = true;
+		$('prog2').hidden = false;
+		$('prog2').max = list2.length;
+		const scores = [];
+		const started = Date.now();
+		for (let i = 0; i < list2.length; i++) {
+			scores.push(await analyse(list2[i]));
+			$('prog2').value = i + 1;
+			if (i % 10 === 0) {
+				const eta = Math.round(((Date.now() - started) / (i + 1)) * (list2.length - i - 1) / 60000);
+				$('status2').textContent = `Analysing ${i + 1} of ${list2.length}…` + (eta ? ` About ${eta} min left.` : '');
+			}
+		}
+		// Bursts: consecutive photos in the same folder that look nearly the same.
+		const groups = [];
+		let group = [];
+		for (let i = 0; i < list2.length; i++) {
+			const sc = scores[i];
+			if (!sc) continue;
+			const prev = group.length ? group[group.length - 1] : -1;
+			const same = prev >= 0 && folderOf(list2[prev]) === folderOf(list2[i]) && hamming(scores[prev].bits, sc.bits) <= 12;
+			if (!same && group.length) { groups.push(group); group = []; }
+			group.push(i);
+		}
+		if (group.length) groups.push(group);
+		// Best frame per burst: sharpness (log scale, it varies widely) plus exposure.
+		const value = (i) => Math.log(1 + scores[i].sharpness) + 2 * scores[i].exposure;
+		const best = groups.map((g) => g.reduce((a, b) => (value(b) > value(a) ? b : a)));
+		// Drop bursts whose best frame is still clearly soft compared with the rest of the shoot.
+		const sharp = best.map((i) => Math.log(1 + scores[i].sharpness)).sort((a, b) => a - b);
+		const cutoff = sharp[Math.floor(sharp.length * 0.15)] ?? 0;
+		const keep = best.filter((i) => Math.log(1 + scores[i].sharpness) >= cutoff || best.length < 8);
+		const picks = getPicks();
+		keep.forEach((i) => picks.add(i + 1));
+		setPicks(picks);
+		$('status2').textContent = `Auto-pick: ${list2.length} photos → ${groups.length} different shots → ${keep.length} picked (the sharpest frame of each, very soft shots left out). Press Review photos to check them.`;
+		btn.disabled = false;
+	});
 
 	$('export').addEventListener('click', async () => {
 		const numbers = parseNumbers($('picks').value);
