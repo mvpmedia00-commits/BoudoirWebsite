@@ -7,6 +7,7 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 import {
 	ART_DIRECTION,
 	BUNNY_STORAGE_ORIGIN,
+	EXPLICIT_HERO_PHOTOS,
 	HERO_COLUMNS,
 	PORTFOLIO_PHOTOS,
 	PROCESS_VIDEO,
@@ -22,10 +23,11 @@ export const prerender = true;
 
 // Each column's clips are listed twice so the scrolling loop is seamless; the copies reuse the
 // same downloads.
-const explicitHeroColumns = HERO_COLUMNS.map((column) => ({
-	reverse: column.reverse,
-	tiles: column.clips.map((clip): HeroTile => ({ kind: 'video', ...clip }))
-}));
+const explicitHeroColumns = HERO_COLUMNS.map((column, col) => {
+	const tiles = column.clips.map((clip): HeroTile => ({ kind: 'video', ...clip }));
+	EXPLICIT_HERO_PHOTOS.filter((p) => p.column === col).forEach((p) => tiles.splice(1, 0, { kind: 'image', src: p.src }));
+	return { reverse: column.reverse, tiles };
+});
 // Both versions of the wall are in the page; CSS shows the one for the current mode, and the hero
 // script only loads clips in visible columns. Tiles are listed twice so the scroll loop is seamless.
 const heroWalls = [
