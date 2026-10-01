@@ -169,6 +169,7 @@ const sliders = [
 				height: number;
 				adjust: Adjust;
 				auto: [number, number, number];
+				autoOn: boolean; // Auto color is worked out per file, so "Apply to all" recomputes it for each
 				rotation: number; // quarter turns clockwise
 				flip: boolean;
 				aspect: string;
@@ -428,6 +429,7 @@ const sliders = [
 					file,
 					adjust: { ...NEUTRAL },
 					auto: [1, 1, 1] as [number, number, number],
+					autoOn: false,
 					rotation: 0,
 					flip: false,
 					aspect: '',
@@ -507,6 +509,7 @@ const sliders = [
 				if (!current) return;
 				current.adjust = { ...NEUTRAL };
 				current.auto = [1, 1, 1];
+				current.autoOn = false;
 				syncControls();
 				draw();
 			});
@@ -514,7 +517,8 @@ const sliders = [
 				if (!current) return;
 				items.forEach((item) => {
 					item.adjust = { ...current!.adjust };
-					item.auto = [...current!.auto] as [number, number, number];
+					item.autoOn = current!.autoOn;
+					item.auto = current!.autoOn ? autoGains(item) : [1, 1, 1];
 					if (item.kind === current!.kind && current!.aspect) {
 						item.aspect = current!.aspect;
 						fitCrop(item);
@@ -523,13 +527,12 @@ const sliders = [
 				status.textContent = `Settings applied to all ${items.length} file(s).`;
 			});
 			// Auto color: neutralise the average color (gray-world white balance), ignoring very dark and very bright pixels.
-			q('[data-auto]').addEventListener('click', () => {
-				if (!current) return;
+			const autoGains = (item: Item): [number, number, number] => {
 				const c = document.createElement('canvas');
 				c.width = 96;
 				c.height = 96;
 				const ctx = c.getContext('2d', { willReadFrequently: true })!;
-				ctx.drawImage(current.source as CanvasImageSource, 0, 0, 96, 96);
+				ctx.drawImage(item.source as CanvasImageSource, 0, 0, 96, 96);
 				const d = ctx.getImageData(0, 0, 96, 96).data;
 				let r = 0, g = 0, b = 0, n = 0;
 				for (let i = 0; i < d.length; i += 4) {
@@ -537,11 +540,16 @@ const sliders = [
 					if (l < 25 || l > 235) continue;
 					r += d[i]; g += d[i + 1]; b += d[i + 2]; n++;
 				}
-				if (!n) return;
+				if (!n) return [1, 1, 1];
 				const m = (r + g + b) / 3;
 				// Pull most (not all) of the way to neutral so skin keeps some warmth.
 				const pull = (v: number) => 1 + 0.85 * (m / v - 1);
-				current.auto = [pull(r), pull(g), pull(b)];
+				return [pull(r), pull(g), pull(b)];
+			};
+			q('[data-auto]').addEventListener('click', () => {
+				if (!current) return;
+				current.auto = autoGains(current);
+				current.autoOn = true;
 				draw();
 				status.textContent = 'Auto color applied. Fine-tune with Temperature and Tint.';
 			});
