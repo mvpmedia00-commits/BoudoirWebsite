@@ -85,6 +85,7 @@
 	.check { display: flex; gap: 8px; align-items: center; margin-top: 14px; color: var(--muted); font-size: 14px; }
 	progress { width: 100%; height: 10px; margin-top: 12px; accent-color: var(--gold); }
 	.note { font-size: 13px; color: var(--muted); }
+	.tlog { max-height: 320px; overflow: auto; white-space: pre-wrap; font-size: 13px; line-height: 1.5; background: #0f0e0d; border: 1px solid #2a2725; border-radius: 10px; padding: 12px; color: var(--muted); }
 	@media (max-width: 560px) { .row { grid-template-columns: 1fr; } }
 </style>
 </head>
@@ -285,6 +286,53 @@
 		<button id="vExport" disabled>Save frames as photos</button>
 		<progress id="vProg2" value="0" max="1" hidden></progress>
 		<div class="status" id="vStatus2"></div>
+	</section>
+
+	<section>
+		<h2><span>4</span>Video transcripts (what people say, on a timeline)</h2>
+		<ol>
+			<li>Choose a folder of videos (subfolders included) or individual videos.</li>
+			<li>Press <b>Transcribe</b>. The tool takes the sound out of each video and writes down what is said, with the time in the clip for every line.</li>
+			<li>You get a subtitle file (.srt) for each video, which editing apps (Premiere, DaVinci Resolve, CapCut, Final Cut) can place on the timeline, plus one timeline spreadsheet and one text file for all videos. Send the text or spreadsheet to Claude to build the cut.</li>
+		</ol>
+		<p class="note">Speech recognition runs in this browser with Whisper. The first run downloads the model once (about 80 MB to 1 GB, depending on the quality you pick); after that it works offline. Nothing is uploaded. Chrome or Edge on a computer with a graphics card is much faster; on a phone or older laptop, choose Fast.</p>
+		<label class="file">Choose video folder<input type="file" id="tFolder" webkitdirectory multiple /></label>
+		<label class="file">Choose video files<input type="file" id="tFiles" multiple accept="video/*,audio/*,.mov,.mp4,.m4v,.mkv,.webm,.m4a,.mp3,.wav" /></label>
+		<div class="status" id="tFound">No videos chosen yet.</div>
+		<div class="row">
+			<div>
+				<label for="tModel">Quality</label>
+				<select id="tModel">
+					<option value="onnx-community/whisper-base">Fast (smallest download, less accurate)</option>
+					<option value="onnx-community/whisper-small" selected>Good (recommended)</option>
+					<option value="onnx-community/whisper-large-v3-turbo">Best (large download; needs a graphics card)</option>
+				</select>
+			</div>
+			<div>
+				<label for="tLang">Language spoken</label>
+				<select id="tLang">
+					<option value="spanish" selected>Spanish</option>
+					<option value="english">English</option>
+					<option value="">Detect automatically</option>
+				</select>
+			</div>
+		</div>
+		<div class="row">
+			<div>
+				<label for="tSave">Save to</label>
+				<select id="tSave">
+					<option value="folder">A folder I choose</option>
+					<option value="zip">Zip files in Downloads</option>
+				</select>
+			</div>
+			<div></div>
+		</div>
+		<label class="check"><input type="checkbox" id="tTranslate" checked /> Also translate into English (for subtitles)</label>
+		<label class="check"><input type="checkbox" id="tWav" /> Also save each video's sound as a WAV file (for editing)</label>
+		<button id="tRun" disabled>Transcribe</button>
+		<progress id="tProg" value="0" max="1" hidden></progress>
+		<div class="status" id="tStatus"></div>
+		<pre class="tlog" id="tLog" hidden></pre>
 	</section>
 
 	<p class="note">Works with JPEG, PNG, and WebP in Chrome, Edge, Firefox, and Safari. iPhone HEIC photos work in Safari on a Mac; in other browsers, export them as JPEG first. Camera RAW files (CR2, CR3, NEF, ARW, DNG, and others) are skipped in steps 1 and 2: convert them in step 0 first. Videos (step 3) work in the formats your browser can play: MP4 and MOV from phones and most cameras, and WebM. Some pro camera formats (for example Sony XAVC S-I or 10-bit 4:2:2 footage) do not play in browsers; export a copy as MP4 first. If the browser asks to allow multiple downloads, choose Allow.</p>
@@ -1065,6 +1113,231 @@
 			(missing.length ? `\nNot found (choose the same videos and frame setting as for the sheets): ${missing.slice(0, 20).join(', ')}` : '') +
 			(failed ? `\n${failed} frame(s) came from a video this browser cannot play.` : '');
 		refreshV();
+	});
+
+	// ---------- Step 4: video transcripts. Whisper runs in the browser through transformers.js.
+	const TRANSFORMERS_URL = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.0';
+	const MEDIA = /\.(mp4|mov|m4v|webm|mkv|avi|mts|m2ts|3gp|m4a|mp3|wav|aac)$/i;
+	let tList = [];
+	const pickTranscribe = (fileList) => {
+		tList = Array.from(fileList)
+			.filter((f) => MEDIA.test(f.name) && !f.name.startsWith('._'))
+			.sort((a, b) => (a.webkitRelativePath || a.name).localeCompare(b.webkitRelativePath || b.name, 'en', { numeric: true }));
+		const total = tList.reduce((n, f) => n + f.size, 0);
+		$('tFound').className = 'status' + (tList.length ? '' : ' bad');
+		$('tFound').textContent = tList.length
+			? `${tList.length} file(s) (${total >= 1073741824 ? (total / 1073741824).toFixed(2) + ' GB' : mb(total)}).`
+			: 'No videos or audio files found there.';
+		$('tRun').disabled = !tList.length;
+	};
+	$('tFolder').addEventListener('change', (e) => pickTranscribe(e.target.files));
+	$('tFiles').addEventListener('change', (e) => pickTranscribe(e.target.files));
+	if (!window.showDirectoryPicker) {
+		$('tSave').value = 'zip';
+		$('tSave').querySelector('[value="folder"]').disabled = true;
+	}
+	// Whisper large-v3-turbo was not trained to translate; translation uses the "Good" model instead.
+	$('tModel').addEventListener('change', () => {
+		const turbo = $('tModel').value.includes('turbo');
+		$('tTranslate').parentElement.title = turbo ? 'Translation uses the Good model, because Best (turbo) cannot translate.' : '';
+	});
+
+	const srtTime = (t) => {
+		const ms = Math.max(0, Math.round(t * 1000));
+		const h = Math.floor(ms / 3600000), m = Math.floor(ms / 60000) % 60, s = Math.floor(ms / 1000) % 60;
+		return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')},${String(ms % 1000).padStart(3, '0')}`;
+	};
+	const shortTime = (t) => srtTime(t).replace(',', '.').slice(0, 10);
+	const csvCell = (v) => `"${String(v).replace(/"/g, '""')}"`;
+	const toSrt = (lines) =>
+		lines.map((l, i) => `${i + 1}\n${srtTime(l.start)} --> ${srtTime(l.end)}\n${l.text}\n`).join('\n');
+
+	// Decode a video's sound: the original (for the WAV) and a 16 kHz mono copy (what Whisper needs).
+	const decodeSound = async (file) => {
+		if (file.size > 2147483648) throw new Error('over 2 GB; export a smaller copy or just the audio');
+		const ctx = new AudioContext();
+		try {
+			const buffer = await ctx.decodeAudioData(await file.arrayBuffer());
+			const offline = new OfflineAudioContext(1, Math.max(1, Math.ceil(buffer.duration * 16000)), 16000);
+			const src = offline.createBufferSource();
+			src.buffer = buffer;
+			src.connect(offline.destination);
+			src.start();
+			const mono = (await offline.startRendering()).getChannelData(0);
+			return { buffer, mono };
+		} finally {
+			ctx.close();
+		}
+	};
+	// 16-bit PCM WAV of the original sound.
+	const toWav = (buffer) => {
+		const ch = buffer.numberOfChannels, rate = buffer.sampleRate, n = buffer.length;
+		const out = new DataView(new ArrayBuffer(44 + n * ch * 2));
+		const str = (o, t) => { for (let i = 0; i < t.length; i++) out.setUint8(o + i, t.charCodeAt(i)); };
+		str(0, 'RIFF'); out.setUint32(4, 36 + n * ch * 2, true); str(8, 'WAVE'); str(12, 'fmt ');
+		out.setUint32(16, 16, true); out.setUint16(20, 1, true); out.setUint16(22, ch, true);
+		out.setUint32(24, rate, true); out.setUint32(28, rate * ch * 2, true); out.setUint16(32, ch * 2, true);
+		out.setUint16(34, 16, true); str(36, 'data'); out.setUint32(40, n * ch * 2, true);
+		const data = Array.from({ length: ch }, (_, c) => buffer.getChannelData(c));
+		let o = 44;
+		for (let i = 0; i < n; i++) {
+			for (let c = 0; c < ch; c++) {
+				const v = Math.max(-1, Math.min(1, data[c][i]));
+				out.setInt16(o, v < 0 ? v * 0x8000 : v * 0x7fff, true);
+				o += 2;
+			}
+		}
+		return new Uint8Array(out.buffer);
+	};
+	// Split long audio into blocks of about 5 minutes, cutting at the quietest moment near each
+	// boundary so no word is cut in half. Blocks also give progress updates.
+	const blocksOf = (mono, rate = 16000, size = 300) => {
+		const cuts = [0];
+		const frame = Math.round(rate * 0.05);
+		while (mono.length - cuts[cuts.length - 1] > (size + 30) * rate) {
+			const target = cuts[cuts.length - 1] + size * rate;
+			let best = target, bestE = Infinity;
+			for (let at = target - 3 * rate; at < target + 3 * rate; at += frame) {
+				let e = 0;
+				for (let i = at; i < at + frame; i++) e += mono[i] * mono[i];
+				if (e < bestE) { bestE = e; best = at; }
+			}
+			cuts.push(best);
+		}
+		cuts.push(mono.length);
+		return cuts.slice(0, -1).map((start, i) => ({ start, end: cuts[i + 1] }));
+	};
+
+	let asrCache = {};
+	const loadAsr = async (model) => {
+		if (asrCache[model]) return asrCache[model];
+		const { pipeline } = await import(TRANSFORMERS_URL);
+		const gpu = !!navigator.gpu;
+		const progress = (p) => {
+			if (p.status === 'progress_total') $('tStatus').textContent = `Downloading the speech model (first time only): ${Math.round(p.progress)}%`;
+		};
+		const attempt = (opts) => pipeline('automatic-speech-recognition', model, { progress_callback: progress, ...opts });
+		let asr;
+		try {
+			asr = await attempt(gpu ? { device: 'webgpu', dtype: { encoder_model: 'fp32', decoder_model_merged: 'q4' } } : { dtype: 'q8' });
+		} catch {
+			asr = await attempt({}); // fall back to the library's defaults
+		}
+		asrCache[model] = asr;
+		return asr;
+	};
+	// Transcribe one 16 kHz mono recording; returns [{start, end, text}] in seconds.
+	const transcribe = async (asr, mono, options, onBlock) => {
+		const lines = [];
+		const blocks = blocksOf(mono);
+		for (let b = 0; b < blocks.length; b++) {
+			const { start, end } = blocks[b];
+			const offset = start / 16000, blockEnd = end / 16000;
+			const out = await asr(mono.subarray(start, end), { return_timestamps: true, chunk_length_s: 30, stride_length_s: 5, ...options });
+			for (const c of out.chunks || [{ timestamp: [0, blockEnd - offset], text: out.text }]) {
+				const text = (c.text || '').trim();
+				if (!text) continue;
+				const s0 = offset + (c.timestamp?.[0] ?? 0);
+				const s1 = offset + (c.timestamp?.[1] ?? blockEnd - offset);
+				lines.push({ start: s0, end: Math.max(s1, s0 + 0.5), text });
+			}
+			onBlock?.(b + 1, blocks.length);
+		}
+		return lines;
+	};
+
+	$('tRun').addEventListener('click', async () => {
+		const model = $('tModel').value;
+		const language = $('tLang').value || null;
+		const translate = $('tTranslate').checked && language !== 'english';
+		const wav = $('tWav').checked;
+		let dir = null;
+		if ($('tSave').value === 'folder') {
+			try { dir = await window.showDirectoryPicker({ id: 'mvp-transcripts', mode: 'readwrite' }); } catch { return; }
+		}
+		const out = dir ? null : zipper('video-transcripts');
+		const save = async (path, bytes) => {
+			if (!dir) return out.add(path, bytes);
+			const parts = path.split('/');
+			let d = dir;
+			for (const part of parts.slice(0, -1)) d = await d.getDirectoryHandle(part, { create: true });
+			const w = await (await d.getFileHandle(parts[parts.length - 1], { create: true })).createWritable();
+			await w.write(bytes);
+			await w.close();
+		};
+		const enc = (text) => new TextEncoder().encode(text);
+		$('tRun').disabled = true;
+		$('tProg').hidden = false;
+		$('tProg').max = tList.length;
+		$('tLog').hidden = false;
+		$('tLog').textContent = '';
+		$('tStatus').className = 'status';
+		const log = (line) => { $('tLog').textContent += line + '\n'; $('tLog').scrollTop = $('tLog').scrollHeight; };
+		const results = [], failed = [];
+		try {
+			$('tStatus').textContent = 'Loading the speech model…';
+			const asr = await loadAsr(model);
+			const asrTranslate = translate ? (model.includes('turbo') ? await loadAsr('onnx-community/whisper-small') : asr) : null;
+			for (let i = 0; i < tList.length; i++) {
+				const file = tList[i];
+				const name = file.webkitRelativePath || file.name;
+				const base = name.replace(/\.[^./]+$/, '');
+				$('tStatus').textContent = `${i + 1} of ${tList.length}: taking the sound out of ${file.name}…`;
+				let sound;
+				try {
+					sound = await decodeSound(file);
+				} catch (err) {
+					failed.push(`${file.name} (${err.message || 'no readable sound; export it as MP4 first'})`);
+					continue;
+				}
+				const duration = sound.mono.length / 16000;
+				if (wav) await save(`audio/${base}.wav`, toWav(sound.buffer));
+				log(`=== ${name} (${shortTime(duration)}) ===`);
+				const lines = await transcribe(asr, sound.mono, { language, task: 'transcribe' }, (b, n) => {
+					$('tStatus').textContent = `${i + 1} of ${tList.length}: transcribing ${file.name}, part ${b} of ${n}…`;
+				});
+				lines.forEach((l) => log(`[${shortTime(l.start)} → ${shortTime(l.end)}] ${l.text}`));
+				let english = [];
+				if (asrTranslate) {
+					$('tStatus').textContent = `${i + 1} of ${tList.length}: translating ${file.name} into English…`;
+					english = await transcribe(asrTranslate, sound.mono, { language, task: 'translate' });
+					await save(`subtitles/${base}.en.srt`, enc(toSrt(english)));
+				}
+				await save(`subtitles/${base}.srt`, enc(toSrt(lines)));
+				results.push({ video: name, duration, lines, english });
+				$('tProg').value = i + 1;
+			}
+		} catch (err) {
+			$('tStatus').className = 'status bad';
+			$('tStatus').textContent = `The speech model could not load or run: ${err.message || err}. Check the internet connection for the first run, then try again (or pick Fast).`;
+			$('tRun').disabled = false;
+			return;
+		}
+		// One timeline for all videos: every line with its video and times, plus the English beside it.
+		const englishAt = (r, l) => r.english.filter((e) => e.start < l.end && e.end > l.start).map((e) => e.text).join(' ');
+		const csv = ['video,start,end,start_seconds,end_seconds,text,english'];
+		const txt = [];
+		for (const r of results) {
+			txt.push(`=== ${r.video} (${shortTime(r.duration)} long) ===`);
+			for (const l of r.lines) {
+				const en = translate ? englishAt(r, l) : '';
+				csv.push([csvCell(r.video), shortTime(l.start), shortTime(l.end), l.start.toFixed(2), l.end.toFixed(2), csvCell(l.text), csvCell(en)].join(','));
+				txt.push(`[${shortTime(l.start)} → ${shortTime(l.end)}] ${l.text}` + (en ? `\n    EN: ${en}` : ''));
+			}
+			if (!r.lines.length) txt.push('(no speech found)');
+			txt.push('');
+		}
+		await save('transcript-timeline.csv', enc(csv.join('\n')));
+		await save('transcripts.txt', enc(txt.join('\n')));
+		await save('transcripts.json', enc(JSON.stringify(results.map((r) => ({ video: r.video, seconds: +r.duration.toFixed(2), lines: r.lines, english: r.english })), null, 1)));
+		const zips = out ? out.finish() : [];
+		$('tStatus').className = 'status' + (failed.length ? ' bad' : '');
+		$('tStatus').textContent =
+			`Finished: ${results.length} video(s), ${results.reduce((n, r) => n + r.lines.length, 0)} lines of speech, ` +
+			(dir ? `saved in the "${dir.name}" folder.` : `in ${zips.length} zip file(s) in Downloads.`) +
+			(failed.length ? `\nCould not read the sound of: ${failed.join(', ')}` : '') +
+			'\nSend transcripts.txt (or transcript-timeline.csv) to Claude to build the cut.';
+		$('tRun').disabled = false;
 	});
 
 	// ---------- Step 2: export picks.
