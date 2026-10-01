@@ -7,6 +7,8 @@ import ExplicitLock from '../components/ui/ExplicitLock.astro';
 import StripMedia from '../components/ui/StripMedia.astro';
 import { BOUDOIR_FILM_STRIP, SITE_MEDIA, STRIP_MEDIA, type StripItem } from '../data/siteMedia';
 
+// Explicit-mode banner at the top of the page (artwork already carries the MVP Media title).
+const EXPLICIT_BANNER = 'https://boudoir123mvp.b-cdn.net/films-hero-explicit.jpg';
 const FEATURED_FILM = 'https://drive.google.com/file/d/1RizgFs5c6eV4A7hWAinKD7jsAl_k-xmI/preview';
 
 // Google Drive's embeddable player for a file ID. The file must be shared as "Anyone with the link".
@@ -144,7 +146,23 @@ const filmsSchema = {
 	<body>
 		<Header />
 		<main class="films">
-			<section class="films-hero">
+			<section class="films-banner" data-explicit aria-label="Films">
+				<img
+					src={EXPLICIT_BANNER}
+					alt="MVP Media: photographer and model in a red-lit studio. Own the frame. Photography, videography, branding, creative media."
+					loading="lazy"
+					decoding="async"
+				/>
+				<div class="films-shell films-banner-bar">
+					<h1>Motion, made with the same care as the still.</h1>
+					<div class="hero-actions">
+						<a class="btn btn-solid" href="/booking">Discuss a Film</a>
+						<a class="btn btn-ghost" href="#reel">Watch the Reel</a>
+					</div>
+				</div>
+			</section>
+
+			<section class="films-hero" data-safe>
 				<img class="films-hero-image parallax" data-parallax-speed="0.12" src={SITE_MEDIA.about} alt="" loading="eager" fetchpriority="high" decoding="async" />
 				<div class="films-hero-overlay"></div>
 				<div class="films-shell films-hero-content">
@@ -395,6 +413,32 @@ const filmsSchema = {
 </script>
 
 <style>
+	/* Explicit-mode banner: full-width artwork with its own title, buttons underneath. */
+	.films-banner img {
+		display: block;
+		width: 100%;
+		aspect-ratio: 16 / 9;
+		max-height: calc(100svh - var(--header-h, 70px) - 6.5rem);
+		object-fit: cover;
+		object-position: 50% 40%;
+		border-radius: 0;
+	}
+	.films-banner-bar {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem 2rem;
+		padding-top: 1.4rem;
+		padding-bottom: 1.4rem;
+	}
+	.films-banner-bar h1 {
+		margin: 0;
+		font-size: clamp(1.4rem, 3vw, 2.1rem);
+	}
+	.films-banner-bar .hero-actions {
+		margin: 0;
+	}
 	.films {
 		padding: 0;
 		background: radial-gradient(circle at top, #1b1410 0%, #050505 55%, #020202 100%);
