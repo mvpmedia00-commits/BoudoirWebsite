@@ -1,0 +1,1032 @@
+---
+import BaseHead from '../../components/BaseHead.astro';
+import { checkAdminToken, grantAdminAccess, hasAdminAccess } from '../../lib/access';
+
+// Private photo and video editor. Same sign-in as /admin/feed: open /admin/editor?token=... once and
+// the token is swapped for the admin cookie. Everything runs in the browser; files are never uploaded.
+const providedToken = Astro.url.searchParams.get('token');
+if (providedToken !== null) {
+	if (checkAdminToken(providedToken)) {
+		grantAdminAccess(Astro.cookies);
+		return Astro.redirect('/admin/editor');
+	}
+	return Astro.redirect('/');
+}
+if (!hasAdminAccess(Astro.cookies)) {
+	return Astro.redirect('/');
+}
+
+const sliders = [
+	{ id: 'exposure', label: 'Exposure', min: -2, max: 2, step: 0.05 },
+	{ id: 'contrast', label: 'Contrast', min: -1, max: 1, step: 0.02 },
+	{ id: 'highlights', label: 'Highlights', min: -1, max: 1, step: 0.02 },
+	{ id: 'shadows', label: 'Shadows', min: -1, max: 1, step: 0.02 },
+	{ id: 'temperature', label: 'Temperature (cool / warm)', min: -100, max: 100, step: 1 },
+	{ id: 'tint', label: 'Tint (green / magenta)', min: -100, max: 100, step: 1 },
+	{ id: 'saturation', label: 'Saturation', min: -1, max: 1, step: 0.02 },
+	{ id: 'vibrance', label: 'Vibrance', min: -1, max: 1, step: 0.02 },
+	{ id: 'sharpen', label: 'Sharpen', min: 0, max: 2, step: 0.05 }
+];
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title="Editor | MVP Media" description="Private photo and video editor." noIndex={true} />
+	</head>
+	<body class="editor-body">
+		<div class="editor" data-editor>
+			<aside class="files">
+				<div class="files-head">
+					<a class="brand" href="/">MVP Media</a>
+					<p>Editor</p>
+				</div>
+				<label class="btn btn-solid open">
+					Open photos or videos
+					<input type="file" accept="image/*,video/*" multiple data-open />
+				</label>
+				<p class="hint">Files stay on this device. Nothing is uploaded.</p>
+				<ul class="file-list" data-file-list></ul>
+			</aside>
+
+			<main class="stage">
+				<div class="stage-bar">
+					<span data-file-name>No file open</span>
+					<span class="stage-tools">
+						<button type="button" data-compare title="Hold to see the original">Hold to compare</button>
+					</span>
+				</div>
+				<div class="viewport" data-viewport>
+					<p class="empty" data-empty>Open photos or videos to start. You can open many at once.</p>
+					<div class="canvas-wrap" data-canvas-wrap hidden>
+						<canvas data-preview></canvas>
+						<div class="crop-box" data-crop-box hidden>
+							<span class="handle nw" data-handle="nw"></span>
+							<span class="handle ne" data-handle="ne"></span>
+							<span class="handle sw" data-handle="sw"></span>
+							<span class="handle se" data-handle="se"></span>
+						</div>
+					</div>
+				</div>
+				<div class="video-bar" data-video-bar hidden>
+					<button type="button" data-play>Play</button>
+					<label>Start <input type="number" min="0" step="0.1" value="0" data-trim-start /> s</label>
+					<label>End <input type="number" min="0" step="0.1" value="0" data-trim-end /> s</label>
+					<span data-video-time></span>
+				</div>
+			</main>
+
+			<aside class="panel">
+				<section>
+					<h2>Color and light</h2>
+					<button type="button" class="wide" data-auto>Auto color (fix color casts)</button>
+					{sliders.map((s) => (
+						<label class="slider">
+							<span>{s.label} <output data-out={s.id}>0</output></span>
+							<input type="range" min={s.min} max={s.max} step={s.step} value="0" data-adjust={s.id} />
+						</label>
+					))}
+					<div class="row">
+						<button type="button" data-reset>Reset</button>
+						<button type="button" data-apply-all>Apply to all files</button>
+					</div>
+				</section>
+
+				<section>
+					<h2>Crop and rotate</h2>
+					<label class="slider">
+						<span>Shape</span>
+						<select data-aspect>
+							<option value="">Original (no crop)</option>
+							<option value="free">Free</option>
+							<option value="0.8">4:5 portrait (galleries, covers)</option>
+							<option value="0.75">3:4 portrait (hero tiles)</option>
+							<option value="0.5625">9:16 vertical (phone video)</option>
+							<option value="1">1:1 square</option>
+							<option value="1.5">3:2 landscape</option>
+							<option value="1.7778">16:9 landscape (films)</option>
+						</select>
+					</label>
+					<div class="row">
+						<button type="button" data-rotate="-1">Rotate left</button>
+						<button type="button" data-rotate="1">Rotate right</button>
+						<button type="button" data-flip>Flip</button>
+					</div>
+				</section>
+
+				<section>
+					<h2>Export</h2>
+					<label class="slider">
+						<span>Size (long edge)</span>
+						<select data-size>
+							<option value="0">Original size</option>
+							<option value="2400">2400 px</option>
+							<option value="2000" selected>2000 px (photos for the site)</option>
+							<option value="1600">1600 px</option>
+							<option value="1080">1080 px (video)</option>
+							<option value="720">720 px (background video)</option>
+							<option value="480">480 px (hero tiles)</option>
+						</select>
+					</label>
+					<label class="slider">
+						<span>Photo quality <output data-out="quality">86</output></span>
+						<input type="range" min="60" max="98" step="1" value="86" data-quality />
+					</label>
+					<label class="slider">
+						<span>File name</span>
+						<input type="text" placeholder="e.g. boudoir-08" data-name />
+					</label>
+					<button type="button" class="btn btn-solid wide" data-export>Export this file</button>
+					<button type="button" class="wide" data-export-all>Export all photos (zip)</button>
+					<p class="hint" data-status></p>
+					<p class="hint">
+						Photos export as JPEG with location and camera data removed. Videos re-record in real time with the
+						trim, crop, and color applied, without sound, as MP4 where the browser supports it (Chrome, Edge, Safari),
+						otherwise WebM.
+					</p>
+				</section>
+			</aside>
+		</div>
+
+		<script>
+			type Adjust = {
+				exposure: number;
+				contrast: number;
+				highlights: number;
+				shadows: number;
+				temperature: number;
+				tint: number;
+				saturation: number;
+				vibrance: number;
+				sharpen: number;
+			};
+			type Crop = { x: number; y: number; w: number; h: number };
+			type Item = {
+				file: File;
+				kind: 'image' | 'video';
+				source: HTMLImageElement | HTMLVideoElement | ImageBitmap;
+				width: number;
+				height: number;
+				adjust: Adjust;
+				auto: [number, number, number];
+				rotation: number; // quarter turns clockwise
+				flip: boolean;
+				aspect: string;
+				crop: Crop; // in rotated-image space, 0..1
+				name: string;
+				trimStart: number;
+				trimEnd: number;
+				thumb: string;
+			};
+
+			const NEUTRAL: Adjust = { exposure: 0, contrast: 0, highlights: 0, shadows: 0, temperature: 0, tint: 0, saturation: 0, vibrance: 0, sharpen: 0 };
+			const FULL: Crop = { x: 0, y: 0, w: 1, h: 1 };
+			const q = <T extends Element>(sel: string) => document.querySelector<T>(sel)!;
+			const qa = <T extends Element>(sel: string) => Array.from(document.querySelectorAll<T>(sel));
+
+			// ---------- WebGL renderer: one shader does color, white balance, sharpen, crop, rotate, and flip.
+			const VERT = `
+				attribute vec2 pos;
+				uniform vec2 uOrigin, uAxisU, uAxisV;
+				varying vec2 vUv;
+				void main() {
+					vUv = uOrigin + pos.x * uAxisU + pos.y * uAxisV;
+					gl_Position = vec4(pos.x * 2.0 - 1.0, 1.0 - pos.y * 2.0, 0.0, 1.0);
+				}`;
+			const FRAG = `
+				precision highp float;
+				varying vec2 vUv;
+				uniform sampler2D uImg;
+				uniform vec2 uTexel;
+				uniform vec3 uGain;
+				uniform float uExposure, uContrast, uHighlights, uShadows, uSaturation, uVibrance, uSharpen;
+				const vec3 LUMA = vec3(0.2126, 0.7152, 0.0722);
+				void main() {
+					vec3 c = texture2D(uImg, vUv).rgb;
+					if (uSharpen > 0.0) {
+						vec3 blur = (texture2D(uImg, vUv + vec2(uTexel.x, 0.0)).rgb + texture2D(uImg, vUv - vec2(uTexel.x, 0.0)).rgb +
+							texture2D(uImg, vUv + vec2(0.0, uTexel.y)).rgb + texture2D(uImg, vUv - vec2(0.0, uTexel.y)).rgb) * 0.25;
+						c += (c - blur) * uSharpen;
+					}
+					c *= uGain * exp2(uExposure);
+					float l = dot(c, LUMA);
+					float shadowMask = 1.0 - smoothstep(0.0, 0.55, l);
+					float highlightMask = smoothstep(0.45, 1.0, l);
+					float target = l + uShadows * 0.35 * shadowMask * (1.0 - l) + uHighlights * 0.35 * highlightMask * (uHighlights < 0.0 ? l : 1.0 - l);
+					c *= target / max(l, 0.0001);
+					c = (c - 0.5) * (1.0 + uContrast) + 0.5;
+					l = dot(c, LUMA);
+					float sat = max(max(c.r, c.g), c.b) - min(min(c.r, c.g), c.b);
+					c = mix(vec3(l), c, 1.0 + uSaturation + uVibrance * (1.0 - clamp(sat, 0.0, 1.0)));
+					gl_FragColor = vec4(clamp(c, 0.0, 1.0), 1.0);
+				}`;
+
+			const makeRenderer = (canvas: HTMLCanvasElement) => {
+				const gl = canvas.getContext('webgl', { preserveDrawingBuffer: true, premultipliedAlpha: false })!;
+				const compile = (type: number, src: string) => {
+					const s = gl.createShader(type)!;
+					gl.shaderSource(s, src);
+					gl.compileShader(s);
+					return s;
+				};
+				const prog = gl.createProgram()!;
+				gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT));
+				gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG));
+				gl.linkProgram(prog);
+				gl.useProgram(prog);
+				const buf = gl.createBuffer();
+				gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 0, 1, 0, 0, 1, 1, 1]), gl.STATIC_DRAW);
+				const loc = gl.getAttribLocation(prog, 'pos');
+				gl.enableVertexAttribArray(loc);
+				gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+				const tex = gl.createTexture();
+				gl.bindTexture(gl.TEXTURE_2D, tex);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+				const u = (name: string) => gl.getUniformLocation(prog, name);
+				let lastSource: unknown = null;
+
+				return (item: Item, outW: number, outH: number, opts: { crop: Crop; neutral?: boolean; fresh?: boolean }) => {
+					canvas.width = outW;
+					canvas.height = outH;
+					gl.viewport(0, 0, outW, outH);
+					if (opts.fresh || lastSource !== item.source || item.kind === 'video') {
+						gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, item.source as TexImageSource);
+						lastSource = item.source;
+					}
+					// Map output pixels to source texture coordinates through flip, rotation, and crop.
+					const toSource = (x: number, y: number): [number, number] => {
+						if (item.flip) x = 1 - x;
+						switch (((item.rotation % 4) + 4) % 4) {
+							case 1: return [y, 1 - x];
+							case 2: return [1 - x, 1 - y];
+							case 3: return [1 - y, x];
+							default: return [x, y];
+						}
+					};
+					const { x, y, w, h } = opts.crop;
+					const o = toSource(x, y);
+					const a = toSource(x + w, y);
+					const b = toSource(x, y + h);
+					gl.uniform2f(u('uOrigin'), o[0], o[1]);
+					gl.uniform2f(u('uAxisU'), a[0] - o[0], a[1] - o[1]);
+					gl.uniform2f(u('uAxisV'), b[0] - o[0], b[1] - o[1]);
+					const adj = opts.neutral ? NEUTRAL : item.adjust;
+					const auto = opts.neutral ? [1, 1, 1] : item.auto;
+					const t = adj.temperature / 100;
+					const g = adj.tint / 100;
+					gl.uniform3f(u('uGain'), auto[0] * (1 + 0.35 * t) * (1 + 0.08 * g), auto[1] * (1 - 0.25 * g), auto[2] * (1 - 0.35 * t) * (1 + 0.08 * g));
+					gl.uniform2f(u('uTexel'), 1 / item.width, 1 / item.height);
+					gl.uniform1f(u('uExposure'), adj.exposure);
+					gl.uniform1f(u('uContrast'), adj.contrast);
+					gl.uniform1f(u('uHighlights'), adj.highlights);
+					gl.uniform1f(u('uShadows'), adj.shadows);
+					gl.uniform1f(u('uSaturation'), adj.saturation);
+					gl.uniform1f(u('uVibrance'), adj.vibrance);
+					gl.uniform1f(u('uSharpen'), adj.sharpen);
+					gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+					return canvas;
+				};
+			};
+
+			// ---------- ZIP writer (stored; JPEGs do not compress further). Splits into parts under 24 MB.
+			const CRC = (() => {
+				const t = new Uint32Array(256);
+				for (let n = 0; n < 256; n++) {
+					let c = n;
+					for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+					t[n] = c >>> 0;
+				}
+				return t;
+			})();
+			const crc32 = (b: Uint8Array<ArrayBuffer>) => {
+				let c = 0xffffffff;
+				for (let i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 0xff] ^ (c >>> 8);
+				return (c ^ 0xffffffff) >>> 0;
+			};
+			const buildZip = (entries: { name: string; data: Uint8Array<ArrayBuffer> }[]) => {
+				const parts: BlobPart[] = [];
+				const central: BlobPart[] = [];
+				let offset = 0;
+				for (const { name, data } of entries) {
+					const n = new TextEncoder().encode(name);
+					const crc = crc32(data);
+					const local = new DataView(new ArrayBuffer(30));
+					local.setUint32(0, 0x04034b50, true); local.setUint16(4, 20, true); local.setUint16(6, 0x0800, true);
+					local.setUint32(14, crc, true); local.setUint32(18, data.length, true); local.setUint32(22, data.length, true);
+					local.setUint16(26, n.length, true);
+					const cen = new DataView(new ArrayBuffer(46));
+					cen.setUint32(0, 0x02014b50, true); cen.setUint16(4, 20, true); cen.setUint16(6, 20, true); cen.setUint16(8, 0x0800, true);
+					cen.setUint32(16, crc, true); cen.setUint32(20, data.length, true); cen.setUint32(24, data.length, true);
+					cen.setUint16(28, n.length, true); cen.setUint32(42, offset, true);
+					parts.push(local, n, data);
+					central.push(cen, n);
+					offset += 30 + n.length + data.length;
+				}
+				const size = entries.reduce((s, e) => s + 46 + new TextEncoder().encode(e.name).length, 0);
+				const end = new DataView(new ArrayBuffer(22));
+				end.setUint32(0, 0x06054b50, true); end.setUint16(8, entries.length, true); end.setUint16(10, entries.length, true);
+				end.setUint32(12, size, true); end.setUint32(16, offset, true);
+				return new Blob([...parts, ...central, end], { type: 'application/zip' });
+			};
+			const download = (blob: Blob, name: string) => {
+				const a = document.createElement('a');
+				a.href = URL.createObjectURL(blob);
+				a.download = name;
+				document.body.appendChild(a);
+				a.click();
+				a.remove();
+				setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+			};
+
+			// ---------- State and UI.
+			const items: Item[] = [];
+			let current: Item | null = null;
+			const preview = q<HTMLCanvasElement>('[data-preview]');
+			const render = makeRenderer(preview);
+			const exportCanvas = document.createElement('canvas');
+			const renderExport = makeRenderer(exportCanvas);
+			const status = q<HTMLElement>('[data-status]');
+			const cropBox = q<HTMLElement>('[data-crop-box]');
+			let comparing = false;
+
+			const rotatedSize = (item: Item) => (item.rotation % 2 ? [item.height, item.width] : [item.width, item.height]);
+			const baseName = (file: File) => file.name.replace(/\.[^.]+$/, '');
+
+			const fitCrop = (item: Item) => {
+				if (!item.aspect || item.aspect === 'free') return;
+				const [rw, rh] = rotatedSize(item);
+				const ratio = Number(item.aspect); // width / height in pixels
+				let w = 1;
+				let h = (rw / ratio) / rh;
+				if (h > 1) {
+					h = 1;
+					w = (rh * ratio) / rw;
+				}
+				item.crop = { x: (1 - w) / 2, y: (1 - h) / 2, w, h };
+			};
+
+			const draw = () => {
+				if (!current) return;
+				const [rw, rh] = rotatedSize(current);
+				const vp = q<HTMLElement>('[data-viewport]').getBoundingClientRect();
+				const scale = Math.min((vp.width - 32) / rw, (vp.height - 32) / rh, 1);
+				const w = Math.max(1, Math.round(rw * scale));
+				const h = Math.max(1, Math.round(rh * scale));
+				render(current, w, h, { crop: FULL, neutral: comparing });
+				preview.style.width = `${w}px`;
+				preview.style.height = `${h}px`;
+				const showCrop = !!current.aspect;
+				cropBox.hidden = !showCrop;
+				if (showCrop) {
+					const c = current.crop;
+					Object.assign(cropBox.style, { left: `${c.x * w}px`, top: `${c.y * h}px`, width: `${c.w * w}px`, height: `${c.h * h}px` });
+				}
+			};
+
+			const syncControls = () => {
+				if (!current) return;
+				qa<HTMLInputElement>('[data-adjust]').forEach((input) => {
+					const key = input.dataset.adjust as keyof Adjust;
+					input.value = String(current!.adjust[key]);
+					q(`[data-out="${key}"]`).textContent = String(current!.adjust[key]);
+				});
+				q<HTMLSelectElement>('[data-aspect]').value = current.aspect;
+				q<HTMLInputElement>('[data-name]').value = current.name;
+				const isVideo = current.kind === 'video';
+				q<HTMLElement>('[data-video-bar]').hidden = !isVideo;
+				if (isVideo) {
+					q<HTMLInputElement>('[data-trim-start]').value = current.trimStart.toFixed(1);
+					q<HTMLInputElement>('[data-trim-end]').value = current.trimEnd.toFixed(1);
+				}
+				q('[data-file-name]').textContent = `${current.file.name} · ${current.width}×${current.height}`;
+				qa<HTMLElement>('[data-file-list] li').forEach((li, i) => li.classList.toggle('is-active', items[i] === current));
+			};
+
+			const select = (item: Item) => {
+				if (current && current.kind === 'video') (current.source as HTMLVideoElement).pause();
+				current = item;
+				q<HTMLElement>('[data-empty]').hidden = true;
+				q<HTMLElement>('[data-canvas-wrap]').hidden = false;
+				syncControls();
+				draw();
+			};
+
+			const addToList = (item: Item) => {
+				const li = document.createElement('li');
+				li.innerHTML = `<img alt="" src="${item.thumb}"><span></span>`;
+				li.querySelector('span')!.textContent = item.file.name + (item.kind === 'video' ? ' (video)' : '');
+				li.addEventListener('click', () => select(item));
+				q('[data-file-list]').appendChild(li);
+			};
+
+			const load = async (file: File): Promise<Item | null> => {
+				const base = {
+					file,
+					adjust: { ...NEUTRAL },
+					auto: [1, 1, 1] as [number, number, number],
+					rotation: 0,
+					flip: false,
+					aspect: '',
+					crop: { ...FULL },
+					name: baseName(file) + '-edit',
+					trimStart: 0,
+					trimEnd: 0
+				};
+				if (file.type.startsWith('video/')) {
+					const video = document.createElement('video');
+					video.muted = true;
+					video.playsInline = true;
+					video.preload = 'auto';
+					video.src = URL.createObjectURL(file);
+					const ok = await new Promise<boolean>((resolve) => {
+						video.onloadeddata = () => resolve(true);
+						video.onerror = () => resolve(false);
+					});
+					if (!ok) return null;
+					const t = document.createElement('canvas');
+					t.width = 96;
+					t.height = Math.round((96 * video.videoHeight) / video.videoWidth);
+					t.getContext('2d')!.drawImage(video, 0, 0, t.width, t.height);
+					return { ...base, kind: 'video', source: video, width: video.videoWidth, height: video.videoHeight, trimEnd: video.duration, thumb: t.toDataURL('image/jpeg', 0.6) };
+				}
+				let source: ImageBitmap | HTMLImageElement;
+				try {
+					source = await createImageBitmap(file, { imageOrientation: 'from-image' });
+				} catch {
+					const img = new Image();
+					img.src = URL.createObjectURL(file);
+					const ok = await new Promise<boolean>((resolve) => {
+						img.onload = () => resolve(true);
+						img.onerror = () => resolve(false);
+					});
+					if (!ok) return null;
+					source = img;
+				}
+				const width = 'naturalWidth' in source ? source.naturalWidth : source.width;
+				const height = 'naturalHeight' in source ? source.naturalHeight : source.height;
+				const t = document.createElement('canvas');
+				t.width = 96;
+				t.height = Math.round((96 * height) / width);
+				t.getContext('2d')!.drawImage(source, 0, 0, t.width, t.height);
+				return { ...base, kind: 'image', source, width, height, thumb: t.toDataURL('image/jpeg', 0.6) };
+			};
+
+			q<HTMLInputElement>('[data-open]').addEventListener('change', async (event) => {
+				const files = Array.from((event.target as HTMLInputElement).files ?? []);
+				let failed = 0;
+				for (const file of files) {
+					status.textContent = `Opening ${file.name}…`;
+					const item = await load(file);
+					if (!item) {
+						failed++;
+						continue;
+					}
+					items.push(item);
+					addToList(item);
+					if (!current) select(item);
+				}
+				status.textContent = failed ? `${failed} file(s) could not be opened (RAW camera files are not supported; export JPEG first).` : '';
+				(event.target as HTMLInputElement).value = '';
+			});
+
+			// Adjustments.
+			qa<HTMLInputElement>('[data-adjust]').forEach((input) => {
+				input.addEventListener('input', () => {
+					if (!current) return;
+					const key = input.dataset.adjust as keyof Adjust;
+					current.adjust[key] = Number(input.value);
+					q(`[data-out="${key}"]`).textContent = input.value;
+					draw();
+				});
+			});
+			q('[data-reset]').addEventListener('click', () => {
+				if (!current) return;
+				current.adjust = { ...NEUTRAL };
+				current.auto = [1, 1, 1];
+				syncControls();
+				draw();
+			});
+			q('[data-apply-all]').addEventListener('click', () => {
+				if (!current) return;
+				items.forEach((item) => {
+					item.adjust = { ...current!.adjust };
+					item.auto = [...current!.auto] as [number, number, number];
+					if (item.kind === current!.kind && current!.aspect) {
+						item.aspect = current!.aspect;
+						fitCrop(item);
+					}
+				});
+				status.textContent = `Settings applied to all ${items.length} file(s).`;
+			});
+			// Auto color: neutralise the average color (gray-world white balance), ignoring very dark and very bright pixels.
+			q('[data-auto]').addEventListener('click', () => {
+				if (!current) return;
+				const c = document.createElement('canvas');
+				c.width = 96;
+				c.height = 96;
+				const ctx = c.getContext('2d', { willReadFrequently: true })!;
+				ctx.drawImage(current.source as CanvasImageSource, 0, 0, 96, 96);
+				const d = ctx.getImageData(0, 0, 96, 96).data;
+				let r = 0, g = 0, b = 0, n = 0;
+				for (let i = 0; i < d.length; i += 4) {
+					const l = (d[i] + d[i + 1] + d[i + 2]) / 3;
+					if (l < 25 || l > 235) continue;
+					r += d[i]; g += d[i + 1]; b += d[i + 2]; n++;
+				}
+				if (!n) return;
+				const m = (r + g + b) / 3;
+				// Pull most (not all) of the way to neutral so skin keeps some warmth.
+				const pull = (v: number) => 1 + 0.85 * (m / v - 1);
+				current.auto = [pull(r), pull(g), pull(b)];
+				draw();
+				status.textContent = 'Auto color applied. Fine-tune with Temperature and Tint.';
+			});
+
+			// Crop and rotate.
+			q<HTMLSelectElement>('[data-aspect]').addEventListener('change', (event) => {
+				if (!current) return;
+				current.aspect = (event.target as HTMLSelectElement).value;
+				current.crop = { ...FULL };
+				if (current.aspect === 'free') current.crop = { x: 0.1, y: 0.1, w: 0.8, h: 0.8 };
+				fitCrop(current);
+				draw();
+			});
+			qa<HTMLButtonElement>('[data-rotate]').forEach((btn) =>
+				btn.addEventListener('click', () => {
+					if (!current) return;
+					current.rotation += Number(btn.dataset.rotate);
+					current.crop = { ...FULL };
+					fitCrop(current);
+					draw();
+				})
+			);
+			q('[data-flip]').addEventListener('click', () => {
+				if (!current) return;
+				current.flip = !current.flip;
+				draw();
+			});
+
+			// Drag the crop box to move it, or a corner to resize (keeping the chosen shape).
+			let drag: { mode: string; startX: number; startY: number; start: Crop } | null = null;
+			cropBox.addEventListener('pointerdown', (event) => {
+				if (!current) return;
+				const handle = (event.target as HTMLElement).dataset.handle ?? 'move';
+				drag = { mode: handle, startX: event.clientX, startY: event.clientY, start: { ...current.crop } };
+				cropBox.setPointerCapture(event.pointerId);
+				event.preventDefault();
+			});
+			cropBox.addEventListener('pointermove', (event) => {
+				if (!drag || !current) return;
+				const box = preview.getBoundingClientRect();
+				const dx = (event.clientX - drag.startX) / box.width;
+				const dy = (event.clientY - drag.startY) / box.height;
+				const s = drag.start;
+				const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
+				if (drag.mode === 'move') {
+					current.crop = { ...s, x: clamp(s.x + dx, 0, 1 - s.w), y: clamp(s.y + dy, 0, 1 - s.h) };
+				} else {
+					const left = drag.mode.includes('w');
+					const top = drag.mode.includes('n');
+					let w = clamp(s.w + (left ? -dx : dx), 0.05, 1);
+					let h = clamp(s.h + (top ? -dy : dy), 0.05, 1);
+					if (current.aspect !== 'free') {
+						const [rw, rh] = rotatedSize(current);
+						h = (w * rw) / Number(current.aspect) / rh;
+						if (h > 1) {
+							h = 1;
+							w = (rh * Number(current.aspect)) / rw;
+						}
+					}
+					let x = left ? s.x + s.w - w : s.x;
+					let y = top ? s.y + s.h - h : s.y;
+					x = clamp(x, 0, 1 - w);
+					y = clamp(y, 0, 1 - h);
+					current.crop = { x, y, w: Math.min(w, 1 - x), h: Math.min(h, 1 - y) };
+				}
+				draw();
+			});
+			cropBox.addEventListener('pointerup', () => (drag = null));
+
+			// Compare with the original while held.
+			const compare = q<HTMLButtonElement>('[data-compare]');
+			const setCompare = (on: boolean) => {
+				comparing = on;
+				draw();
+			};
+			compare.addEventListener('pointerdown', () => setCompare(true));
+			['pointerup', 'pointerleave', 'pointercancel'].forEach((t) => compare.addEventListener(t, () => setCompare(false)));
+
+			// Video preview and trim.
+			const videoTime = q<HTMLElement>('[data-video-time]');
+			let playing = false;
+			const tick = () => {
+				if (!current || current.kind !== 'video') return;
+				const video = current.source as HTMLVideoElement;
+				if (video.currentTime >= current.trimEnd) video.currentTime = current.trimStart;
+				videoTime.textContent = `${video.currentTime.toFixed(1)} / ${video.duration.toFixed(1)} s`;
+				draw();
+				if (playing) requestAnimationFrame(tick);
+			};
+			q('[data-play]').addEventListener('click', () => {
+				if (!current || current.kind !== 'video') return;
+				const video = current.source as HTMLVideoElement;
+				playing = video.paused;
+				q('[data-play]').textContent = playing ? 'Pause' : 'Play';
+				if (playing) {
+					if (video.currentTime < current.trimStart || video.currentTime >= current.trimEnd) video.currentTime = current.trimStart;
+					void video.play();
+					tick();
+				} else video.pause();
+			});
+			const seekTo = async (time: number) => {
+				if (!current || current.kind !== 'video') return;
+				const video = current.source as HTMLVideoElement;
+				video.currentTime = time;
+				await new Promise((r) => (video.onseeked = r));
+				draw();
+			};
+			q<HTMLInputElement>('[data-trim-start]').addEventListener('change', (e) => {
+				if (!current) return;
+				current.trimStart = Math.min(Math.max(0, Number((e.target as HTMLInputElement).value)), current.trimEnd - 0.1);
+				void seekTo(current.trimStart);
+			});
+			q<HTMLInputElement>('[data-trim-end]').addEventListener('change', (e) => {
+				if (!current) return;
+				const video = current.source as HTMLVideoElement;
+				current.trimEnd = Math.max(Math.min(video.duration, Number((e.target as HTMLInputElement).value)), current.trimStart + 0.1);
+				void seekTo(current.trimEnd);
+			});
+			q<HTMLInputElement>('[data-name]').addEventListener('input', (e) => {
+				if (current) current.name = (e.target as HTMLInputElement).value.trim() || baseName(current.file) + '-edit';
+			});
+			q<HTMLInputElement>('[data-quality]').addEventListener('input', (e) => {
+				q('[data-out="quality"]').textContent = (e.target as HTMLInputElement).value;
+			});
+
+			// ---------- Export.
+			const outputSize = (item: Item) => {
+				const [rw, rh] = rotatedSize(item);
+				const crop = item.aspect ? item.crop : FULL;
+				let w = rw * crop.w;
+				let h = rh * crop.h;
+				const limit = Number(q<HTMLSelectElement>('[data-size]').value);
+				if (limit && Math.max(w, h) > limit) {
+					const s = limit / Math.max(w, h);
+					w *= s;
+					h *= s;
+				}
+				// Even sizes keep video encoders happy.
+				return [Math.max(2, Math.round(w / 2) * 2), Math.max(2, Math.round(h / 2) * 2), crop] as const;
+			};
+
+			const exportPhoto = async (item: Item) => {
+				const [w, h, crop] = outputSize(item);
+				const canvas = renderExport(item, w, h, { crop, fresh: true });
+				const quality = Number(q<HTMLInputElement>('[data-quality]').value) / 100;
+				const blob = await new Promise<Blob>((resolve) => canvas.toBlob((b) => resolve(b!), 'image/jpeg', quality));
+				return new Uint8Array(await blob.arrayBuffer());
+			};
+
+			const exportVideo = async (item: Item) => {
+				const video = item.source as HTMLVideoElement;
+				const [w, h, crop] = outputSize(item);
+				const mime = ['video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm'].find((m) => MediaRecorder.isTypeSupported(m)) ?? 'video/webm';
+				renderExport(item, w, h, { crop, fresh: true });
+				const stream = exportCanvas.captureStream(30);
+				const recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: Math.round(w * h * 30 * 0.12) });
+				const chunks: Blob[] = [];
+				recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+				video.pause();
+				video.currentTime = item.trimStart;
+				await new Promise((r) => (video.onseeked = r));
+				const done = new Promise<void>((resolve) => (recorder.onstop = () => resolve()));
+				recorder.start(500);
+				await video.play();
+				await new Promise<void>((resolve) => {
+					const frame = () => {
+						renderExport(item, w, h, { crop });
+						status.textContent = `Recording video… ${Math.max(0, item.trimEnd - video.currentTime).toFixed(1)} s left. Keep this tab open.`;
+						if (video.currentTime >= item.trimEnd || video.ended) return resolve();
+						requestAnimationFrame(frame);
+					};
+					frame();
+				});
+				video.pause();
+				recorder.stop();
+				await done;
+				return { blob: new Blob(chunks, { type: mime.split(';')[0] }), ext: mime.startsWith('video/mp4') ? 'mp4' : 'webm' };
+			};
+
+			const exportBtn = q<HTMLButtonElement>('[data-export]');
+			exportBtn.addEventListener('click', async () => {
+				if (!current) return;
+				exportBtn.disabled = true;
+				try {
+					if (current.kind === 'image') {
+						const data = await exportPhoto(current);
+						download(new Blob([data], { type: 'image/jpeg' }), `${current.name}.jpg`);
+						status.textContent = `Saved ${current.name}.jpg (${(data.length / 1024).toFixed(0)} KB).`;
+					} else {
+						const { blob, ext } = await exportVideo(current);
+						download(blob, `${current.name}.${ext}`);
+						status.textContent = `Saved ${current.name}.${ext} (${(blob.size / 1048576).toFixed(1)} MB).`;
+					}
+				} catch (error) {
+					status.textContent = `Export failed: ${error instanceof Error ? error.message : error}`;
+				}
+				exportBtn.disabled = false;
+				draw();
+			});
+
+			const exportAllBtn = q<HTMLButtonElement>('[data-export-all]');
+			exportAllBtn.addEventListener('click', async () => {
+				const photos = items.filter((i) => i.kind === 'image');
+				if (!photos.length) return;
+				exportAllBtn.disabled = true;
+				const LIMIT = 24 * 1048576;
+				let batch: { name: string; data: Uint8Array<ArrayBuffer> }[] = [];
+				let size = 0;
+				let part = 0;
+				const used = new Set<string>();
+				const flush = () => {
+					if (!batch.length) return;
+					part++;
+					download(buildZip(batch), `edited-photos-part-${String(part).padStart(2, '0')}.zip`);
+					batch = [];
+					size = 0;
+				};
+				for (let i = 0; i < photos.length; i++) {
+					status.textContent = `Exporting ${i + 1} of ${photos.length}…`;
+					const data = await exportPhoto(photos[i]);
+					let name = `${photos[i].name}.jpg`;
+					for (let n = 2; used.has(name); n++) name = `${photos[i].name}-${n}.jpg`;
+					used.add(name);
+					if (size + data.length > LIMIT) flush();
+					batch.push({ name, data });
+					size += data.length + 100;
+				}
+				flush();
+				status.textContent = `Exported ${photos.length} photo(s) in ${part} zip file(s).`;
+				exportAllBtn.disabled = false;
+				draw();
+			});
+
+			window.addEventListener('resize', draw);
+		</script>
+
+		<style>
+			.editor-body {
+				margin: 0;
+				height: 100vh;
+				overflow: hidden;
+				background: #070707;
+			}
+			.editor {
+				display: grid;
+				grid-template-columns: 240px minmax(0, 1fr) 300px;
+				height: 100vh;
+			}
+			.files,
+			.panel {
+				overflow-y: auto;
+				padding: 1rem;
+				border-right: 1px solid var(--stroke);
+				background: #0d0c0b;
+			}
+			.panel {
+				border-right: 0;
+				border-left: 1px solid var(--stroke);
+			}
+			.files-head {
+				display: flex;
+				align-items: baseline;
+				justify-content: space-between;
+				margin-bottom: 0.9rem;
+			}
+			.files-head p {
+				margin: 0;
+				color: var(--brand-strong);
+				font-size: 0.75rem;
+				letter-spacing: 0.18em;
+				text-transform: uppercase;
+			}
+			.brand {
+				color: var(--text-primary);
+				text-decoration: none;
+				font-weight: 700;
+				letter-spacing: 0.16em;
+				text-transform: uppercase;
+				font-size: 0.85rem;
+			}
+			.open {
+				display: block;
+				text-align: center;
+				cursor: pointer;
+			}
+			.open input {
+				display: none;
+			}
+			.hint {
+				margin: 0.6rem 0 0;
+				font-size: 0.78rem;
+				line-height: 1.5;
+				color: var(--text-muted);
+			}
+			.file-list {
+				list-style: none;
+				margin: 1rem 0 0;
+				padding: 0;
+				display: grid;
+				gap: 0.4rem;
+			}
+			.file-list :global(li) {
+				display: grid;
+				grid-template-columns: 48px minmax(0, 1fr);
+				gap: 0.6rem;
+				align-items: center;
+				padding: 0.35rem;
+				border: 1px solid transparent;
+				border-radius: 8px;
+				cursor: pointer;
+				font-size: 0.78rem;
+				color: var(--text-muted);
+			}
+			.file-list :global(li.is-active) {
+				border-color: var(--brand-strong);
+				color: var(--text-primary);
+			}
+			.file-list :global(img) {
+				width: 48px;
+				height: 48px;
+				object-fit: cover;
+				border-radius: 6px;
+			}
+			.file-list :global(span) {
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+			.stage {
+				display: grid;
+				grid-template-rows: auto minmax(0, 1fr) auto;
+				min-width: 0;
+			}
+			.stage-bar,
+			.video-bar {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 1rem;
+				padding: 0.65rem 1rem;
+				border-bottom: 1px solid var(--stroke);
+				font-size: 0.82rem;
+				color: var(--text-muted);
+			}
+			.video-bar {
+				justify-content: flex-start;
+				border-top: 1px solid var(--stroke);
+				border-bottom: 0;
+			}
+			.video-bar[hidden] {
+				display: none;
+			}
+			.video-bar input {
+				width: 5.5rem;
+			}
+			.viewport {
+				position: relative;
+				display: grid;
+				place-items: center;
+				min-height: 0;
+				overflow: hidden;
+				background:
+					repeating-conic-gradient(#121212 0% 25%, #0b0b0b 0% 50%) 50% / 24px 24px;
+			}
+			.empty {
+				color: var(--text-muted);
+			}
+			.canvas-wrap {
+				position: relative;
+				line-height: 0;
+			}
+			.canvas-wrap[hidden] {
+				display: none;
+			}
+			.canvas-wrap canvas {
+				border-radius: 0;
+				box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+			}
+			.crop-box {
+				position: absolute;
+				border: 1px solid #fff;
+				box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+				cursor: move;
+				touch-action: none;
+			}
+			.crop-box[hidden] {
+				display: none;
+			}
+			.handle {
+				position: absolute;
+				width: 14px;
+				height: 14px;
+				background: var(--brand-strong);
+				border: 1px solid #000;
+			}
+			.handle.nw { left: -7px; top: -7px; cursor: nwse-resize; }
+			.handle.ne { right: -7px; top: -7px; cursor: nesw-resize; }
+			.handle.sw { left: -7px; bottom: -7px; cursor: nesw-resize; }
+			.handle.se { right: -7px; bottom: -7px; cursor: nwse-resize; }
+			.panel section {
+				padding-bottom: 1rem;
+				margin-bottom: 1rem;
+				border-bottom: 1px solid var(--stroke);
+			}
+			.panel h2 {
+				margin: 0 0 0.6rem;
+				font-size: 0.78rem;
+				letter-spacing: 0.16em;
+				text-transform: uppercase;
+				color: var(--brand-strong);
+			}
+			.slider {
+				display: grid;
+				gap: 0.25rem;
+				margin: 0.55rem 0;
+				font-size: 0.8rem;
+				color: var(--text-muted);
+			}
+			.slider span {
+				display: flex;
+				justify-content: space-between;
+			}
+			.slider input[type='range'] {
+				width: 100%;
+				accent-color: var(--brand-strong);
+			}
+			.panel select,
+			.panel input[type='text'],
+			.video-bar input {
+				background: #141210;
+				color: var(--text-primary);
+				border: 1px solid var(--stroke);
+				border-radius: 6px;
+				padding: 0.45rem;
+				font: inherit;
+			}
+			.editor button {
+				background: #1a1714;
+				color: var(--text-primary);
+				border: 1px solid var(--stroke);
+				border-radius: 999px;
+				padding: 0.5rem 0.9rem;
+				font: inherit;
+				font-size: 0.78rem;
+				cursor: pointer;
+			}
+			.editor button:hover {
+				border-color: var(--brand-strong);
+			}
+			.editor button:disabled {
+				opacity: 0.45;
+			}
+			.editor button.btn-solid {
+				background: var(--brand-strong);
+				color: #111;
+				font-weight: 700;
+			}
+			.wide {
+				width: 100%;
+				margin: 0.35rem 0;
+			}
+			.row {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.4rem;
+				margin-top: 0.5rem;
+			}
+			@media (max-width: 980px) {
+				.editor-body {
+					height: auto;
+					overflow: auto;
+				}
+				.editor {
+					grid-template-columns: 1fr;
+					height: auto;
+				}
+				.viewport {
+					height: 60vh;
+				}
+				.files,
+				.panel {
+					border: 0;
+					border-bottom: 1px solid var(--stroke);
+				}
+			}
+		</style>
+	</body>
+</html>
