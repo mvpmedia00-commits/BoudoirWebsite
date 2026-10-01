@@ -12,7 +12,8 @@ const site = process.env.PUBLIC_SITE_URL || 'https://boudoir-website.vercel.app'
 export default defineConfig({
   site,
   integrations: [mdx(), sitemap()],
-  adapter: vercel(),
+  // AI photo edits take up to a couple of minutes; allow server functions to run for up to 5 minutes.
+  adapter: vercel({ maxDuration: 300 }),
   output: 'server',
   redirects: {
     '/hub': '/films',
@@ -37,6 +38,10 @@ export default defineConfig({
       POCKETBASE_ADMIN_TOKEN: envField.string({ context: 'server', access: 'secret', optional: true }),
       ADMIN_DASH_TOKEN: envField.string({ context: 'server', access: 'secret', optional: true }),
       VAULT_ACCESS_CODE: envField.string({ context: 'server', access: 'secret', optional: true }),
+      // AI photo editor (/admin/ai-editor). OPENAI_IMAGE_MODEL and OPENAI_BASE_URL are optional.
+      OPENAI_API_KEY: envField.string({ context: 'server', access: 'secret', optional: true }),
+      OPENAI_IMAGE_MODEL: envField.string({ context: 'server', access: 'secret', optional: true }),
+      OPENAI_BASE_URL: envField.string({ context: 'server', access: 'secret', optional: true }),
     },
   },
   vite: {

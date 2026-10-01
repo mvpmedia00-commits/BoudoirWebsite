@@ -46,6 +46,7 @@ const sliders = [
 					<input type="file" accept="image/*,video/*" multiple data-open />
 				</label>
 				<p class="hint">Files stay on this device. Nothing is uploaded.</p>
+				<a class="btn btn-ghost ai-link" href="/admin/ai-editor">AI editor (describe an edit in words) →</a>
 				<ul class="file-list" data-file-list></ul>
 			</aside>
 
@@ -814,6 +815,12 @@ const sliders = [
 				align-items: baseline;
 				justify-content: space-between;
 				margin-bottom: 0.9rem;
+			}
+			.ai-link {
+				display: block;
+				margin: 0 0 0.9rem;
+				font-size: 0.78rem;
+				text-align: center;
 			}
 			.files-head p {
 				margin: 0;

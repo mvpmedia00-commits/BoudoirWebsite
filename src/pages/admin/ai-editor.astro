@@ -1,0 +1,533 @@
+---
+import { OPENAI_API_KEY } from 'astro:env/server';
+import BaseHead from '../../components/BaseHead.astro';
+import { checkAdminToken, grantAdminAccess, hasAdminAccess } from '../../lib/access';
+
+// Private AI photo editor, like the image editor in ChatGPT: describe a change in words, optionally
+// brush over the area to change, and the photo comes back edited. Same sign-in as /admin/feed:
+// open /admin/ai-editor?token=... once. Edits run through /api/ai-edit (OpenAI image model).
+const providedToken = Astro.url.searchParams.get('token');
+if (providedToken !== null) {
+	if (checkAdminToken(providedToken)) {
+		grantAdminAccess(Astro.cookies);
+		return Astro.redirect('/admin/ai-editor');
+	}
+	return Astro.redirect('/');
+}
+if (!hasAdminAccess(Astro.cookies)) {
+	return Astro.redirect('/');
+}
+const configured = (OPENAI_API_KEY ?? '').trim().length > 0;
+
+const suggestions = [
+	'Remove the wrinkles and marks from the backdrop',
+	'Make the lighting warmer and more cinematic',
+	'Change the background to a dark, moody studio',
+	'Remove the stray hairs and small blemishes, keep the skin texture real',
+	'Make it look like a luxury magazine cover shot',
+	'Remove the object I selected'
+];
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title="AI Editor | MVP Media" description="Private AI photo editor." noIndex={true} />
+	</head>
+	<body class="ai-body">
+		<div class="ai" data-ai>
+			<div class="ai-stage-wrap">
+				<div class="ai-bar">
+					<a class="ai-brand" href="/admin/editor" title="Back to the regular editor">MVP Media <span>AI Editor</span></a>
+					<span class="ai-tools">
+						<label class="ai-btn ai-btn-solid">
+							Open photo
+							<input type="file" accept="image/*" data-open hidden />
+						</label>
+						<button type="button" class="ai-btn" data-tool="brush" aria-pressed="false" disabled title="Paint over the part of the photo to change">Select area</button>
+						<button type="button" class="ai-btn" data-tool="erase" aria-pressed="false" disabled title="Remove part of the selection">Unselect</button>
+						<label class="ai-size" title="Brush size">
+							<span>Brush</span>
+							<input type="range" min="8" max="160" value="48" data-brush-size />
+						</label>
+						<button type="button" class="ai-btn" data-clear disabled>Clear selection</button>
+						<button type="button" class="ai-btn" data-compare disabled title="Hold to see the version before this edit">Hold to compare</button>
+						<a class="ai-btn" data-download aria-disabled="true">Download</a>
+					</span>
+				</div>
+				<div class="ai-stage" data-stage>
+					<div class="ai-empty" data-empty>
+						<p>Open a photo (or drop one here) and tell the editor what to change, the same way you would in ChatGPT.</p>
+						<p class="ai-muted">To change only one part, press <b>Select area</b> and paint over it first.</p>
+					</div>
+					<div class="ai-frame" data-frame hidden>
+						<img alt="Photo being edited" data-view />
+						<canvas data-paint></canvas>
+						<div class="ai-working" data-working hidden><span></span></div>
+					</div>
+				</div>
+				<div class="ai-versions" data-versions></div>
+			</div>
+
+			<aside class="ai-chat">
+				{
+					!configured && (
+						<div class="ai-setup">
+							<b>One step left to switch this on.</b> Add your OpenAI API key in Vercel: Settings → Environment Variables → name
+							<code>OPENAI_API_KEY</code>, value = your key from platform.openai.com/api-keys. Then redeploy. Never paste the key in a chat.
+						</div>
+					)
+				}
+				<div class="ai-thread" data-thread>
+					<div class="ai-msg ai-msg-bot">
+						Hi. Open a photo and describe the edit: "make the background a dark studio", "remove the lamp on the left", "warmer, more cinematic light".
+						Each result becomes a new version you can keep editing, compare, or go back to.
+						<span class="ai-muted ai-small">Photos are sent to OpenAI to be edited. OpenAI refuses nudity, so use this for PG-13 and editorial shots.</span>
+					</div>
+				</div>
+				<div class="ai-suggest" data-suggest hidden>
+					{suggestions.map((s) => <button type="button" data-suggestion>{s}</button>)}
+				</div>
+				<form class="ai-compose" data-compose>
+					<div class="ai-refs" data-refs></div>
+					<textarea data-prompt rows="3" placeholder="Describe the edit…" disabled></textarea>
+					<div class="ai-compose-row">
+						<label class="ai-btn ai-attach" title="Add reference photos (a dress, a background, a lighting look)">
+							+ Reference
+							<input type="file" accept="image/*" multiple data-ref-input hidden />
+						</label>
+						<button type="submit" class="ai-btn ai-btn-solid ai-send" data-send disabled>Edit</button>
+					</div>
+					<details class="ai-settings">
+						<summary>Settings</summary>
+						<label>
+							Model
+							<select data-model>
+								<option value="chatgpt-image-latest" selected>ChatGPT image model (same as ChatGPT)</option>
+								<option value="gpt-image-2.5-sunburst">GPT Image 2.5 Sunburst (most precise)</option>
+								<option value="gpt-image-2.5-flare">GPT Image 2.5 Flare (fastest)</option>
+							</select>
+						</label>
+						<label>
+							Quality
+							<select data-quality>
+								<option value="high" selected>Best</option>
+								<option value="medium">Standard (cheaper)</option>
+								<option value="low">Draft (cheapest, for trying ideas)</option>
+							</select>
+						</label>
+						<label class="ai-check"><input type="checkbox" data-keep checked /> Keep the person exactly as they are (face, body, pose)</label>
+					</details>
+				</form>
+			</aside>
+		</div>
+
+		<script>
+			const root = document.querySelector('[data-ai]') as HTMLElement;
+			const q = <T extends Element = HTMLElement>(sel: string) => root.querySelector(sel) as T;
+			const view = q<HTMLImageElement>('[data-view]');
+			const paint = q<HTMLCanvasElement>('[data-paint]');
+			const pctx = paint.getContext('2d') as CanvasRenderingContext2D;
+			const thread = q('[data-thread]');
+			const promptBox = q<HTMLTextAreaElement>('[data-prompt]');
+			const sendBtn = q<HTMLButtonElement>('[data-send]');
+			const download = q<HTMLAnchorElement>('[data-download]');
+			const SEND_EDGE = 2048; // long edge sent to OpenAI (keeps uploads under the server's size limit)
+			const REF_EDGE = 1280;
+
+			type Version = { src: string; blob: Blob; w: number; h: number; parent: number; label: string };
+			const versions: Version[] = [];
+			let current = -1;
+			let tool: 'brush' | 'erase' | null = null;
+			let hasSelection = false;
+			let busy = false;
+			let references: Blob[] = [];
+
+			const canvasToBlob = (c: HTMLCanvasElement, type: string, quality?: number) =>
+				new Promise<Blob>((resolve, reject) => c.toBlob((b) => (b ? resolve(b) : reject(new Error('encode failed'))), type, quality));
+
+			// Decode a file (camera rotation applied) and shrink it to `edge` on its long side.
+			const prepare = async (file: Blob, edge: number) => {
+				const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
+				const s = Math.min(1, edge / Math.max(bmp.width, bmp.height));
+				const c = document.createElement('canvas');
+				c.width = Math.round(bmp.width * s);
+				c.height = Math.round(bmp.height * s);
+				const ctx = c.getContext('2d') as CanvasRenderingContext2D;
+				ctx.imageSmoothingQuality = 'high';
+				ctx.drawImage(bmp, 0, 0, c.width, c.height);
+				bmp.close();
+				return { blob: await canvasToBlob(c, 'image/jpeg', 0.9), w: c.width, h: c.height };
+			};
+
+			const scrollThread = () => thread.scrollTo({ top: thread.scrollHeight, behavior: 'smooth' });
+			const addMsg = (cls: string, html = '') => {
+				const el = document.createElement('div');
+				el.className = `ai-msg ${cls}`;
+				el.innerHTML = html;
+				thread.append(el);
+				scrollThread();
+				return el;
+			};
+			const escapeHtml = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] as string);
+
+			const setTool = (next: typeof tool) => {
+				tool = next;
+				root.querySelectorAll<HTMLButtonElement>('[data-tool]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.tool === tool)));
+				paint.classList.toggle('ai-painting', tool !== null);
+			};
+			const clearSelection = () => {
+				pctx.clearRect(0, 0, paint.width, paint.height);
+				hasSelection = false;
+				q<HTMLButtonElement>('[data-clear]').disabled = true;
+			};
+
+			const renderVersions = () => {
+				const strip = q('[data-versions]');
+				strip.innerHTML = '';
+				versions.forEach((v, i) => {
+					const b = document.createElement('button');
+					b.type = 'button';
+					b.className = 'ai-version' + (i === current ? ' is-current' : '');
+					b.title = v.label;
+					b.innerHTML = `<img src="${v.src}" alt="" /><span>${i === 0 || v.parent === -1 ? 'Original' : `Edit ${i}`}</span>`;
+					b.addEventListener('click', () => show(i));
+					strip.append(b);
+				});
+			};
+
+			const show = (i: number) => {
+				current = i;
+				const v = versions[i];
+				view.src = v.src;
+				paint.width = v.w;
+				paint.height = v.h;
+				clearSelection();
+				q('[data-frame]').hidden = false;
+				q('[data-empty]').hidden = true;
+				download.href = v.src;
+				download.download = `mvp-ai-edit-${String(i).padStart(2, '0')}.jpg`;
+				download.removeAttribute('aria-disabled');
+				q<HTMLButtonElement>('[data-compare]').disabled = v.parent < 0;
+				root.querySelectorAll<HTMLButtonElement>('[data-tool]').forEach((b) => (b.disabled = false));
+				promptBox.disabled = false;
+				sendBtn.disabled = busy;
+				renderVersions();
+			};
+
+			const addVersion = (v: Version) => {
+				versions.push(v);
+				show(versions.length - 1);
+				return versions.length - 1;
+			};
+
+			// ---------- Opening photos (button, drag and drop, or paste).
+			const openFile = async (file: File) => {
+				if (!file.type.startsWith('image/')) return;
+				try {
+					const { blob, w, h } = await prepare(file, SEND_EDGE);
+					const i = addVersion({ src: URL.createObjectURL(blob), blob, w, h, parent: -1, label: file.name });
+					addMsg('ai-msg-user', `Opened <b>${escapeHtml(file.name)}</b>`).append(thumb(i));
+					q('[data-suggest]').hidden = false;
+					promptBox.focus();
+				} catch {
+					addMsg('ai-msg-bot ai-msg-error', 'That file could not be opened. Use a JPEG, PNG, or WebP photo.');
+				}
+			};
+			const thumb = (i: number) => {
+				const img = document.createElement('img');
+				img.className = 'ai-thumb';
+				img.src = versions[i].src;
+				img.alt = '';
+				img.title = 'Show this version';
+				img.addEventListener('click', () => show(i));
+				return img;
+			};
+			q<HTMLInputElement>('[data-open]').addEventListener('change', (e) => {
+				const f = (e.target as HTMLInputElement).files?.[0];
+				if (f) openFile(f);
+				(e.target as HTMLInputElement).value = '';
+			});
+			const stage = q('[data-stage]');
+			stage.addEventListener('dragover', (e) => { e.preventDefault(); stage.classList.add('ai-drop'); });
+			stage.addEventListener('dragleave', () => stage.classList.remove('ai-drop'));
+			stage.addEventListener('drop', (e) => {
+				e.preventDefault();
+				stage.classList.remove('ai-drop');
+				const f = e.dataTransfer?.files?.[0];
+				if (f) openFile(f);
+			});
+			document.addEventListener('paste', (e) => {
+				const f = Array.from(e.clipboardData?.files ?? []).find((x) => x.type.startsWith('image/'));
+				if (f) openFile(f);
+			});
+
+			// ---------- Selecting the area to change (painted in photo pixels; shown semi-transparent).
+			let last: { x: number; y: number } | null = null;
+			const toCanvas = (e: PointerEvent) => {
+				const r = paint.getBoundingClientRect();
+				return { x: ((e.clientX - r.left) * paint.width) / r.width, y: ((e.clientY - r.top) * paint.height) / r.height, scale: paint.width / r.width };
+			};
+			const stroke = (e: PointerEvent) => {
+				const p = toCanvas(e);
+				const size = Number(q<HTMLInputElement>('[data-brush-size]').value) * p.scale;
+				pctx.globalCompositeOperation = tool === 'erase' ? 'destination-out' : 'source-over';
+				pctx.strokeStyle = pctx.fillStyle = '#ff3d6e';
+				pctx.lineWidth = size;
+				pctx.lineCap = pctx.lineJoin = 'round';
+				pctx.beginPath();
+				if (last) {
+					pctx.moveTo(last.x, last.y);
+					pctx.lineTo(p.x, p.y);
+					pctx.stroke();
+				} else {
+					pctx.arc(p.x, p.y, size / 2, 0, Math.PI * 2);
+					pctx.fill();
+				}
+				last = p;
+				if (tool === 'brush') {
+					hasSelection = true;
+					q<HTMLButtonElement>('[data-clear]').disabled = false;
+				}
+			};
+			paint.addEventListener('pointerdown', (e) => {
+				if (!tool) return;
+				paint.setPointerCapture(e.pointerId);
+				last = null;
+				stroke(e);
+			});
+			paint.addEventListener('pointermove', (e) => { if (tool && last) stroke(e); });
+			const endStroke = () => {
+				last = null;
+				// After erasing, check whether anything is still selected.
+				if (tool === 'erase') {
+					const d = pctx.getImageData(0, 0, paint.width, paint.height).data;
+					let any = false;
+					for (let i = 3; i < d.length; i += 64) if (d[i]) { any = true; break; }
+					hasSelection = any;
+					q<HTMLButtonElement>('[data-clear]').disabled = !any;
+				}
+			};
+			paint.addEventListener('pointerup', endStroke);
+			paint.addEventListener('pointercancel', endStroke);
+			root.querySelectorAll<HTMLButtonElement>('[data-tool]').forEach((b) =>
+				b.addEventListener('click', () => setTool(tool === b.dataset.tool ? null : (b.dataset.tool as typeof tool)))
+			);
+			q('[data-clear]').addEventListener('click', clearSelection);
+
+			// OpenAI masks: fully transparent where the photo may change, opaque everywhere else.
+			const buildMask = async () => {
+				const m = document.createElement('canvas');
+				m.width = paint.width;
+				m.height = paint.height;
+				const mctx = m.getContext('2d') as CanvasRenderingContext2D;
+				mctx.fillStyle = '#000';
+				mctx.fillRect(0, 0, m.width, m.height);
+				mctx.globalCompositeOperation = 'destination-out';
+				// Grow the selection slightly so edits blend in at the edges.
+				mctx.filter = `blur(${Math.max(2, Math.round(m.width / 300))}px)`;
+				mctx.drawImage(paint, 0, 0);
+				mctx.filter = 'none';
+				mctx.drawImage(paint, 0, 0);
+				// Any partly transparent pixel becomes fully transparent (the API reads alpha = 0 only).
+				const img = mctx.getImageData(0, 0, m.width, m.height);
+				for (let i = 3; i < img.data.length; i += 4) img.data[i] = img.data[i] < 250 ? 0 : 255;
+				mctx.globalCompositeOperation = 'copy';
+				mctx.putImageData(img, 0, 0);
+				return canvasToBlob(m, 'image/png');
+			};
+
+			// ---------- Compare: hold to see the version this edit started from.
+			const compare = q<HTMLButtonElement>('[data-compare]');
+			const showParent = (on: boolean) => {
+				const v = versions[current];
+				if (!v || v.parent < 0) return;
+				view.src = on ? versions[v.parent].src : v.src;
+				paint.style.visibility = on ? 'hidden' : '';
+			};
+			compare.addEventListener('pointerdown', () => showParent(true));
+			['pointerup', 'pointerleave', 'pointercancel'].forEach((t) => compare.addEventListener(t, () => showParent(false)));
+
+			// ---------- Reference photos.
+			const refsBox = q('[data-refs]');
+			const renderRefs = () => {
+				refsBox.innerHTML = '';
+				references.forEach((r, i) => {
+					const chip = document.createElement('span');
+					chip.className = 'ai-ref';
+					chip.innerHTML = `<img src="${URL.createObjectURL(r)}" alt="" /><button type="button" title="Remove">×</button>`;
+					chip.querySelector('button')!.addEventListener('click', () => { references.splice(i, 1); renderRefs(); });
+					refsBox.append(chip);
+				});
+			};
+			q<HTMLInputElement>('[data-ref-input]').addEventListener('change', async (e) => {
+				const input = e.target as HTMLInputElement;
+				for (const f of Array.from(input.files ?? []).slice(0, 4 - references.length)) {
+					try { references.push((await prepare(f, REF_EDGE)).blob); } catch { /* unreadable file: skip */ }
+				}
+				input.value = '';
+				renderRefs();
+			});
+
+			// ---------- Sending an edit.
+			root.querySelectorAll<HTMLButtonElement>('[data-suggestion]').forEach((b) =>
+				b.addEventListener('click', () => { promptBox.value = b.textContent ?? ''; promptBox.focus(); })
+			);
+			promptBox.addEventListener('keydown', (e) => {
+				if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); q<HTMLFormElement>('[data-compose]').requestSubmit(); }
+			});
+
+			const runEdit = async (from: number, prompt: string, mask: Blob | null, refs: Blob[]) => {
+				busy = true;
+				sendBtn.disabled = true;
+				q('[data-working]').hidden = false;
+				const reply = addMsg('ai-msg-bot ai-msg-pending', '<span class="ai-dots"></span> Editing… <span data-timer>0:00</span>');
+				const started = Date.now();
+				const timer = setInterval(() => {
+					const s = Math.round((Date.now() - started) / 1000);
+					const t = reply.querySelector('[data-timer]');
+					if (t) t.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+				}, 1000);
+				const body = new FormData();
+				body.append('prompt', prompt);
+				body.append('image', versions[from].blob, 'photo.jpg');
+				if (mask) body.append('mask', mask, 'mask.png');
+				refs.forEach((r, i) => body.append('reference', r, `reference-${i + 1}.jpg`));
+				body.append('model', q<HTMLSelectElement>('[data-model]').value);
+				body.append('quality', q<HTMLSelectElement>('[data-quality]').value);
+				body.append('keepPerson', q<HTMLInputElement>('[data-keep]').checked ? 'on' : 'off');
+				try {
+					const res = await fetch('/api/ai-edit', { method: 'POST', body });
+					const data = (await res.json().catch(() => ({ error: `The server answered with error ${res.status}.` }))) as { image?: string; error?: string; seconds?: number };
+					if (!data.image) throw new Error(data.error || 'No image came back.');
+					const blob = await (await fetch(data.image)).blob();
+					const bmp = await createImageBitmap(blob);
+					const i = addVersion({ src: URL.createObjectURL(blob), blob, w: bmp.width, h: bmp.height, parent: from, label: prompt });
+					bmp.close();
+					reply.className = 'ai-msg ai-msg-bot';
+					reply.innerHTML = `Here is the edit (${data.seconds ?? Math.round((Date.now() - started) / 1000)} s).`;
+					reply.append(thumb(i));
+					const actions = document.createElement('div');
+					actions.className = 'ai-actions';
+					actions.innerHTML = `<a class="ai-btn" href="${versions[i].src}" download="mvp-ai-edit-${String(i).padStart(2, '0')}.jpg">Download</a><button type="button" class="ai-btn">Try again</button>`;
+					actions.querySelector('button')!.addEventListener('click', () => runEdit(from, prompt, mask, refs));
+					reply.append(actions);
+				} catch (err) {
+					reply.className = 'ai-msg ai-msg-bot ai-msg-error';
+					reply.textContent = err instanceof Error && err.message !== 'Failed to fetch' ? err.message : 'The connection dropped. Check your internet and try again.';
+					const again = document.createElement('button');
+					again.type = 'button';
+					again.className = 'ai-btn';
+					again.textContent = 'Try again';
+					again.addEventListener('click', () => runEdit(from, prompt, mask, refs));
+					reply.append(document.createElement('br'), again);
+				} finally {
+					clearInterval(timer);
+					busy = false;
+					sendBtn.disabled = current < 0;
+					q('[data-working]').hidden = true;
+					scrollThread();
+				}
+			};
+
+			q<HTMLFormElement>('[data-compose]').addEventListener('submit', async (e) => {
+				e.preventDefault();
+				const prompt = promptBox.value.trim();
+				if (!prompt || busy || current < 0) return;
+				const mask = hasSelection ? await buildMask() : null;
+				const refs = references;
+				const msg = addMsg('ai-msg-user', escapeHtml(prompt));
+				const notes = [mask ? 'selected area only' : '', refs.length ? `${refs.length} reference photo${refs.length > 1 ? 's' : ''}` : ''].filter(Boolean);
+				if (notes.length) msg.insertAdjacentHTML('beforeend', `<span class="ai-small ai-muted">${notes.join(' · ')}</span>`);
+				promptBox.value = '';
+				references = [];
+				renderRefs();
+				setTool(null);
+				q('[data-suggest]').hidden = true;
+				runEdit(current, prompt, mask, refs);
+			});
+
+			// Results live only in this tab: warn before closing with unsaved edits.
+			window.addEventListener('beforeunload', (e) => {
+				if (versions.some((v) => v.parent >= 0)) e.preventDefault();
+			});
+		</script>
+
+		<style is:global>
+			.ai-body { margin: 0; height: 100vh; overflow: hidden; background: #070707; color: var(--text-primary); font-family: inherit; }
+			.ai { display: grid; grid-template-columns: minmax(0, 1fr) 380px; height: 100vh; }
+			.ai-stage-wrap { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+			.ai-bar { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; justify-content: space-between; padding: 0.7rem 1rem; border-bottom: 1px solid var(--stroke); }
+			.ai-brand { color: var(--text-primary); text-decoration: none; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; font-size: 0.8rem; }
+			.ai-brand span { color: var(--brand-strong); margin-left: 0.4rem; }
+			.ai-tools { display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center; }
+			.ai-btn {
+				display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.5rem 0.85rem; border-radius: 999px;
+				border: 1px solid var(--stroke); background: #141312; color: var(--text-primary); font: inherit; font-size: 0.82rem;
+				cursor: pointer; text-decoration: none; white-space: nowrap;
+			}
+			.ai-btn:hover:not(:disabled) { border-color: var(--brand-deep); }
+			.ai-btn:disabled, .ai-btn[aria-disabled='true'] { opacity: 0.4; cursor: default; pointer-events: none; }
+			.ai-btn[aria-pressed='true'] { background: var(--brand-rose); border-color: var(--brand-rose); color: #fff; }
+			.ai-btn-solid { background: var(--brand-strong); border-color: var(--brand-strong); color: #111; font-weight: 700; }
+			.ai-size { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.78rem; color: var(--text-muted); }
+			.ai-size input { width: 90px; accent-color: var(--brand-strong); }
+			.ai-stage { position: relative; flex: 1; min-height: 0; display: grid; place-items: center; padding: 1rem; overflow: hidden; }
+			.ai-stage.ai-drop { outline: 2px dashed var(--brand-strong); outline-offset: -12px; }
+			.ai-empty { max-width: 420px; text-align: center; color: var(--text-primary); }
+			.ai-muted { color: var(--text-muted); }
+			.ai-small { display: block; margin-top: 0.4rem; font-size: 0.75rem; }
+			.ai-frame { position: relative; width: fit-content; max-width: 100%; }
+			.ai-frame[hidden] { display: none; }
+			.ai-frame img { max-width: 100%; max-height: calc(100vh - 190px); display: block; border-radius: 6px; }
+			.ai-frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.5; pointer-events: none; touch-action: none; }
+			.ai-frame canvas.ai-painting { pointer-events: auto; cursor: crosshair; }
+			.ai-working { position: absolute; inset: 0; border-radius: 6px; background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.16) 50%, transparent 70%); background-size: 250% 100%; animation: ai-shine 1.6s linear infinite; pointer-events: none; }
+			.ai-working[hidden] { display: none; }
+			@keyframes ai-shine { from { background-position: 125% 0; } to { background-position: -125% 0; } }
+			.ai-versions { display: flex; gap: 0.5rem; padding: 0.6rem 1rem; overflow-x: auto; border-top: 1px solid var(--stroke); min-height: 74px; }
+			.ai-version { flex: none; display: grid; gap: 2px; padding: 3px; border: 1px solid var(--stroke); border-radius: 8px; background: #111; color: var(--text-muted); font-size: 0.68rem; cursor: pointer; }
+			.ai-version img { width: 64px; height: 48px; object-fit: cover; border-radius: 5px; }
+			.ai-version.is-current { border-color: var(--brand-strong); color: var(--brand-strong); }
+			.ai-chat { display: flex; flex-direction: column; min-height: 0; min-width: 0; border-left: 1px solid var(--stroke); background: #0d0c0b; }
+			.ai-setup { margin: 0.8rem; padding: 0.8rem; border: 1px solid var(--brand-amber); border-radius: 10px; font-size: 0.82rem; line-height: 1.5; }
+			.ai-setup code { color: var(--brand-amber); }
+			.ai-thread { flex: 1; min-height: 0; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.7rem; }
+			.ai-msg { max-width: 92%; padding: 0.65rem 0.8rem; border-radius: 14px; font-size: 0.88rem; line-height: 1.5; }
+			.ai-msg-bot { align-self: flex-start; background: #171513; border: 1px solid var(--stroke); }
+			.ai-msg-user { align-self: flex-end; background: #2a2219; }
+			.ai-msg-error { border-color: var(--brand-rose); color: #f1c3cc; }
+			.ai-msg-pending { color: var(--text-muted); }
+			.ai-thumb { display: block; margin-top: 0.5rem; max-width: 100%; max-height: 220px; border-radius: 8px; cursor: pointer; }
+			.ai-actions { display: flex; gap: 0.4rem; margin-top: 0.5rem; }
+			.ai-dots::before { content: '●'; color: var(--brand-strong); animation: ai-pulse 1s ease-in-out infinite; }
+			@keyframes ai-pulse { 50% { opacity: 0.2; } }
+			.ai-suggest { display: flex; gap: 0.4rem; padding: 0 1rem 0.6rem; overflow-x: auto; scrollbar-width: thin; }
+			.ai-suggest[hidden] { display: none; }
+			.ai-suggest button { flex: none; white-space: nowrap; padding: 0.4rem 0.7rem; border-radius: 999px; border: 1px solid var(--stroke); background: transparent; color: var(--text-muted); font: inherit; font-size: 0.76rem; cursor: pointer; text-align: left; }
+			.ai-suggest button:hover { color: var(--text-primary); border-color: var(--brand-deep); }
+			.ai-compose { padding: 0.8rem 1rem 1rem; border-top: 1px solid var(--stroke); display: grid; gap: 0.5rem; }
+			.ai-compose textarea { width: 100%; box-sizing: border-box; resize: vertical; min-height: 72px; padding: 0.7rem; border-radius: 12px; border: 1px solid var(--stroke); background: #121110; color: var(--text-primary); font: inherit; font-size: 0.92rem; }
+			.ai-compose-row { display: flex; justify-content: space-between; gap: 0.5rem; }
+			.ai-send { padding-inline: 1.4rem; }
+			.ai-refs { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+			.ai-ref { position: relative; }
+			.ai-ref img { width: 52px; height: 52px; object-fit: cover; border-radius: 8px; display: block; }
+			.ai-ref button { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 50%; border: 0; background: #000; color: #fff; cursor: pointer; line-height: 1; }
+			.ai-settings { font-size: 0.8rem; color: var(--text-muted); }
+			.ai-settings summary { cursor: pointer; }
+			.ai-settings label { display: grid; gap: 0.25rem; margin-top: 0.5rem; }
+			.ai-settings select { padding: 0.45rem; border-radius: 8px; border: 1px solid var(--stroke); background: #121110; color: var(--text-primary); font: inherit; }
+			.ai-settings .ai-check { display: flex; gap: 0.4rem; align-items: center; }
+			@media (max-width: 900px) {
+				.ai-body { height: auto; overflow: auto; }
+				.ai { grid-template-columns: minmax(0, 1fr); height: auto; }
+				.ai-stage { min-height: 50vh; padding: 0.6rem; }
+				.ai-bar { justify-content: flex-start; }
+				.ai-frame img { max-height: 60vh; }
+				.ai-chat { border-left: 0; border-top: 1px solid var(--stroke); }
+				.ai-thread { max-height: 50vh; }
+			}
+		</style>
+	</body>
+</html>
