@@ -1,0 +1,74 @@
+{
+  "project": "MVP MEDIA editorial retouch",
+  "target_photo": {
+    "selection_number": 30,
+    "filename": "5B1A1099.JPG",
+    "role": "hero / cover image"
+  },
+  "creative_goal": "High-end fashion/editorial image with the model dominant and the neon tunnel supporting the composition instead of overpowering it.",
+  "priority_order": [
+    "Preserve identity and real facial structure",
+    "Preserve wardrobe shape, pose, anatomy, tattoos, and environment",
+    "Balance skin against the blue/cyan/red neon lighting",
+    "Make the subject read first, tunnel second",
+    "Keep realistic skin texture; no plastic smoothing",
+    "Retain rich red wardrobe detail without clipping saturation"
+  ],
+  "crop": {
+    "recommended": "4:5 vertical",
+    "composition": "Place the face near the upper-right rule-of-thirds point. Preserve enough tunnel on the left to show the repeating neon arches and vanishing point.",
+    "avoid": [
+      "cutting through knees, elbows, wrists, or the top of the head",
+      "cropping so tightly that the tunnel no longer reads as an environment"
+    ]
+  },
+  "global_adjustments": {
+    "exposure": "+0.10 to +0.30 EV only if needed",
+    "highlights": "-15 to -30",
+    "shadows": "+8 to +18",
+    "whites": "+3 to +10",
+    "blacks": "-5 to -12",
+    "contrast": "+5 to +12",
+    "texture": "+3 to +8",
+    "clarity": "+2 to +6",
+    "dehaze": "+1 to +4",
+    "vibrance": "+6 to +12",
+    "saturation": "0 to -4"
+  },
+  "color_direction": {
+    "skin": "Neutral-warm and natural. Reduce orange/red contamination from the neon if it makes skin look too warm.",
+    "red_wardrobe": "Deep saturated red with visible fabric texture; avoid flat clipped red.",
+    "blue_cyan_neon": "Keep vivid but slightly darker than the subject.",
+    "background": "Reduce overall saturation roughly 8-15% if it competes with the face."
+  },
+  "local_masks": {
+    "face_and_skin": [
+      "Lift exposure approximately +0.10 EV",
+      "Reduce excessive magenta/orange cast",
+      "Dodge eyes and catchlights subtly",
+      "Remove temporary blemishes only",
+      "Preserve pores, fine hair, texture, moles, and natural contours",
+      "Do not change facial shape"
+    ],
+    "wardrobe": [
+      "Recover red highlight detail",
+      "Increase texture slightly",
+      "Do not alter garment construction or coverage"
+    ],
+    "background": [
+      "Darken about 0.15-0.35 EV behind and around the model",
+      "Reduce clarity slightly if needed",
+      "Preserve the neon tunnel geometry",
+      "Remove only small distracting debris or sensor spots"
+    ]
+  },
+  "retouch_limits": [
+    "No body reshaping",
+    "No face replacement",
+    "No artificial eye enlargement",
+    "No heavy frequency-separation/plastic skin",
+    "No fake depth-of-field that destroys the neon tunnel",
+    "No changing the pose or wardrobe"
+  ],
+  "ai_editor_prompt": "Editorially retouch this photograph for an MVP MEDIA fashion campaign. Preserve the model's exact identity, face, body proportions, pose, wardrobe, tattoos, and the neon tunnel location. Create a premium magazine finish: natural skin with visible real texture, balanced neutral-warm skin tone, clean eyes and catchlights, controlled highlights, deep but detailed blacks, and rich red wardrobe color with fabric detail. Make the model the brightest and sharpest visual priority. Slightly darken and reduce saturation/clarity in the neon tunnel so it frames the subject without overpowering her. Keep the tunnel's blue/cyan/red geometry intact. Remove only temporary blemishes, sensor spots, or small background distractions. Do not reshape the face or body, do not replace features, do not create plastic skin, and do not change the clothing or pose. Finish with a polished high-fashion editorial grade, realistic and photographic rather than AI-generated."
+}
