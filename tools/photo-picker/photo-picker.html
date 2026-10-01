@@ -91,7 +91,59 @@
 <body>
 <main>
 	<h1>MVP Media Photo Picker</h1>
-	<p class="sub">Runs entirely in this browser window. Your photos are never uploaded anywhere; the tool only saves files to your Downloads folder.</p>
+	<p class="sub">Runs entirely in this browser window. Your photos are never uploaded anywhere; the tool only saves files to your Downloads folder (or a folder you choose).</p>
+
+	<section>
+		<h2><span>0</span>Convert RAW to JPEG (if you shot RAW)</h2>
+		<ol>
+			<li>Choose a folder (subfolders included) or individual files. Works with Canon CR2/CR3, Nikon NEF, Sony ARW, Adobe DNG, Fujifilm RAF, Olympus ORF, Panasonic RW2, Samsung SRW, and Pentax PEF.</li>
+			<li>Press <b>Convert to JPEG</b>. Each photo keeps its file name (IMG_1234.CR3 becomes IMG_1234.jpg) and its rotation, with location and camera data removed.</li>
+			<li>Then use the converted folder in steps 1 and 2.</li>
+		</ol>
+		<p class="note">How it works: every RAW file carries a full-size JPEG the camera made when you took the shot, and the tool saves that (the same picture as the camera's own JPEG setting, with its color style). It does not re-develop the sensor data the way Lightroom does. Some cameras, mostly older Sony models and phone DNGs, only store a smaller copy; the tool tells you when that happens.</p>
+		<label class="file">Choose RAW folder<input type="file" id="rawFolder" webkitdirectory multiple /></label>
+		<label class="file">Choose RAW files<input type="file" id="rawFiles" multiple accept=".cr2,.cr3,.nef,.arw,.dng,.raf,.orf,.rw2,.srw,.pef" /></label>
+		<div class="status" id="rawFound">No RAW files chosen yet.</div>
+		<div class="row">
+			<div>
+				<label for="rawSize">Size</label>
+				<select id="rawSize">
+					<option value="0" selected>Full size (as large as the camera stored it)</option>
+					<option value="4000">4000 pixels long edge</option>
+					<option value="2400">2400 pixels long edge</option>
+				</select>
+			</div>
+			<div>
+				<label for="rawQuality">JPEG quality</label>
+				<select id="rawQuality">
+					<option value="0.86">86% (smaller files)</option>
+					<option value="0.92" selected>92% (recommended)</option>
+					<option value="0.97">97% (largest files)</option>
+				</select>
+			</div>
+		</div>
+		<div class="row">
+			<div>
+				<label for="rawEdit">Automatic editing</label>
+				<select id="rawEdit">
+					<option value="off" selected>Off: keep the camera's look</option>
+					<option value="light">Gentle: color and light only</option>
+					<option value="full">On: color, light, and sharpening</option>
+					<option value="editorial">Editorial: the MVP magazine finish</option>
+				</select>
+			</div>
+			<div>
+				<label for="rawSave">Save to</label>
+				<select id="rawSave">
+					<option value="folder">A folder I choose (best for big shoots)</option>
+					<option value="zip">Zip files in Downloads (under 24 MB each)</option>
+				</select>
+			</div>
+		</div>
+		<button id="rawConvert" disabled>Convert to JPEG</button>
+		<progress id="rawProg" value="0" max="1" hidden></progress>
+		<div class="status" id="rawStatus"></div>
+	</section>
 
 	<section>
 		<h2><span>1</span>Make contact sheets</h2>
@@ -194,7 +246,7 @@
 		<div class="status" id="status2"></div>
 	</section>
 
-	<p class="note">Works with JPEG, PNG, and WebP in Chrome, Edge, Firefox, and Safari. iPhone HEIC photos work in Safari on a Mac; in other browsers, export them as JPEG first. Camera RAW files (CR2, CR3, NEF, ARW, DNG) are skipped: export JPEGs from your editing app. If the browser asks to allow multiple downloads, choose Allow.</p>
+	<p class="note">Works with JPEG, PNG, and WebP in Chrome, Edge, Firefox, and Safari. iPhone HEIC photos work in Safari on a Mac; in other browsers, export them as JPEG first. Camera RAW files (CR2, CR3, NEF, ARW, DNG, and others) are skipped in steps 1 and 2: convert them in step 0 first. If the browser asks to allow multiple downloads, choose Allow.</p>
 </main>
 
 <script>
@@ -345,26 +397,51 @@
 	// already-rich colors, red protection so wardrobe and neon keep their texture, then a soft subject
 	// mask (centre-weighted oval, since the browser has no GrabCut) that lifts and sharpens the person
 	// while the background is slightly darkened, softened, and calmed.
-	const editorialPass = (d, w, h) => {
+	// The blurs are measured on a copy of at most 1200 pixels and scaled back up, so full-size
+	// camera files stay fast and light on memory.
+	const editorialPass = (ctx, image, w, h) => {
+		const d = image.data;
 		const src = new Uint8ClampedArray(d);
-		const wide = boxBlur(src, w, h, Math.max(4, Math.round(Math.max(w, h) / 60)));
-		const soft = boxBlur(src, w, h, Math.max(1, Math.round(Math.max(w, h) / 900)));
+		ctx.putImageData(image, 0, 0);
+		const s = Math.min(1, 1200 / Math.max(w, h));
+		const sw = Math.max(1, Math.round(w * s)), sh = Math.max(1, Math.round(h * s));
+		const small = document.createElement('canvas');
+		small.width = sw; small.height = sh;
+		const sctx = small.getContext('2d', { willReadFrequently: true });
+		sctx.imageSmoothingQuality = 'high';
+		sctx.drawImage(ctx.canvas, 0, 0, sw, sh);
+		const sd = sctx.getImageData(0, 0, sw, sh).data;
+		const wideS = boxBlur(sd, sw, sh, Math.max(2, Math.round(Math.max(sw, sh) / 60)));
+		const softS = boxBlur(sd, sw, sh, 1);
+		// Bilinear lookup into a small blurred buffer, for pixel (x, y) of the full image.
+		const at = (buf, x, y, out) => {
+			const fx = Math.min(sw - 1, Math.max(0, (x + 0.5) * s - 0.5)), fy = Math.min(sh - 1, Math.max(0, (y + 0.5) * s - 0.5));
+			const x0 = Math.floor(fx), y0 = Math.floor(fy), x1 = Math.min(sw - 1, x0 + 1), y1 = Math.min(sh - 1, y0 + 1);
+			const ax = fx - x0, ay = fy - y0;
+			for (let c = 0; c < 3; c++) {
+				const top = buf[(y0 * sw + x0) * 3 + c] * (1 - ax) + buf[(y0 * sw + x1) * 3 + c] * ax;
+				const bottom = buf[(y1 * sw + x0) * 3 + c] * (1 - ax) + buf[(y1 * sw + x1) * 3 + c] * ax;
+				out[c] = top * (1 - ay) + bottom * ay;
+			}
+		};
+		const wide = [0, 0, 0], soft = [0, 0, 0];
 		const cx = w / 2, cy = h * 0.47, rx = w * 0.34, ry = h * 0.46;
 		for (let y = 0; y < h; y++) {
 			for (let x = 0; x < w; x++) {
-				const i = (y * w + x) * 4, j = (y * w + x) * 3;
+				const i = (y * w + x) * 4;
+				at(wideS, x, y, wide); at(softS, x, y, soft);
 				const dist = Math.hypot((x - cx) / rx, (y - cy) / ry);
 				const t = Math.min(1, Math.max(0, (dist - 0.7) / 0.5));
 				const m = 1 - t * t * (3 - 2 * t); // 1 on the subject, 0 in the background
 				let r = src[i], g = src[i + 1], b = src[i + 2];
 				// Local contrast (gentle "clarity" on luminance only).
 				const l = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-				const lw = 0.2126 * wide[j] + 0.7152 * wide[j + 1] + 0.0722 * wide[j + 2];
+				const lw = 0.2126 * wide[0] + 0.7152 * wide[1] + 0.0722 * wide[2];
 				const lc = 0.18 * (l - lw);
 				r += lc; g += lc; b += lc;
 				// Background: a touch of blur, about -0.2 EV, and 10% less saturation.
 				const bg = 1 - m;
-				r += bg * 0.14 * (soft[j] - r); g += bg * 0.14 * (soft[j + 1] - g); b += bg * 0.14 * (soft[j + 2] - b);
+				r += bg * 0.14 * (soft[0] - r); g += bg * 0.14 * (soft[1] - g); b += bg * 0.14 * (soft[2] - b);
 				// Subject: slight lift. Background: slight darkening.
 				const lift = 1 + m * 0.035 - bg * 0.12;
 				r *= lift; g *= lift; b *= lift;
@@ -455,7 +532,7 @@
 			d[i + 2] = luts[2][d[i + 2]];
 		}
 
-		if (mode === 'editorial') editorialPass(d, w, h);
+		if (mode === 'editorial') editorialPass(ctx, image, w, h);
 
 		// Light unsharp mask (4-neighbour), after resizing so it suits the final size. Editorial sharpens
 		// the subject more than the background.
@@ -477,6 +554,91 @@
 		ctx.putImageData(image, 0, 0);
 	};
 
+	// ---------- RAW files. Every camera RAW embeds the camera's own JPEG of the shot (usually full size).
+	// Find every embedded JPEG the browser can decode (baseline or progressive; the lossless JPEG some
+	// cameras use for the sensor data itself is skipped) and keep the largest.
+	const largestEmbeddedJpeg = (u8) => {
+		const be16 = (p) => (u8[p] << 8) | u8[p + 1];
+		let best = null;
+		for (let i = 0; i < u8.length - 4; i++) {
+			if (u8[i] !== 0xff || u8[i + 1] !== 0xd8 || u8[i + 2] !== 0xff) continue;
+			let p = i + 2, w = 0, h = 0, end = 0, exifAt = -1;
+			while (p + 4 < u8.length && u8[p] === 0xff) {
+				const marker = u8[p + 1];
+				if (marker === 0xff) { p++; continue; }
+				const len = be16(p + 2);
+				if (marker === 0xe1 && u8[p + 4] === 0x45 && u8[p + 5] === 0x78) exifAt = p + 10; // "Exif\0\0"
+				if (marker === 0xc0 || marker === 0xc1 || marker === 0xc2) { h = be16(p + 5); w = be16(p + 7); }
+				else if (marker >= 0xc3 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc) break; // lossless / unsupported
+				if (marker === 0xda) {
+					// Entropy-coded data: inside it, 0xFF is always followed by 0x00 or a restart marker.
+					let q = p + 2 + len;
+					while (q + 1 < u8.length && !(u8[q] === 0xff && u8[q + 1] !== 0x00 && (u8[q + 1] < 0xd0 || u8[q + 1] > 0xd7))) q++;
+					if (u8[q + 1] === 0xd9) end = q + 2;
+					break;
+				}
+				p += 2 + len;
+			}
+			if (w && h && end) {
+				if (!best || w * h > best.w * best.h) best = { start: i, end, w, h, exifAt };
+				i = end - 1;
+			}
+		}
+		return best;
+	};
+	// Orientation tag (0x0112) from the first IFD of a TIFF structure at "base"; 0 when absent.
+	const tiffOrientation = (u8, base) => {
+		if (base + 8 > u8.length) return 0;
+		const le = u8[base] === 0x49 && u8[base + 1] === 0x49;
+		if (!le && !(u8[base] === 0x4d && u8[base + 1] === 0x4d)) return 0;
+		const dv = new DataView(u8.buffer, u8.byteOffset);
+		const ifd = base + dv.getUint32(base + 4, le);
+		if (ifd + 2 > u8.length) return 0;
+		const n = dv.getUint16(ifd, le);
+		for (let k = 0; k < n && ifd + 2 + k * 12 + 12 <= u8.length; k++) {
+			const e = ifd + 2 + k * 12;
+			if (dv.getUint16(e, le) === 0x0112) return dv.getUint16(e + 8, le);
+		}
+		return 0;
+	};
+	// The RAW's own rotation: TIFF-based files (CR2, NEF, ARW, DNG, ORF, RW2, SRW, PEF) start with the
+	// TIFF header; Canon CR3 keeps it in its CMT1 box.
+	const rawOrientation = (u8) => {
+		const direct = tiffOrientation(u8, 0);
+		if (direct) return direct;
+		const head = u8.subarray(0, Math.min(u8.length, 262144));
+		for (let i = 0; i < head.length - 4; i++) {
+			if (head[i] === 0x43 && head[i + 1] === 0x4d && head[i + 2] === 0x54 && head[i + 3] === 0x31) return tiffOrientation(u8, i + 4);
+		}
+		return 0;
+	};
+	// Decode a RAW file to an upright canvas, or null when it holds no usable JPEG.
+	const decodeRaw = async (file) => {
+		const u8 = new Uint8Array(await file.arrayBuffer());
+		const jpeg = largestEmbeddedJpeg(u8);
+		if (!jpeg) return null;
+		// If the embedded JPEG carries its own orientation, the browser applies it; otherwise use the RAW's.
+		const own = jpeg.exifAt >= 0 ? tiffOrientation(u8, jpeg.exifAt) : 0;
+		const orientation = own ? 1 : rawOrientation(u8) || 1;
+		let bmp;
+		try {
+			bmp = await createImageBitmap(new Blob([u8.subarray(jpeg.start, jpeg.end)], { type: 'image/jpeg' }), { imageOrientation: 'from-image' });
+		} catch {
+			return null;
+		}
+		const turn = orientation === 6 || orientation === 8;
+		const canvas = document.createElement('canvas');
+		canvas.width = turn ? bmp.height : bmp.width;
+		canvas.height = turn ? bmp.width : bmp.height;
+		const ctx = canvas.getContext('2d');
+		if (orientation === 3) ctx.setTransform(-1, 0, 0, -1, canvas.width, canvas.height);
+		else if (orientation === 6) ctx.setTransform(0, 1, -1, 0, canvas.width, 0);
+		else if (orientation === 8) ctx.setTransform(0, -1, 1, 0, 0, canvas.height);
+		ctx.drawImage(bmp, 0, 0);
+		bmp.close();
+		return canvas;
+	};
+
 	const parseNumbers = (text) => {
 		const set = new Set();
 		for (const token of text.split(/[\s,;]+/).filter(Boolean)) {
@@ -490,6 +652,95 @@
 	};
 	const $ = (id) => document.getElementById(id);
 
+	// ---------- Step 0: RAW to JPEG.
+	let rawList = [];
+	const pickRaw = (fileList) => {
+		rawList = Array.from(fileList)
+			.filter((f) => RAW.test(f.name) && !f.name.startsWith('._'))
+			.sort((a, b) => (a.webkitRelativePath || a.name).localeCompare(b.webkitRelativePath || b.name, 'en', { numeric: true }));
+		const total = rawList.reduce((n, f) => n + f.size, 0);
+		$('rawFound').className = 'status' + (rawList.length ? '' : ' bad');
+		$('rawFound').textContent = rawList.length
+			? `${rawList.length.toLocaleString()} RAW files (${total >= 1073741824 ? (total / 1073741824).toFixed(2) + ' GB' : mb(total)}).`
+			: 'No RAW files found there.';
+		$('rawConvert').disabled = !rawList.length;
+	};
+	$('rawFolder').addEventListener('change', (e) => pickRaw(e.target.files));
+	$('rawFiles').addEventListener('change', (e) => pickRaw(e.target.files));
+	// Saving straight into a folder needs Chrome or Edge; other browsers fall back to zips.
+	if (!window.showDirectoryPicker) {
+		$('rawSave').value = 'zip';
+		$('rawSave').querySelector('[value="folder"]').disabled = true;
+	}
+
+	$('rawConvert').addEventListener('click', async () => {
+		const longEdge = Number($('rawSize').value);
+		const quality = Number($('rawQuality').value);
+		const mode = $('rawEdit').value;
+		let dir = null;
+		if ($('rawSave').value === 'folder') {
+			try {
+				dir = await window.showDirectoryPicker({ id: 'mvp-raw-out', mode: 'readwrite' });
+			} catch {
+				return; // cancelled
+			}
+		}
+		// Writes into the chosen folder, keeping the subfolder layout of the RAW folder.
+		const writeFile = async (path, bytes) => {
+			const parts = path.split('/');
+			let d = dir;
+			for (const part of parts.slice(0, -1)) d = await d.getDirectoryHandle(part, { create: true });
+			const handle = await d.getFileHandle(parts[parts.length - 1], { create: true });
+			const stream = await handle.createWritable();
+			await stream.write(bytes);
+			await stream.close();
+		};
+		const out = dir ? null : zipper('converted-jpegs');
+		$('rawConvert').disabled = true;
+		$('rawProg').hidden = false;
+		$('rawProg').max = rawList.length;
+		$('rawStatus').className = 'status';
+		const failed = [], small = [];
+		const started = performance.now();
+		for (let i = 0; i < rawList.length; i++) {
+			const file = rawList[i];
+			const path = (file.webkitRelativePath || file.name).replace(/\.[^./]+$/, '.jpg');
+			try {
+				const full = await decodeRaw(file);
+				if (!full) { failed.push(file.name); continue; }
+				if (Math.max(full.width, full.height) < 2400) small.push(`${file.name} (${full.width}×${full.height})`);
+				const scale = longEdge ? Math.min(1, longEdge / Math.max(full.width, full.height)) : 1;
+				let canvas = full;
+				if (scale < 1) {
+					canvas = document.createElement('canvas');
+					canvas.width = Math.round(full.width * scale);
+					canvas.height = Math.round(full.height * scale);
+					const c = canvas.getContext('2d');
+					c.imageSmoothingQuality = 'high';
+					c.drawImage(full, 0, 0, canvas.width, canvas.height);
+				}
+				autoEdit(canvas.getContext('2d', { willReadFrequently: true }), canvas.width, canvas.height, mode);
+				const bytes = await toJpeg(canvas, quality);
+				if (dir) await writeFile(path, bytes);
+				else out.add(path, bytes);
+			} catch (err) {
+				failed.push(`${file.name} (${err.message || err})`);
+			}
+			$('rawProg').value = i + 1;
+			const each = (performance.now() - started) / (i + 1);
+			const left = Math.round((each * (rawList.length - i - 1)) / 60000);
+			$('rawStatus').textContent = `Converted ${i + 1} of ${rawList.length}${left ? `, about ${left} min left` : ''}.`;
+		}
+		const zips = out ? out.finish() : [];
+		const done = rawList.length - failed.length;
+		$('rawStatus').className = 'status' + (failed.length ? ' bad' : '');
+		$('rawStatus').textContent =
+			`Finished: ${done} JPEG(s) ${dir ? `saved in the "${dir.name}" folder` : `in ${zips.length} zip file(s), saved to Downloads`}.` +
+			(small.length ? `\n${small.length} file(s) only hold a smaller camera copy (under 2400 pixels): ${small.slice(0, 5).join(', ')}${small.length > 5 ? ' …' : ''}. For full size, export those from Lightroom or your camera app.` : '') +
+			(failed.length ? `\n${failed.length} file(s) had no usable picture inside: ${failed.slice(0, 5).join(', ')}${failed.length > 5 ? ' …' : ''}` : '');
+		$('rawConvert').disabled = false;
+	});
+
 	// ---------- Step 1: contact sheets.
 	let list1 = [];
 	$('folder1').addEventListener('change', (e) => {
@@ -500,7 +751,7 @@
 		$('found1').className = 'status' + (images.length ? '' : ' bad');
 		$('found1').textContent = images.length
 			? `${images.length.toLocaleString()} photos in ${folders} folder(s), about ${Math.ceil(images.length / per) + folders} sheets.` +
-				(raw ? `\n${raw.toLocaleString()} RAW files skipped (export them as JPEG to include them).` : '')
+				(raw ? `\n${raw.toLocaleString()} RAW files skipped (convert them in step 0 first).` : '')
 			: 'No JPEG, PNG, WebP, or HEIC photos found in that folder.';
 		$('make').disabled = !images.length;
 	});
