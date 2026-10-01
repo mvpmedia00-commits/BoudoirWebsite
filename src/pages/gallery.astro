@@ -4,27 +4,30 @@ import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import { SITE_TITLE } from '../consts';
 import { GALLERY_CATEGORIES } from '../data/galleryMedia';
+import ExplicitLock from '../components/ui/ExplicitLock.astro';
 import StripMedia from '../components/ui/StripMedia.astro';
-import { PORTFOLIO_PHOTOS, SITE_MEDIA, STRIP_MEDIA } from '../data/siteMedia';
+import { PORTFOLIO_PHOTOS, SAFE_MEDIA, SITE_MEDIA, STRIP_MEDIA } from '../data/siteMedia';
 
 const categoryVisuals = {
+	// safe: PG-13 cover when the Explicit switch is off; null shows a "turn on Explicit" card.
 	boudoir: {
 		image: PORTFOLIO_PHOTOS.boudoir[0],
-		veil: true,
+		safe: SAFE_MEDIA.boudoirCover as string | null,
 		mood: 'Warm editorial silhouettes and confident direction.'
 	},
 	'artistic-nude': {
 		image: PORTFOLIO_PHOTOS.artisticNude[0],
-		veil: true,
+		safe: null,
 		mood: 'Fine-art composition focused on form, light, and shape.'
 	},
 	'body-paint': {
 		image: PORTFOLIO_PHOTOS.bodyPaint[0],
-		veil: true,
+		safe: null,
 		mood: 'Color-washed texture and body-art storytelling.'
 	},
 	'editorial-portrait': {
 		image: PORTFOLIO_PHOTOS.editorial[1],
+		safe: PORTFOLIO_PHOTOS.editorial[1],
 		mood: 'Brand-safe portraiture with cinematic styling and polish.'
 	}
 } as const;
@@ -61,8 +64,19 @@ const featuredStrip = [...STRIP_MEDIA, ...STRIP_MEDIA];
 			<section class="gallery-grid fade-up">
 				{GALLERY_CATEGORIES.map((category) => (
 					<a class="category-card" href={`/gallery/${category.slug}`}>
-						<div class="category-media" data-veil={'veil' in categoryVisuals[category.slug] ? '' : undefined}>
-							<img src={categoryVisuals[category.slug].image} alt={`${category.label} portfolio preview`} loading="lazy" />
+						<div class="category-media">
+							{categoryVisuals[category.slug].safe === categoryVisuals[category.slug].image ? (
+								<img src={categoryVisuals[category.slug].image} alt={`${category.label} portfolio preview`} loading="lazy" />
+							) : (
+								<>
+									<img data-explicit src={categoryVisuals[category.slug].image} alt={`${category.label} portfolio preview`} loading="lazy" />
+									{categoryVisuals[category.slug].safe ? (
+										<img data-safe src={categoryVisuals[category.slug].safe} alt={`${category.label} portfolio preview`} loading="lazy" />
+									) : (
+										<ExplicitLock label={category.label} />
+									)}
+								</>
+							)}
 							<div class="category-wash"></div>
 						</div>
 						<div class="category-content">

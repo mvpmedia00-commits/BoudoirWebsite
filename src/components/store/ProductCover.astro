@@ -5,15 +5,13 @@ interface Props {
 	title: string;
 	subtitle?: string;
 	image?: string;
-	/** 18+ item: blurred with an 18+ badge while the visitor has the 18+ blur switch on. */
-	mature?: boolean;
 	eager?: boolean;
 }
 
-const { title, subtitle, image, mature = false, eager = false } = Astro.props;
+const { title, subtitle, image, eager = false } = Astro.props;
 ---
 
-<div class="cover" data-veil={mature && image ? '' : undefined}>
+<div class="cover">
 	<div class="title-card" aria-hidden="true">
 		<span class="brand">{SITE_TITLE}</span>
 		<span class="name">{title}</span>
@@ -25,7 +23,7 @@ const { title, subtitle, image, mature = false, eager = false } = Astro.props;
 			alt={title}
 			loading={eager ? 'eager' : 'lazy'}
 			decoding="async"
-			onerror="this.parentElement.removeAttribute('data-veil');this.remove()"
+			onerror="this.remove()"
 		/>
 	)}
 </div>

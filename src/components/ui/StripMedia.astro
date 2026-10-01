@@ -6,8 +6,8 @@ interface Props {
 }
 
 const { item } = Astro.props;
-// 18+ items blur while the visitor has the 18+ blur switch on (see global.css).
-const veil = item.mature ? '' : undefined;
+// 18+ items show only in Explicit mode (see global.css); PG-13 mode leaves them out of the strip.
+const explicit = item.mature ? '' : undefined;
 ---
 
 {
@@ -15,16 +15,16 @@ const veil = item.mature ? '' : undefined;
 		<video
 			data-strip-video
 			data-src={item.src}
-			poster={item.poster}
+			data-poster={item.poster}
 			muted
 			loop
 			playsinline
 			preload="none"
 			aria-hidden="true"
-			data-veil-quiet={veil}
+			data-explicit={explicit}
 		/>
 	) : (
-		<img src={item.src} alt="" loading="lazy" decoding="async" data-veil-quiet={veil} />
+		<img src={item.src} alt="" loading="lazy" decoding="async" data-explicit={explicit} />
 	)
 }
 

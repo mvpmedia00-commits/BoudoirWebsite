@@ -1,6 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
-import { BLUR_PREF_KEY, SITE_TITLE } from '../consts';
+import { EXPLICIT_PREF_KEY, SITE_TITLE } from '../consts';
 import { getStoreItems } from '../lib/store';
 import EntryGate from './EntryGate.astro';
 import HeaderLink from './HeaderLink.astro';
@@ -41,8 +41,15 @@ const links = [
 					<li><HeaderLink href={link.href}>{link.label}</HeaderLink></li>
 				))}
 			</ul>
-			<button class="blur-switch" type="button" role="switch" aria-checked="false" data-blur-switch>
-				<span class="blur-label">18+ blur</span>
+			<button
+				class="blur-switch"
+				type="button"
+				role="switch"
+				aria-checked="false"
+				title="Off shows a PG-13 version of the site. On shows everything, including nudity."
+				data-blur-switch
+			>
+				<span class="blur-label">Explicit</span>
 				<span class="blur-track" aria-hidden="true"><span class="blur-thumb"></span></span>
 				<span class="blur-state" aria-hidden="true" data-blur-state>Off</span>
 			</button>
@@ -51,26 +58,43 @@ const links = [
 	</nav>
 </header>
 
-<script define:vars={{ blurKey: BLUR_PREF_KEY }}>
-	// 18+ blur switch: BaseHead.astro sets html.blur-on before paint; this keeps the switch in sync
-	// and saves the visitor's choice.
-	const blurSwitch = document.querySelector('[data-blur-switch]');
-	const blurState = document.querySelector('[data-blur-state]');
+<script define:vars={{ explicitKey: EXPLICIT_PREF_KEY }}>
+	// Explicit switch: Off = PG-13 version, On = everything. BaseHead.astro sets html.explicit before
+	// paint. Changing mode reloads the page so the right photos and videos load from the start.
 	const root = document.documentElement;
-	const syncBlurSwitch = () => {
-		const on = root.classList.contains('blur-on');
-		blurSwitch?.setAttribute('aria-checked', String(on));
-		if (blurState) blurState.textContent = on ? 'On' : 'Off';
-	};
-	syncBlurSwitch();
-	blurSwitch?.addEventListener('click', () => {
-		const on = root.classList.toggle('blur-on');
+	const modeSwitch = document.querySelector('[data-blur-switch]');
+	const modeState = document.querySelector('[data-blur-state]');
+	const on = root.classList.contains('explicit');
+	modeSwitch?.setAttribute('aria-checked', String(on));
+	if (modeState) modeState.textContent = on ? 'On' : 'Off';
+
+	const setExplicit = (value) => {
 		try {
-			localStorage.setItem(blurKey, on ? 'on' : 'off');
+			localStorage.setItem(explicitKey, value ? 'on' : 'off');
 		} catch (e) {
-			// Storage unavailable: the choice lasts for this page view only.
+			// Storage unavailable: the mode lasts for this page view only.
 		}
-		syncBlurSwitch();
+		root.classList.toggle('explicit', value);
+		location.reload();
+	};
+	modeSwitch?.addEventListener('click', () => setExplicit(!root.classList.contains('explicit')));
+	// "Turn on Explicit" buttons on PG-13 stand-ins (ExplicitLock.astro).
+	document.addEventListener('click', (event) => {
+		if (event.target instanceof Element && event.target.closest('[data-explicit-on]')) setExplicit(true);
+	});
+	// This script runs before the page body exists, so media setup waits for it.
+	document.addEventListener('DOMContentLoaded', () => {
+		// Video preview frames are fetched even for hidden videos, so they are stored as data-poster and
+		// applied only to videos on show in the current mode (and current screen layout).
+		document.querySelectorAll('video[data-poster]').forEach((video) => {
+			if (video.getClientRects().length) video.setAttribute('poster', video.getAttribute('data-poster'));
+		});
+		// Iframes (films) that may contain nudity load only in Explicit mode.
+		if (on) {
+			document.querySelectorAll('iframe[data-explicit-src]').forEach((frame) => {
+				frame.setAttribute('src', frame.getAttribute('data-explicit-src'));
+			});
+		}
 	});
 </script>
 

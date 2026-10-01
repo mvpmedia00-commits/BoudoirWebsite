@@ -50,7 +50,6 @@ const categories = [...new Set(items.map((item) => item.data.category))];
 									title={item.data.title}
 									subtitle={item.data.subtitle}
 									image={item.data.image}
-									mature={item.data.mature}
 								/>
 								<div class="card-body">
 									<div class="tags">
@@ -147,9 +146,6 @@ const categories = [...new Set(items.map((item) => item.data.category))];
 	}
 	.card:hover :global(.cover img) {
 		transform: scale(1.04);
-	}
-	:global(html.blur-on) .card:hover :global([data-veil] img) {
-		transform: scale(1.12);
 	}
 	.card-body {
 		padding: 0.9rem 0.1rem 0;

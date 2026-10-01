@@ -46,6 +46,7 @@ export const HERO_COLUMNS: { reverse?: boolean; clips: Clip[] }[] = [
 ];
 
 /** One image or short muted video in the scrolling strips on the Films and Portfolio pages. */
+/** mature: shown only in Explicit mode. */
 export type StripItem = { kind: 'image' | 'video'; src: string; poster?: string; mature?: boolean };
 
 /** Scrolling strips (Films and Portfolio pages). Small files sized for the strip tiles. */
@@ -68,6 +69,35 @@ export const ART_DIRECTION = {
 export const BOUDOIR_FILM_STRIP: StripItem[] = ['strip-boudoir-01.jpg', 'strip-boudoir-02.jpg', 'strip-boudoir-03.jpg'].map(
 	(file) => ({ kind: 'image', src: `${BUNNY_PHOTOS}/${file}` })
 );
+
+/**
+ * PG-13 versions (Explicit switch off). Only photos and clips checked to contain no nudity belong here.
+ * 18+ media without a stand-in shows an ExplicitLock card instead.
+ */
+const bunny = (file: string) => `${BUNNY_PHOTOS}/${file}`;
+export const SAFE_MEDIA = {
+	boudoirCover: bunny('strip-boudoir-01.jpg'),
+	cinematic: photo('editorial-04-wide.jpg'),
+	process: bunny('strip-boudoir-02.jpg')
+};
+
+export type HeroTile = { kind: 'video' | 'image'; src: string; poster?: string };
+const heroVideo = (file: string, poster: string): HeroTile => ({ kind: 'video', src: bunny(file), poster: bunny(poster) });
+const heroImage = (url: string): HeroTile => ({ kind: 'image', src: url });
+
+/** Rolling hero in PG-13 mode: the non-nude clips plus non-nude photos. Each column starts with a clip where possible. */
+export const SAFE_HERO_COLUMNS: { reverse?: boolean; tiles: HeroTile[] }[] = [
+	{ tiles: [heroVideo('reel-luxury.mp4', 'reel-luxury.jpg'), heroImage(bunny('strip-boudoir-01.jpg')), heroImage(photo('editorial-03.jpg'))] },
+	{
+		reverse: true,
+		tiles: [heroVideo('reel-editorial.mp4', 'reel-editorial.jpg'), heroImage(photo('editorial-02.jpg')), heroImage(bunny('strip-boudoir-02.jpg'))]
+	},
+	{ tiles: [heroVideo('signature-mvp.mp4', 'signature-mvp.jpg'), heroImage(photo('editorial-06.jpg')), heroImage(photo('editorial-08.jpg'))] },
+	{
+		reverse: true,
+		tiles: [heroImage(photo('editorial-05.jpg')), heroImage(bunny('strip-boudoir-03.jpg')), heroImage(photo('editorial-07-wide.jpg'))]
+	}
+];
 
 /** Section videos further down the homepage. Cinematic is 18+. */
 export const SECTION_VIDEOS = {
@@ -129,7 +159,7 @@ export const photosForSlug = (slug: string): string[] =>
 /**
  * Video beside "From consultation to delivery" on the homepage (vertical 9:16 clip). Host these on
  * an adult-friendly CDN (Bunny.net storage) and paste the https URLs here; until mp4 is set, the
- * section keeps its photo. mature: true blurs it while the visitor has the 18+ blur switch on.
+ * section keeps its photo. mature: true plays it only in Explicit mode (PG-13 mode shows SAFE_MEDIA.process).
  */
 export const PROCESS_VIDEO = {
 	// Converted from the original iPhone clip (IMG_3581, HEVC HDR) so it plays in every browser.

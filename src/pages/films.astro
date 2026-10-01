@@ -3,6 +3,7 @@ import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import { SITE_TITLE } from '../consts';
+import ExplicitLock from '../components/ui/ExplicitLock.astro';
 import StripMedia from '../components/ui/StripMedia.astro';
 import { BOUDOIR_FILM_STRIP, SITE_MEDIA, STRIP_MEDIA, type StripItem } from '../data/siteMedia';
 
@@ -30,6 +31,8 @@ type FilmType = {
 	stripBelow?: StripItem[];
 	/** Shape of the video player box; '16 / 9' for horizontal films, '9 / 16' for vertical ones. */
 	videoAspect?: string;
+	/** Contains nudity: plays only in Explicit mode; PG-13 mode shows a "turn on Explicit" card. */
+	mature?: boolean;
 };
 
 // A vertical player (taller than wide) gets a phone-sized width instead of the full column.
@@ -41,6 +44,7 @@ const isVertical = (aspect = '16 / 9') => {
 const filmTypes: FilmType[] = [
 	{
 		id: 'boudoir',
+		mature: true,
 		nav: 'Boudoir',
 		title: 'Boudoir Films',
 		copy: 'A short, private film made alongside your photo session. Slow movement, soft light, and the same guided direction as the stills.',
@@ -51,6 +55,7 @@ const filmTypes: FilmType[] = [
 	},
 	{
 		id: 'artistic',
+		mature: true,
 		nav: 'Artistic Motion',
 		title: 'Artistic Motion Studies',
 		copy: 'Fine-art studies of form and shadow, shot and graded like cinema. Built around composition rather than trend.',
@@ -60,6 +65,7 @@ const filmTypes: FilmType[] = [
 	},
 	{
 		id: 'body-paint',
+		mature: true,
 		nav: 'Body Paint',
 		title: 'Body Paint Process Films',
 		copy: 'The transformation from bare canvas to finished piece, captured from first brushstroke to final frame.',
@@ -173,14 +179,17 @@ const filmsSchema = {
 							</p>
 							<a class="btn btn-ghost" href="/booking">Start a Project</a>
 						</div>
-						<div class="film-frame">
+						<div class="film-frame" data-explicit>
 							<iframe
-								src={FEATURED_FILM}
+								data-explicit-src={FEATURED_FILM}
 								title={`${SITE_TITLE} featured reel`}
 								loading="lazy"
 								allow="autoplay; encrypted-media; picture-in-picture"
 								allowfullscreen
 							></iframe>
+						</div>
+						<div class="film-frame" data-safe>
+							<ExplicitLock label="Explicit film" action />
 						</div>
 					</div>
 				</div>
@@ -203,13 +212,24 @@ const filmsSchema = {
 								</header>
 								<div class:list={['content-row', { reverse: index % 2 === 1 }]}>
 									<div class="media-col reveal" data-stagger="1">
+										{film.mature && (
+											<div
+												class:list={['film-media', 'is-video', { 'is-vertical': isVertical(film.videoAspect) }]}
+												style={`aspect-ratio: ${film.videoAspect ?? '16 / 9'};`}
+												data-safe
+											>
+												<ExplicitLock label="Explicit film" action />
+											</div>
+										)}
 										{film.streamVideo || film.driveVideo ? (
 											<div
 												class:list={['film-media', 'is-video', { 'is-vertical': isVertical(film.videoAspect) }]}
 												style={`aspect-ratio: ${film.videoAspect ?? '16 / 9'};`}
+												data-explicit={film.mature ? '' : undefined}
 											>
 												<iframe
-													src={film.streamVideo ?? drivePreview(film.driveVideo ?? '')}
+													src={film.mature ? undefined : (film.streamVideo ?? drivePreview(film.driveVideo ?? ''))}
+													data-explicit-src={film.mature ? (film.streamVideo ?? drivePreview(film.driveVideo ?? '')) : undefined}
 													title={`${film.title} by ${SITE_TITLE}`}
 													loading="lazy"
 													allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"

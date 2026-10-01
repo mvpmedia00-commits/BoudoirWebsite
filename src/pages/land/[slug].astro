@@ -4,8 +4,9 @@ import Footer from '../../components/Footer.astro';
 import Header from '../../components/Header.astro';
 import LeadForm from '../../components/ui/LeadForm.astro';
 import NicheGallery from '../../components/ui/NicheGallery.astro';
+import ExplicitLock from '../../components/ui/ExplicitLock.astro';
 import { getNicheBySlug } from '../../lib/niches';
-import { SITE_MEDIA, photosForSlug } from '../../data/siteMedia';
+import { SAFE_MEDIA, SITE_MEDIA, photosForSlug } from '../../data/siteMedia';
 import { hasAdultAccess as readAdultAccess } from '../../lib/access';
 
 const slug = Astro.params.slug ?? '';
@@ -18,6 +19,8 @@ if (!niche) {
 const hasAdultAccess = readAdultAccess(Astro.cookies);
 const heroImage = photosForSlug(niche.slug)[0] ?? SITE_MEDIA.two;
 const requiresGate = niche.isMature === true;
+// PG-13 mode (Explicit switch off): mature pages swap the hero for a non-nude photo, or a lock card.
+const safeHero = niche.slug === 'boudoir' ? SAFE_MEDIA.boudoirCover : null;
 const isAllowed = !requiresGate || hasAdultAccess;
 ---
 
@@ -43,13 +46,33 @@ const isAllowed = !requiresGate || hasAdultAccess;
 								<p>{niche.hero}</p>
 							</div>
 							<div class="niche-hero-media">
-								<img src={heroImage} alt={`${niche.name} portrait by MVP Media`} loading="eager" decoding="async" />
+								{requiresGate ? (
+									<>
+										<img data-explicit src={heroImage} alt={`${niche.name} portrait by MVP Media`} loading="lazy" decoding="async" />
+										{safeHero ? (
+											<img data-safe src={safeHero} alt={`${niche.name} portrait by MVP Media`} loading="lazy" decoding="async" />
+										) : (
+											<ExplicitLock label={niche.name} />
+										)}
+									</>
+								) : (
+									<img src={heroImage} alt={`${niche.name} portrait by MVP Media`} loading="eager" decoding="async" />
+								)}
 							</div>
 						</section>
 
 						<section class="niche-section">
 							<h2>Featured Work</h2>
-							<NicheGallery niche={niche.slug} />
+							{requiresGate ? (
+								<>
+									<div data-explicit>
+										<NicheGallery niche={niche.slug} />
+									</div>
+									<ExplicitLock label="Explicit gallery" action />
+								</>
+							) : (
+								<NicheGallery niche={niche.slug} />
+							)}
 						</section>
 
 						<section class="niche-section two-col">

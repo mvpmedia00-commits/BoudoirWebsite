@@ -2,6 +2,7 @@
 import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
+import ExplicitLock from '../components/ui/ExplicitLock.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 import {
 	ART_DIRECTION,
@@ -9,7 +10,10 @@ import {
 	HERO_COLUMNS,
 	PORTFOLIO_PHOTOS,
 	PROCESS_VIDEO,
+	SAFE_HERO_COLUMNS,
+	SAFE_MEDIA,
 	SECTION_VIDEOS,
+	type HeroTile,
 	SITE_MEDIA
 } from '../data/siteMedia';
 import { BUNNY_MEDIA_HOST } from '../lib/bunnyMedia';
@@ -18,9 +22,18 @@ export const prerender = true;
 
 // Each column's clips are listed twice so the scrolling loop is seamless; the copies reuse the
 // same downloads.
-const heroMediaColumns = HERO_COLUMNS.map((column) => ({
-	...column,
-	clips: [...column.clips, ...column.clips]
+const explicitHeroColumns = HERO_COLUMNS.map((column) => ({
+	reverse: column.reverse,
+	tiles: column.clips.map((clip): HeroTile => ({ kind: 'video', ...clip }))
+}));
+// Both versions of the wall are in the page; CSS shows the one for the current mode, and the hero
+// script only loads clips in visible columns. Tiles are listed twice so the scroll loop is seamless.
+const heroWalls = [
+	{ mode: 'explicit', columns: explicitHeroColumns },
+	{ mode: 'safe', columns: SAFE_HERO_COLUMNS }
+].map((wall) => ({
+	mode: wall.mode,
+	columns: wall.columns.map((column) => ({ reverse: column.reverse, tiles: [...column.tiles, ...column.tiles] }))
 }));
 
 const homeSchema = {
@@ -48,32 +61,37 @@ const homeSchema = {
 		<Header />
 		<main class="homepage">
 			<section class="hero">
-				<div class="hero-media-wall" aria-hidden="true" data-veil-quiet>
+				<div class="hero-media-wall" aria-hidden="true">
 					{
-						heroMediaColumns.map((column) => (
-							<div class:list={['hero-media-col', { reverse: column.reverse }]}>
-								<div class="hero-media-track">
-									{
-										column.clips.map((clip, index) => {
-											const isPrime = index === 0;
-											return (
+						heroWalls.map((wall) =>
+							wall.columns.map((column, col) => (
+								<div
+									class:list={['hero-media-col', { reverse: column.reverse }]}
+									data-col={col}
+									data-explicit={wall.mode === 'explicit' ? '' : undefined}
+									data-safe={wall.mode === 'safe' ? '' : undefined}
+								>
+									<div class="hero-media-track">
+										{column.tiles.map((tile, index) =>
+											tile.kind === 'video' ? (
 												<video
-													data-src={clip.src}
+													data-src={tile.src}
 													autoplay
 													muted
 													loop
 													playsinline
 													preload="none"
-													poster={clip.poster}
-													data-hero-prime={isPrime ? 'true' : undefined}
-													aria-hidden={index >= 3 ? 'true' : undefined}
+													data-poster={tile.poster}
+													data-hero-prime={index === 0 ? 'true' : undefined}
 												></video>
-											);
-										})
-									}
+											) : (
+												<img src={tile.src} alt="" loading="lazy" decoding="async" />
+											)
+										)}
+									</div>
 								</div>
-							</div>
-						))
+							))
+						)
 					}
 				</div>
 				<div class="hero-noise"></div>
@@ -129,8 +147,9 @@ const homeSchema = {
 					</div>
 					<div class="category-grid">
 						<a class="category-card" href="/gallery/boudoir" data-track data-track-element="home_category_boudoir">
-							<div class="art-frame" data-veil>
-								<img src={PORTFOLIO_PHOTOS.boudoir[0]} alt="Boudoir category preview" loading="lazy" />
+							<div class="art-frame">
+								<img data-explicit src={PORTFOLIO_PHOTOS.boudoir[0]} alt="Boudoir category preview" loading="lazy" />
+								<img data-safe src={SAFE_MEDIA.boudoirCover} alt="Boudoir category preview" loading="lazy" />
 							</div>
 							<div class="category-copy">
 								<h3>Boudoir</h3>
@@ -138,8 +157,9 @@ const homeSchema = {
 							</div>
 						</a>
 						<a class="category-card" href="/gallery/artistic-nude" data-track data-track-element="home_category_artistic_nude">
-							<div class="art-frame" data-veil>
-								<img src={PORTFOLIO_PHOTOS.artisticNude[0]} alt="Artistic nude category preview" loading="lazy" />
+							<div class="art-frame">
+								<img data-explicit src={PORTFOLIO_PHOTOS.artisticNude[0]} alt="Artistic nude category preview" loading="lazy" />
+								<ExplicitLock label="Artistic Nude" />
 							</div>
 							<div class="category-copy">
 								<h3>Artistic Nude</h3>
@@ -147,8 +167,9 @@ const homeSchema = {
 							</div>
 						</a>
 						<a class="category-card" href="/gallery/body-paint" data-track data-track-element="home_category_body_paint">
-							<div class="art-frame" data-veil>
-								<img src={PORTFOLIO_PHOTOS.bodyPaint[0]} alt="Body paint category preview" loading="lazy" />
+							<div class="art-frame">
+								<img data-explicit src={PORTFOLIO_PHOTOS.bodyPaint[0]} alt="Body paint category preview" loading="lazy" />
+								<ExplicitLock label="Body Paint" />
 							</div>
 							<div class="category-copy">
 								<h3>Body Paint</h3>
@@ -203,10 +224,14 @@ const homeSchema = {
 								<p>Styling, texture, and light shaping that keeps every frame polished and intentional.</p>
 							</div>
 						</article>
-						<article class="reel-card" data-veil-quiet>
+						<article class="reel-card">
+							<div class="art-frame" data-safe>
+								<img src={SAFE_MEDIA.cinematic} alt="Couple portrait in falling water" loading="lazy" />
+							</div>
 							<video
+								data-explicit
 								data-lazy-src={SECTION_VIDEOS.cinematic.src}
-								poster={SECTION_VIDEOS.cinematic.poster}
+								data-poster={SECTION_VIDEOS.cinematic.poster}
 								autoplay
 								muted
 								loop
@@ -232,7 +257,10 @@ const homeSchema = {
 					</p>
 					<div class="identity-moodboard">
 						<div class="art-frame"><img src={ART_DIRECTION.feathers} alt="Portrait framed by white feather wings against a glowing backdrop" loading="lazy" /></div>
-						<div class="art-frame" data-veil><img src={ART_DIRECTION.blacklight} alt="Body paint session under blacklight in front of painted wings" loading="lazy" /></div>
+						<div class="art-frame">
+							<img data-explicit src={ART_DIRECTION.blacklight} alt="Body paint session under blacklight in front of painted wings" loading="lazy" />
+							<img data-safe src={PORTFOLIO_PHOTOS.editorial[2]} alt="Portrait in teal lingerie against a carved white screen" loading="lazy" />
+						</div>
 						<div class="art-frame"><img src={ART_DIRECTION.crown} alt="Crowned portrait in front of a sunburst backdrop" loading="lazy" /></div>
 					</div>
 				</section>
@@ -281,13 +309,13 @@ const homeSchema = {
 						</article>
 					</div>
 					{PROCESS_VIDEO.mp4 ? (
-						<div class="process-visual process-video art-frame" data-gated-video data-veil={PROCESS_VIDEO.mature ? '' : undefined}>
+						<div class="process-visual process-video art-frame" data-gated-video data-explicit={PROCESS_VIDEO.mature ? '' : undefined}>
 							<video
 								muted
 								loop
 								playsinline
 								preload="none"
-								poster={PROCESS_VIDEO.poster || undefined}
+								data-poster={PROCESS_VIDEO.poster || undefined}
 								data-sources={JSON.stringify([
 									...(PROCESS_VIDEO.webm ? [{ src: PROCESS_VIDEO.webm, type: 'video/webm' }] : []),
 									{ src: PROCESS_VIDEO.mp4, type: 'video/mp4' }
@@ -298,6 +326,11 @@ const homeSchema = {
 					) : (
 						<div class="process-visual art-frame">
 							<img src={SITE_MEDIA.about} alt="Private studio session planning mood board" loading="lazy" />
+						</div>
+					)}
+					{PROCESS_VIDEO.mp4 && PROCESS_VIDEO.mature && (
+						<div class="process-visual process-video art-frame" data-safe>
+							<img src={SAFE_MEDIA.process} alt="Portrait in a black tweed dress" loading="lazy" />
 						</div>
 					)}
 				</section>
@@ -1540,7 +1573,7 @@ const homeSchema = {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
 		}
 		/* Two columns (six clips) on tablets and phones instead of four. */
-		.hero-media-col:nth-child(n + 3) {
+		.hero-media-col:is([data-col='2'], [data-col='3']) {
 			display: none;
 		}
 		.hero-copy {
@@ -1637,7 +1670,7 @@ const homeSchema = {
 			gap: 0;
 			padding: 0;
 		}
-		.hero-media-col:nth-child(n + 2) {
+		.hero-media-col:not([data-col='0']) {
 			display: none;
 		}
 		.hero-media-col {

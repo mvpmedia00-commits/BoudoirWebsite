@@ -3,7 +3,7 @@
 // all pages through the use of the <BaseHead /> component.
 import '../styles/global.css';
 import type { ImageMetadata } from 'astro';
-import { BLUR_MATURE_PREVIEWS, BLUR_PREF_KEY, SITE_TITLE } from '../consts';
+import { EXPLICIT_DEFAULT, EXPLICIT_PREF_KEY, SITE_TITLE } from '../consts';
 import { SITE_MEDIA } from '../data/siteMedia';
 
 interface Props {
@@ -43,15 +43,16 @@ const imageURL = typeof image === 'string' ? image : image.src;
 	href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&display=swap"
 />
 
-<!-- 18+ blur switch (Header.astro) and entry screen (EntryGate.astro) state. Runs before paint so
+<!-- Explicit / PG-13 mode (switch in Header.astro) and entry screen (EntryGate.astro) state. Runs before paint so
      the page never flashes the wrong state. -->
-<script is:inline define:vars={{ blurDefault: BLUR_MATURE_PREVIEWS, blurKey: BLUR_PREF_KEY }}>
-	var blurOn = blurDefault;
+<script is:inline define:vars={{ explicitDefault: EXPLICIT_DEFAULT, explicitKey: EXPLICIT_PREF_KEY }}>
+	// html.explicit shows [data-explicit] media; without it, [data-safe] (PG-13) media shows instead.
+	var explicitOn = explicitDefault;
 	try {
-		var saved = localStorage.getItem(blurKey);
-		if (saved === 'on' || saved === 'off') blurOn = saved === 'on';
+		var saved = localStorage.getItem(explicitKey);
+		if (saved === 'on' || saved === 'off') explicitOn = saved === 'on';
 	} catch (e) {}
-	document.documentElement.classList.toggle('blur-on', blurOn);
+	document.documentElement.classList.toggle('explicit', explicitOn);
 
 	// Entry screen (EntryGate.astro): skip it when the visitor already confirmed 18+ and has
 	// already seen the loading screen during this visit.

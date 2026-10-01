@@ -1,0 +1,17 @@
+---
+interface Props {
+	/** Show a button that switches the site to Explicit mode. Leave off inside links. */
+	action?: boolean;
+	label?: string;
+}
+
+const { action = false, label = 'Explicit content' } = Astro.props;
+---
+
+<div class="explicit-lock" data-safe>
+	<strong>{label}</strong>
+	<span>This contains nudity. Turn on Explicit in the menu to view it.</span>
+	{action && (
+		<button type="button" class="btn btn-solid" data-explicit-on>Turn on Explicit</button>
+	)}
+</div>
