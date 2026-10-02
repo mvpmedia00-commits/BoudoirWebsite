@@ -152,6 +152,7 @@ const filmsSchema = {
 					alt="MVP Media: photographer and model in a red-lit studio. Own the frame. Photography, videography, branding, creative media."
 					loading="lazy"
 					decoding="async"
+					onerror="if(!this.dataset.tried){this.dataset.tried='png';this.src=this.src.replace(/\.jpg$/,'.png')}else if(this.dataset.tried==='png'){this.dataset.tried='old';this.src='https://boudoir123mvp.b-cdn.net/films-hero-explicit.jpg'}"
 				/>
 				<div class="films-shell films-banner-bar">
 					<h1>Motion, made with the same care as the still.</h1>
