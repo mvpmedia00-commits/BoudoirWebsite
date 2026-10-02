@@ -414,13 +414,14 @@ const filmsSchema = {
 
 <style>
 	/* Explicit-mode banner: full-width artwork with its own title, buttons underneath. */
+	/* The artwork carries its own type and figures, so it is never cropped: on short screens it
+	   narrows (centred on black) until the whole image and the title bar fit in the window. */
 	.films-banner img {
 		display: block;
-		width: 100%;
-		aspect-ratio: 16 / 9;
-		max-height: calc(100svh - var(--header-h, 70px) - 6.5rem);
-		object-fit: cover;
-		object-position: 50% 40%;
+		width: min(100%, calc((100svh - var(--header-h, 70px) - 6.5rem) * 1672 / 941));
+		margin: 0 auto;
+		aspect-ratio: 1672 / 941;
+		object-fit: contain;
 		border-radius: 0;
 	}
 	.films-banner-bar {
