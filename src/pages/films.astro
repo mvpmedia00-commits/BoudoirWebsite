@@ -8,7 +8,7 @@ import StripMedia from '../components/ui/StripMedia.astro';
 import { BOUDOIR_FILM_STRIP, SITE_MEDIA, STRIP_MEDIA, type StripItem } from '../data/siteMedia';
 
 // Explicit-mode banner at the top of the page (artwork already carries the MVP Media title).
-const EXPLICIT_BANNER = 'https://boudoir123mvp.b-cdn.net/films-hero-explicit.jpg';
+const EXPLICIT_BANNER = 'https://boudoir123mvp.b-cdn.net/films-hero-explicit-v2.jpg';
 const FEATURED_FILM = 'https://drive.google.com/file/d/1RizgFs5c6eV4A7hWAinKD7jsAl_k-xmI/preview';
 
 // Google Drive's embeddable player for a file ID. The file must be shared as "Anyone with the link".
@@ -418,9 +418,9 @@ const filmsSchema = {
 	   narrows (centred on black) until the whole image and the title bar fit in the window. */
 	.films-banner img {
 		display: block;
-		width: min(100%, calc((100svh - var(--header-h, 70px) - 6.5rem) * 1672 / 941));
+		width: min(100%, calc((100svh - var(--header-h, 70px) - 6.5rem) * 16 / 9));
 		margin: 0 auto;
-		aspect-ratio: 1672 / 941;
+		aspect-ratio: 16 / 9;
 		object-fit: contain;
 		border-radius: 0;
 	}
