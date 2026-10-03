@@ -446,6 +446,38 @@ const filmsSchema = {
 		object-fit: cover;
 		border-radius: 0;
 	}
+	/* Computers: the banner leaves room for the section chips and the start of the page below it, so
+	   visitors can see there is more to scroll to. The title and buttons sit on the bottom of the video
+	   over a dark fade, and the crop favours the top of the frame so heads stay in shot. */
+	@media (min-width: 900px) {
+		.films-banner {
+			position: relative;
+		}
+		.films-banner video {
+			max-height: calc(100svh - var(--header-h, 70px) - 8rem);
+			object-position: 50% 15%;
+		}
+		.films-banner::after {
+			content: '';
+			position: absolute;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			height: 45%;
+			background: linear-gradient(to top, rgba(5, 5, 5, 0.92), rgba(5, 5, 5, 0.55) 45%, transparent);
+			pointer-events: none;
+		}
+		.films-banner-bar {
+			position: absolute;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			z-index: 1;
+		}
+		.films-banner-bar h1 {
+			text-shadow: 0 2px 18px rgba(0, 0, 0, 0.6);
+		}
+	}
 	.films-banner-bar {
 		display: flex;
 		flex-wrap: wrap;
