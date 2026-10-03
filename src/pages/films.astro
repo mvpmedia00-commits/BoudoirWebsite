@@ -7,8 +7,11 @@ import ExplicitLock from '../components/ui/ExplicitLock.astro';
 import StripMedia from '../components/ui/StripMedia.astro';
 import { BOUDOIR_FILM_STRIP, SITE_MEDIA, STRIP_MEDIA, type StripItem } from '../data/siteMedia';
 
-// Explicit-mode banner at the top of the page (artwork already carries the MVP Media title).
-const EXPLICIT_BANNER = 'https://boudoir123mvp.b-cdn.net/films-hero-explicit-v2.jpg';
+// Explicit-mode banner at the top of the page: a looping video (it already carries the MVP Media
+// title). Full HD for larger screens, 720p for phones; the first frame shows while it loads.
+const BANNER_VIDEO_HD = 'https://boudoir123mvp.b-cdn.net/films-hero-explicit.mp4';
+const BANNER_VIDEO_SD = 'https://boudoir123mvp.b-cdn.net/films-hero-explicit-720.mp4';
+const BANNER_POSTER = 'https://boudoir123mvp.b-cdn.net/films-hero-explicit-poster.jpg';
 const FEATURED_FILM = 'https://drive.google.com/file/d/1RizgFs5c6eV4A7hWAinKD7jsAl_k-xmI/preview';
 
 // Google Drive's embeddable player for a file ID. The file must be shared as "Anyone with the link".
@@ -147,13 +150,30 @@ const filmsSchema = {
 		<Header />
 		<main class="films">
 			<section class="films-banner" data-explicit aria-label="Films">
-				<img
-					src={EXPLICIT_BANNER}
-					alt="MVP Media: photographer and model in a red-lit studio. Own the frame. Photography, videography, branding, creative media."
-					loading="lazy"
-					decoding="async"
-					onerror="if(!this.dataset.tried){this.dataset.tried='png';this.src=this.src.replace(/\.jpg$/,'.png')}else if(this.dataset.tried==='png'){this.dataset.tried='old';this.src='https://boudoir123mvp.b-cdn.net/films-hero-explicit.jpg'}"
-				/>
+				<video
+					data-banner-video
+					data-src-hd={BANNER_VIDEO_HD}
+					data-src-sd={BANNER_VIDEO_SD}
+					data-poster={BANNER_POSTER}
+					autoplay
+					muted
+					loop
+					playsinline
+					preload="none"
+					aria-label="MVP Media: photographer and model in a red-lit studio. Own the frame. Photography, videography, branding, creative media."
+				></video>
+				<script is:inline>
+					// Explicit mode only: load the banner video (720p on phones and data-saver connections).
+					(function () {
+						if (!document.documentElement.classList.contains('explicit')) return;
+						var video = document.querySelector('[data-banner-video]');
+						if (!video) return;
+						var small = window.innerWidth < 900 || (navigator.connection && navigator.connection.saveData);
+						video.src = video.getAttribute(small ? 'data-src-sd' : 'data-src-hd');
+						var play = video.play();
+						if (play && play.catch) play.catch(function () {});
+					})();
+				</script>
 				<div class="films-shell films-banner-bar">
 					<h1>Motion, made with the same care as the still.</h1>
 					<div class="hero-actions">
@@ -417,8 +437,9 @@ const filmsSchema = {
 	/* Explicit-mode banner: full-width artwork with its own title, buttons underneath. */
 	/* The artwork carries its own type and figures: it runs edge to edge at its full 16:9 shape,
 	   never cropped (on short screens the title bar sits just below the fold). */
-	.films-banner img {
+	.films-banner video {
 		display: block;
+		background: #050505;
 		width: 100%;
 		height: auto;
 		aspect-ratio: 16 / 9;
