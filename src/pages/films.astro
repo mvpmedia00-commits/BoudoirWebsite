@@ -8,10 +8,14 @@ import StripMedia from '../components/ui/StripMedia.astro';
 import { BOUDOIR_FILM_STRIP, SITE_MEDIA, STRIP_MEDIA, type StripItem } from '../data/siteMedia';
 
 // Explicit-mode banner at the top of the page: a looping video (it already carries the MVP Media
-// title). Full HD for larger screens, 720p for phones; the first frame shows while it loads.
-const BANNER_VIDEO_HD = 'https://boudoir123mvp.b-cdn.net/films-hero-explicit.mp4';
-const BANNER_VIDEO_SD = 'https://boudoir123mvp.b-cdn.net/films-hero-explicit-720.mp4';
-const BANNER_POSTER = 'https://boudoir123mvp.b-cdn.net/films-hero-explicit-poster.jpg';
+// title), picked at random on each visit. Full HD for larger screens, 720p for phones; the first
+// frame shows while it loads. Add a variant by uploading its three files and listing it here.
+const BUNNY = 'https://boudoir123mvp.b-cdn.net';
+const BANNER_VIDEOS = ['films-hero-explicit', 'films-hero-explicit-2'].map((name) => ({
+	hd: `${BUNNY}/${name}.mp4`,
+	sd: `${BUNNY}/${name}-720.mp4`,
+	poster: `${BUNNY}/${name}-poster.jpg`
+}));
 const FEATURED_FILM = 'https://drive.google.com/file/d/1RizgFs5c6eV4A7hWAinKD7jsAl_k-xmI/preview';
 
 // Google Drive's embeddable player for a file ID. The file must be shared as "Anyone with the link".
@@ -152,9 +156,7 @@ const filmsSchema = {
 			<section class="films-banner" data-explicit aria-label="Films">
 				<video
 					data-banner-video
-					data-src-hd={BANNER_VIDEO_HD}
-					data-src-sd={BANNER_VIDEO_SD}
-					data-poster={BANNER_POSTER}
+					data-variants={JSON.stringify(BANNER_VIDEOS)}
 					autoplay
 					muted
 					loop
@@ -163,13 +165,18 @@ const filmsSchema = {
 					aria-label="MVP Media: photographer and model in a red-lit studio. Own the frame. Photography, videography, branding, creative media."
 				></video>
 				<script is:inline>
-					// Explicit mode only: load the banner video (720p on phones and data-saver connections).
+					// Explicit mode only: pick one of the banner videos at random and load it (720p on phones and
+					// data-saver connections). Its first frame is set as data-poster, which Header applies.
 					(function () {
 						if (!document.documentElement.classList.contains('explicit')) return;
 						var video = document.querySelector('[data-banner-video]');
 						if (!video) return;
+						var variants = JSON.parse(video.getAttribute('data-variants') || '[]');
+						if (!variants.length) return;
+						var pick = variants[Math.floor(Math.random() * variants.length)];
 						var small = window.innerWidth < 900 || (navigator.connection && navigator.connection.saveData);
-						video.src = video.getAttribute(small ? 'data-src-sd' : 'data-src-hd');
+						video.setAttribute('data-poster', pick.poster);
+						video.src = small ? pick.sd : pick.hd;
 						var play = video.play();
 						if (play && play.catch) play.catch(function () {});
 					})();
