@@ -120,6 +120,27 @@ const links = [
 </script>
 
 <script>
+	// Image protection: block right-click and drag saving of photos and videos, and hide the browser's
+	// own video download button. Screenshots can't be blocked, but this stops casual saving.
+	const isMedia = (target: EventTarget | null) =>
+		target instanceof Element && !!target.closest('img, video, picture, canvas, .photo-track, [data-protect]');
+	document.addEventListener('contextmenu', (event) => {
+		if (isMedia(event.target)) event.preventDefault();
+	});
+	document.addEventListener('dragstart', (event) => {
+		if (isMedia(event.target)) event.preventDefault();
+	});
+	const protectVideos = () => {
+		document.querySelectorAll('video').forEach((video) => {
+			video.setAttribute('controlslist', 'nodownload');
+			video.setAttribute('disableremoteplayback', '');
+		});
+	};
+	if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', protectVideos);
+	else protectVideos();
+</script>
+
+<script>
 	// iPhones in Low Power Mode (and some Android battery savers) block autoplaying video until the
 	// visitor touches the page. On the first tap or click anywhere, start every loaded background
 	// video that is on screen; later plays started by scrolling then work normally.

@@ -499,3 +499,13 @@ html.explicit [data-safe] {
   line-height: 1.5;
   color: #d8d2cb;
 }
+
+/* Image protection: no dragging photos or videos out of the page, no long-press "Save image" on
+   iPhones, no text-style selection of media. (Right-click saving is blocked in Header.astro.) */
+img,
+video {
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
