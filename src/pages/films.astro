@@ -36,6 +36,8 @@ type FilmType = {
 	streamVideo?: string;
 	/** Optional Google Drive file ID; used when there is no streamVideo. */
 	driveVideo?: string;
+	/** More films for this section (embed URLs); arrow buttons on the player switch between them. */
+	moreVideos?: string[];
 	/** Photos and clips for the strip right under this section; defaults to STRIP_MEDIA. */
 	stripBelow?: StripItem[];
 	/** Shape of the video player box; '16 / 9' for horizontal films, '9 / 16' for vertical ones. */
@@ -80,6 +82,7 @@ const filmTypes: FilmType[] = [
 		copy: 'The transformation from bare canvas to finished piece, captured from first brushstroke to final frame.',
 		image: SITE_MEDIA.three,
 		streamVideo: bunnyStream('762418', 'fad52987-589f-4853-a43c-85b4d1abd08e'),
+		moreVideos: [drivePreview('162NXf9r53mY6q6u6YQ3mMJ7YIRluOpx_')],
 		videoAspect: '16 / 9'
 	},
 	{
@@ -272,8 +275,10 @@ const filmsSchema = {
 												class:list={['film-media', 'is-video', { 'is-vertical': isVertical(film.videoAspect) }]}
 												style={`aspect-ratio: ${film.videoAspect ?? '16 / 9'};`}
 												data-explicit={film.mature ? '' : undefined}
+												data-film-switcher={film.moreVideos?.length ? '' : undefined}
 											>
 												<iframe
+													data-film-slide
 													src={film.mature ? undefined : (film.streamVideo ?? drivePreview(film.driveVideo ?? ''))}
 													data-explicit-src={film.mature ? (film.streamVideo ?? drivePreview(film.driveVideo ?? '')) : undefined}
 													title={`${film.title} by ${SITE_TITLE}`}
@@ -281,6 +286,24 @@ const filmsSchema = {
 													allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
 													allowfullscreen
 												></iframe>
+												{film.moreVideos?.map((url, i) => (
+													<iframe
+														data-film-slide
+														data-film-src={url}
+														hidden
+														title={`${film.title}, film ${i + 2}, by ${SITE_TITLE}`}
+														loading="lazy"
+														allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
+														allowfullscreen
+													></iframe>
+												))}
+												{film.moreVideos?.length ? (
+													<>
+														<button type="button" class="film-nav film-nav-prev" data-film-prev aria-label="Previous film">&lsaquo;</button>
+														<button type="button" class="film-nav film-nav-next" data-film-next aria-label="Next film">&rsaquo;</button>
+														<span class="film-count" data-film-count aria-live="polite">1 / {film.moreVideos.length + 1}</span>
+													</>
+												) : null}
 											</div>
 										) : (
 											<div class="film-media is-photo">
@@ -357,6 +380,32 @@ const filmsSchema = {
 
 <script>
 	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	// Sections with more than one film: arrows switch films. The film being left is unloaded so it
+	// stops playing; the next one loads only when shown (and, for mature films, only in Explicit mode).
+	document.querySelectorAll<HTMLElement>('[data-film-switcher]').forEach((box) => {
+		const frames = Array.from(box.querySelectorAll<HTMLIFrameElement>('iframe[data-film-slide]'));
+		const count = box.querySelector('[data-film-count]');
+		const allowed = () => !box.hasAttribute('data-explicit') || document.documentElement.classList.contains('explicit');
+		let current = 0;
+		const show = (next: number) => {
+			const leaving = frames[current];
+			const src = leaving.getAttribute('src');
+			if (src) {
+				leaving.dataset.filmSrc = src;
+				leaving.removeAttribute('src');
+			}
+			leaving.hidden = true;
+			current = (next + frames.length) % frames.length;
+			const shown = frames[current];
+			const url = shown.dataset.filmSrc || shown.dataset.explicitSrc;
+			if (url && allowed()) shown.setAttribute('src', url);
+			shown.hidden = false;
+			if (count) count.textContent = `${current + 1} / ${frames.length}`;
+		};
+		box.querySelector('[data-film-prev]')?.addEventListener('click', () => show(current - 1));
+		box.querySelector('[data-film-next]')?.addEventListener('click', () => show(current + 1));
+	});
 
 	// Reveal: sections slide and fade in as they reach the viewport, staggered by data-stagger.
 	const revealTargets = document.querySelectorAll<HTMLElement>('.reveal');
@@ -661,6 +710,57 @@ const filmsSchema = {
 		width: 100%;
 		height: 100%;
 		border: 0;
+	}
+	.film-media iframe[hidden] {
+		display: none;
+	}
+	/* See-through arrows for sections with more than one film. */
+	.film-nav {
+		position: absolute;
+		top: 50%;
+		z-index: 2;
+		display: grid;
+		place-items: center;
+		width: 44px;
+		height: 44px;
+		padding: 0 0 3px;
+		border: 1px solid rgba(255, 255, 255, 0.35);
+		border-radius: 50%;
+		background: rgba(0, 0, 0, 0.22);
+		color: #fff;
+		font-size: 1.7rem;
+		line-height: 1;
+		cursor: pointer;
+		opacity: 0.7;
+		transform: translateY(-50%);
+		backdrop-filter: blur(4px);
+		-webkit-backdrop-filter: blur(4px);
+		transition: opacity 0.2s ease, background 0.2s ease;
+	}
+	.film-nav:hover,
+	.film-nav:focus-visible {
+		opacity: 1;
+		background: rgba(0, 0, 0, 0.5);
+	}
+	.film-nav-prev {
+		left: 10px;
+	}
+	.film-nav-next {
+		right: 10px;
+	}
+	.film-count {
+		position: absolute;
+		top: 10px;
+		left: 50%;
+		z-index: 2;
+		padding: 0.2rem 0.6rem;
+		border-radius: 999px;
+		background: rgba(0, 0, 0, 0.35);
+		color: #fff;
+		font-size: 0.72rem;
+		letter-spacing: 0.12em;
+		transform: translateX(-50%);
+		pointer-events: none;
 	}
 	.content-row {
 		display: grid;
