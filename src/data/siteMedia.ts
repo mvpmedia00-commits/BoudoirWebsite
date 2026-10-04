@@ -55,7 +55,8 @@ export const STRIP_MEDIA: StripItem[] = [
 	{ kind: 'video', src: `${BUNNY_PHOTOS}/strip-bts.mp4`, poster: `${BUNNY_PHOTOS}/strip-bts.jpg`, mature: true },
 	{ kind: 'image', src: `${BUNNY_PHOTOS}/strip-02.jpg`, mature: true },
 	{ kind: 'video', src: `${BUNNY_PHOTOS}/strip-photographer.mp4`, poster: `${BUNNY_PHOTOS}/strip-photographer.jpg` },
-	{ kind: 'image', src: `${BUNNY_PHOTOS}/strip-03.jpg` }
+	{ kind: 'image', src: `${BUNNY_PHOTOS}/strip-03.jpg` },
+	{ kind: 'video', src: `${BUNNY_PHOTOS}/strip-blacklight.mp4`, poster: `${BUNNY_PHOTOS}/strip-blacklight.jpg`, mature: true }
 ];
 
 /** Homepage "Art Direction" moodboard: three different sets. The blacklight one has nudity. */
