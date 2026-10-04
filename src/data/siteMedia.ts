@@ -124,11 +124,11 @@ export const PORTFOLIO_PHOTOS = {
 		photo('5B1A4081.JPG'),
 		photo('5B1A4143.JPG'),
 		photo('5B1A4145.JPG'),
-		...['boudoir-01.jpg', 'boudoir-02.jpg', 'boudoir-03.jpg', 'boudoir-04.jpg', 'boudoir-05.jpg', 'boudoir-06.jpg', 'boudoir-07.jpg'].map(
+		...['boudoir-01.jpg', 'boudoir-02.jpg', 'boudoir-03.jpg', 'boudoir-04.jpg', 'boudoir-05.jpg', 'boudoir-06.jpg', 'boudoir-07.jpg', 'boudoir-08.jpg', 'boudoir-09.jpg'].map(
 			(file) => photo(file)
 		)
 	],
-	artisticNude: [photo('IMG_1982.JPG')],
+	artisticNude: [photo('IMG_1982.JPG'), photo('artistic-nude-01.jpg')],
 	// Files ending in -wide.jpg are landscape and take two columns in the gallery.
 	// Editorial is shown without an 18+ gate, so it only takes photos with no nudity.
 	// Ordered so wide photos fill whole rows of the five-column gallery grid.
