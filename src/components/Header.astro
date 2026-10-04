@@ -68,14 +68,24 @@ const links = [
 	modeSwitch?.setAttribute('aria-checked', String(on));
 	if (modeState) modeState.textContent = on ? 'On' : 'Off';
 
+	// Saves the choice everywhere it can (Safari can block localStorage), then reloads. If nothing could
+	// be saved, the choice rides along in the address (?explicit=on) so the switch still works.
 	const setExplicit = (value) => {
-		try {
-			localStorage.setItem(explicitKey, value ? 'on' : 'off');
-		} catch (e) {
-			// Storage unavailable: the mode lasts for this page view only.
-		}
+		const mode = value ? 'on' : 'off';
+		try { localStorage.setItem(explicitKey, mode); } catch (e) {}
+		try { sessionStorage.setItem(explicitKey, mode); } catch (e) {}
+		try { document.cookie = `${explicitKey}=${mode}; path=/; max-age=31536000; samesite=lax`; } catch (e) {}
+		const saved = () => {
+			try { if (localStorage.getItem(explicitKey) === mode) return true; } catch (e) {}
+			try { if (sessionStorage.getItem(explicitKey) === mode) return true; } catch (e) {}
+			try { return document.cookie.indexOf(`${explicitKey}=${mode}`) !== -1; } catch (e) { return false; }
+		};
 		root.classList.toggle('explicit', value);
-		location.reload();
+		const url = new URL(location.href);
+		if (saved()) url.searchParams.delete('explicit');
+		else url.searchParams.set('explicit', mode);
+		if (url.href === location.href) location.reload();
+		else location.replace(url.href);
 	};
 	modeSwitch?.addEventListener('click', () => setExplicit(!root.classList.contains('explicit')));
 	// "Turn on Explicit" buttons on PG-13 stand-ins (ExplicitLock.astro).
@@ -84,6 +94,17 @@ const links = [
 	});
 	// This script runs before the page body exists, so media setup waits for it.
 	document.addEventListener('DOMContentLoaded', () => {
+		// Last-resort mode (storage blocked): keep ?explicit= on the site's own links so the choice
+		// survives moving between pages.
+		const forced = new URLSearchParams(location.search).get('explicit');
+		if (forced === 'on' || forced === 'off') {
+			document.querySelectorAll('a[href]').forEach((link) => {
+				const target = new URL(link.href, location.href);
+				if (target.origin !== location.origin || target.hash && target.pathname === location.pathname) return;
+				target.searchParams.set('explicit', forced);
+				link.href = target.href;
+			});
+		}
 		// Video preview frames are fetched even for hidden videos, so they are stored as data-poster and
 		// applied only to videos on show in the current mode (and current screen layout).
 		document.querySelectorAll('video[data-poster]').forEach((video) => {

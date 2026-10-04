@@ -40,7 +40,13 @@ const items = getGalleryItemsByCategory(category.slug);
 			<AgeGate redirectTo="/gallery" />
 		</div>
 		<script>
-			const verified = localStorage.getItem('ageVerified') === 'true';
+			// Safari can block localStorage; the 18+ cookie set by the entry screen also counts.
+			let verified = document.cookie.indexOf('mvp_adult_access=granted') !== -1;
+			try {
+				if (localStorage.getItem('ageVerified') === 'true') verified = true;
+			} catch {
+				// storage blocked: rely on the cookie
+			}
 			const ageGate = document.getElementById('ageGate');
 			const gallery = document.getElementById('gallery');
 			if (ageGate) ageGate.style.display = verified ? 'none' : 'block';
