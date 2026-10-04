@@ -47,11 +47,28 @@ const imageURL = typeof image === 'string' ? image : image.src;
      the page never flashes the wrong state. -->
 <script is:inline define:vars={{ explicitDefault: EXPLICIT_DEFAULT, explicitKey: EXPLICIT_PREF_KEY }}>
 	// html.explicit shows [data-explicit] media; without it, [data-safe] (PG-13) media shows instead.
+	// The choice is saved in several places, because Safari (and some privacy settings) can block
+	// localStorage: a ?explicit= address parameter (last-resort fallback), localStorage, sessionStorage,
+	// then a cookie.
 	var explicitOn = explicitDefault;
+	var savedMode = null;
 	try {
-		var saved = localStorage.getItem(explicitKey);
-		if (saved === 'on' || saved === 'off') explicitOn = saved === 'on';
+		var fromUrl = new URLSearchParams(location.search).get('explicit');
+		if (fromUrl === 'on' || fromUrl === 'off') savedMode = fromUrl;
 	} catch (e) {}
+	if (!savedMode) try {
+		var fromLocal = localStorage.getItem(explicitKey);
+		if (fromLocal === 'on' || fromLocal === 'off') savedMode = fromLocal;
+	} catch (e) {}
+	if (!savedMode) try {
+		var fromSession = sessionStorage.getItem(explicitKey);
+		if (fromSession === 'on' || fromSession === 'off') savedMode = fromSession;
+	} catch (e) {}
+	if (!savedMode) try {
+		var fromCookie = document.cookie.match(new RegExp('(?:^|; )' + explicitKey + '=(on|off)'));
+		if (fromCookie) savedMode = fromCookie[1];
+	} catch (e) {}
+	if (savedMode) explicitOn = savedMode === 'on';
 	document.documentElement.classList.toggle('explicit', explicitOn);
 
 	// Entry screen (EntryGate.astro): skip it when the visitor already confirmed 18+ and has
