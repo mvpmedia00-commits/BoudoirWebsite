@@ -147,6 +147,20 @@ export const PORTFOLIO_PHOTOS = {
 	)
 };
 
+/**
+ * Which photo in each portfolio is its cover (homepage category card, Portfolio page, landing page
+ * hero), counted from 1 like the gallery. Categories not listed use their first photo.
+ */
+const COVER_NUMBER: Record<string, number> = {
+	'artistic-nude': 2
+};
+
+/** The cover photo for a landing page or gallery slug. */
+export const coverForSlug = (slug: string): string | undefined => {
+	const photos = photosForSlug(slug);
+	return photos[(COVER_NUMBER[slug] ?? 1) - 1] ?? photos[0];
+};
+
 /** Real photos for a landing page or gallery slug, if any have been uploaded. */
 export const photosForSlug = (slug: string): string[] =>
 	({

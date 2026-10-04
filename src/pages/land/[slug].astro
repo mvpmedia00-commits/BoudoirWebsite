@@ -6,7 +6,7 @@ import LeadForm from '../../components/ui/LeadForm.astro';
 import NicheGallery from '../../components/ui/NicheGallery.astro';
 import ExplicitLock from '../../components/ui/ExplicitLock.astro';
 import { getNicheBySlug } from '../../lib/niches';
-import { SAFE_MEDIA, SITE_MEDIA, photosForSlug } from '../../data/siteMedia';
+import { SAFE_MEDIA, SITE_MEDIA, coverForSlug, photosForSlug } from '../../data/siteMedia';
 import { hasAdultAccess as readAdultAccess } from '../../lib/access';
 
 const slug = Astro.params.slug ?? '';
@@ -17,7 +17,7 @@ if (!niche) {
 }
 
 const hasAdultAccess = readAdultAccess(Astro.cookies);
-const heroImage = photosForSlug(niche.slug)[0] ?? SITE_MEDIA.two;
+const heroImage = coverForSlug(niche.slug) ?? SITE_MEDIA.two;
 const requiresGate = niche.isMature === true;
 // PG-13 mode (Explicit switch off): mature pages swap the hero for a non-nude photo, or a lock card.
 const safeHero = niche.slug === 'boudoir' ? SAFE_MEDIA.boudoirCover : null;
