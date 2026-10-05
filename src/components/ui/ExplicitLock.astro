@@ -5,13 +5,13 @@ interface Props {
 	label?: string;
 }
 
-const { action = false, label = 'Explicit content' } = Astro.props;
+const { action = false, label = 'NSFW content' } = Astro.props;
 ---
 
 <div class="explicit-lock" data-safe>
 	<strong>{label}</strong>
-	<span>This contains nudity. Turn on Explicit in the menu to view it.</span>
+	<span>This contains nudity. Turn on NSFW in the menu to view it.</span>
 	{action && (
-		<button type="button" class="btn btn-solid" data-explicit-on>Turn on Explicit</button>
+		<button type="button" class="btn btn-solid" data-explicit-on>Turn on NSFW</button>
 	)}
 </div>
