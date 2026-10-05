@@ -2,8 +2,10 @@
 import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
+import SectionNext from '../components/SectionNext.astro';
 import ExplicitLock from '../components/ui/ExplicitLock.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import { faqs, MODEL_APPLY_URL, packages, STARTING_PRICE_AMOUNT } from '../data/offers';
 import {
 	ART_DIRECTION,
 	BUNNY_STORAGE_ORIGIN,
@@ -45,7 +47,19 @@ const homeSchema = {
 	url: Astro.site?.href,
 	image: SITE_MEDIA.about,
 	email: 'hello@mvpmedia.studio',
-	areaServed: 'United States'
+	areaServed: [
+		{ '@type': 'City', name: 'Chicago' },
+		{ '@type': 'Country', name: 'United States' }
+	],
+	priceRange: `$${STARTING_PRICE_AMOUNT}+`,
+	makesOffer: {
+		'@type': 'Offer',
+		name: 'Signature boudoir session',
+		price: String(STARTING_PRICE_AMOUNT),
+		priceCurrency: 'USD',
+		url: new URL('/pricing', Astro.site).href,
+		description: 'Starting price. Editorial sessions are higher. Custom work is quoted.'
+	}
 };
 ---
 
@@ -102,7 +116,7 @@ const homeSchema = {
 				<div class="hero-content-wrap">
 					<div class="hero-copy">
 						<p class="hero-kicker">Fine Art Boudoir and Portraiture</p>
-						<p class="hero-location">United States</p>
+						<p class="hero-location">Chicago · Chicagoland</p>
 
 						<div class="hero-title-video-box">
 							<video
@@ -124,7 +138,10 @@ const homeSchema = {
 						</div>
 
 						<p class="hero-sub">
-							Curated photo and film sessions for clients who want elevated visuals, private production, and timeless storytelling.
+							Chicago boudoir photographer for clients who want elevated visuals, private production, and timeless storytelling.
+						</p>
+						<p class="hero-price">
+							<a href="/pricing" data-track data-track-element="hero_starting_price">Sessions from $495</a>
 						</p>
 						<div class="hero-divider"></div>
 						<div class="hero-actions">
@@ -187,6 +204,7 @@ const homeSchema = {
 							</div>
 						</a>
 					</div>
+					<SectionNext bookElement="home_portfolio_book" priceElement="home_portfolio_pricing" />
 				</section>
 
 				<section class="immersive-reel section--rose fade-up">
@@ -245,6 +263,7 @@ const homeSchema = {
 							</div>
 						</article>
 					</div>
+					<SectionNext bookElement="home_reel_book" priceElement="home_reel_pricing" />
 				</section>
 
 				<section class="identity-statement section--dark fade-up">
@@ -264,6 +283,7 @@ const homeSchema = {
 						</div>
 						<div class="art-frame"><img src={ART_DIRECTION.crown} alt="Crowned portrait in front of a sunburst backdrop" loading="lazy" /></div>
 					</div>
+					<SectionNext bookElement="home_direction_book" priceElement="home_direction_pricing" />
 				</section>
 
 				<section class="privacy-block section--dark fade-up">
@@ -280,6 +300,7 @@ const homeSchema = {
 						<li>Professional direction centered on comfort and consent</li>
 						<li>Secure delivery and publication control</li>
 					</ul>
+					<SectionNext bookElement="home_privacy_book" priceElement="home_privacy_pricing" />
 				</section>
 
 				<section class="process-block section--rose fade-up">
@@ -334,6 +355,40 @@ const homeSchema = {
 							<img src={SAFE_MEDIA.process} alt="Portrait in a black tweed dress" loading="lazy" />
 						</div>
 					)}
+					<SectionNext bookElement="home_process_book" priceElement="home_process_pricing" />
+				</section>
+
+				<section class="packages-block section--dark fade-up" id="packages">
+					<div class="section-head">
+						<p class="section-kicker">Packages</p>
+						<h2 class="heading-accent">Sessions from $495</h2>
+					</div>
+					<p class="packages-lead">
+						Signature is the starting point. Editorial sits higher. Custom work is quoted after a consultation. Inclusions are typical and confirmed before your date.
+					</p>
+					<div class="package-grid">
+						{
+							packages.map((tier) => (
+								<article class:list={['package-card', { 'is-signature': tier.featured }]}>
+									<p class="package-price">{tier.priceLabel}</p>
+									<h3>{tier.name}</h3>
+									<p>{tier.summary}</p>
+									<ul>
+										{tier.includes.map((item) => (
+											<li>{item}</li>
+										))}
+									</ul>
+									<p class="package-note">{tier.note}</p>
+									<a class="btn btn-solid" href="/booking" data-track data-track-element={`home_package_${tier.id}`}>
+										Book a Consultation
+									</a>
+								</article>
+							))
+						}
+					</div>
+					<p class="packages-more">
+						<a href="/pricing" data-track data-track-element="home_pricing_page">See pricing and FAQ</a>
+					</p>
 				</section>
 
 				<section class="signature-moment fade-up">
@@ -379,13 +434,56 @@ const homeSchema = {
 							<h3>Destination Session Client</h3>
 						</article>
 					</div>
+					<SectionNext bookElement="home_testimonials_book" priceElement="home_testimonials_pricing" />
+				</section>
+
+				<section class="faq-block section--dark fade-up" id="faq">
+					<div class="section-head">
+						<p class="section-kicker">FAQ</p>
+						<h2 class="heading-accent">Before you book</h2>
+					</div>
+					<div class="faq-list">
+						{
+							faqs.map((item) => (
+								<details>
+									<summary>{item.question}</summary>
+									<p>{item.answer}</p>
+								</details>
+							))
+						}
+					</div>
+					<SectionNext bookElement="home_faq_book" priceElement="home_faq_pricing" />
+				</section>
+
+				<section class="model-call fade-up">
+					<div>
+						<p class="section-kicker">Model Casting</p>
+						<h2 class="heading-accent">Apply to model</h2>
+						<p>
+							Open casting for adults 18 and older who want to collaborate on fine art boudoir, artistic nude, and editorial work.
+						</p>
+					</div>
+					<div class="model-call-actions">
+						<a
+							class="btn btn-solid"
+							href={MODEL_APPLY_URL}
+							target="_blank"
+							rel="noopener noreferrer"
+							data-track
+							data-track-element="home_apply_model"
+						>
+							Apply to Model
+							<span class="sr-only">(opens in a new tab)</span>
+						</a>
+						<a class="btn btn-ghost" href="/booking" data-track data-track-element="home_model_book">Book a Consultation</a>
+					</div>
 				</section>
 
 
 				<section class="final-cta fade-up" id="contact">
 					<div>
 						<h2>Step into the studio</h2>
-						<p>Tell us your idea and ideal timeline. We will reply privately with options, pricing, and availability.</p>
+						<p>Tell us your idea and ideal timeline. Signature sessions start at $495. We reply privately with options and availability.</p>
 					</div>
 					<div class="final-cta-actions">
 						<a class="btn btn-solid" href="/booking" data-track data-track-element="home_book_consultation">Book a Consultation</a>
@@ -770,6 +868,22 @@ const homeSchema = {
 		line-height: 1.7;
 		padding-left: 1rem;
 	}
+	.hero-price {
+		margin: 0 0 0.85rem;
+		padding-left: 1rem;
+		max-width: none;
+	}
+	.hero-price a {
+		color: #d5be96;
+		text-decoration: none;
+		font-size: 0.78rem;
+		font-weight: 700;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+	}
+	.hero-price a:hover {
+		color: #f2dec0;
+	}
 	.hero-divider {
 		width: min(180px, 45vw);
 		height: 1px;
@@ -869,9 +983,12 @@ const homeSchema = {
 	.identity-statement,
 	.privacy-block,
 	.process-block,
+	.packages-block,
 	.signature-moment,
 	.creator-focus,
 	.testimonials-block,
+	.faq-block,
+	.model-call,
 	.final-cta {
 		/* width: 100% so each section spans the column; with only auto margins, grid items shrink to their content. */
 		width: 100%;
@@ -1046,6 +1163,9 @@ const homeSchema = {
 	.process-block > .process-grid {
 		grid-column: 1;
 	}
+	.process-block > :global(.section-next) {
+		grid-column: 1 / -1;
+	}
 	.process-block > .process-grid {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 		align-self: start;
@@ -1075,6 +1195,138 @@ const homeSchema = {
 		object-fit: cover;
 		border-radius: 0;
 		background: #0b0b0b;
+	}
+	.packages-block {
+		padding: 1.1rem;
+		border: 1px solid rgba(213, 190, 150, 0.22);
+		background: #121212;
+		scroll-margin-top: calc(var(--header-h, 72px) + 0.75rem);
+	}
+	.packages-lead,
+	.packages-more {
+		margin: 0.85rem 0 0;
+		max-width: 68ch;
+		font-size: 0.92rem;
+		line-height: 1.65;
+		color: #c4c4c4;
+	}
+	.packages-more a {
+		color: #d5be96;
+		font-size: 0.75rem;
+		font-weight: 700;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		text-decoration: none;
+	}
+	.packages-more a:hover {
+		color: #f2dec0;
+	}
+	.package-grid {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 0.8rem;
+		margin-top: 0.95rem;
+	}
+	.package-card {
+		display: grid;
+		align-content: start;
+		gap: 0.5rem;
+		background: rgba(255, 255, 255, 0.03);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		padding: 0.95rem;
+	}
+	.package-card.is-signature {
+		border-color: rgba(213, 190, 150, 0.5);
+		background: linear-gradient(180deg, rgba(213, 190, 150, 0.08), rgba(255, 255, 255, 0.03));
+	}
+	.package-price {
+		margin: 0;
+		font-size: 0.68rem;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: #d5be96;
+		font-weight: 700;
+	}
+	.package-card h3 {
+		margin: 0;
+		font-family: 'Cormorant Garamond', 'Times New Roman', serif;
+		font-size: 1.7rem;
+		color: #f0d5be;
+	}
+	.package-card p,
+	.package-note {
+		margin: 0;
+		font-size: 0.84rem;
+		line-height: 1.6;
+		color: #cabeb7;
+	}
+	.package-card ul {
+		margin: 0;
+		padding-left: 1.05rem;
+		display: grid;
+		gap: 0.3rem;
+		color: #c7c7c7;
+		font-size: 0.82rem;
+	}
+	.package-card .btn {
+		margin-top: 0.35rem;
+		justify-self: start;
+		border-radius: 0;
+		text-transform: uppercase;
+		letter-spacing: 0.09em;
+		font-size: 0.72rem;
+	}
+	.faq-block {
+		scroll-margin-top: calc(var(--header-h, 72px) + 0.75rem);
+	}
+	.faq-list {
+		display: grid;
+		gap: 0.55rem;
+		margin-top: 0.95rem;
+	}
+	.faq-list details {
+		background: #151515;
+		border: 1px solid rgba(213, 190, 150, 0.18);
+		padding: 0.9rem 1rem;
+	}
+	.faq-list summary {
+		cursor: pointer;
+		color: #f3f3f3;
+		font-weight: 700;
+	}
+	.faq-list details p {
+		margin: 0.7rem 0 0;
+		font-size: 0.9rem;
+		line-height: 1.65;
+		color: #c2c2c2;
+	}
+	.model-call {
+		padding: 1.1rem;
+		display: grid;
+		grid-template-columns: 1.1fr 0.9fr;
+		gap: 1rem;
+		align-items: center;
+		background: linear-gradient(145deg, rgba(18, 18, 18, 0.95), rgba(11, 11, 11, 0.95));
+		border: 1px solid rgba(213, 190, 150, 0.28);
+	}
+	.model-call h2 {
+		margin: 0;
+	}
+	.model-call p {
+		margin: 0.55rem 0 0;
+		font-size: 0.9rem;
+		color: #bcbcbc;
+	}
+	.model-call-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+	}
+	.model-call .btn {
+		border-radius: 0;
+		text-transform: uppercase;
+		letter-spacing: 0.09em;
+		font-size: 0.73rem;
 	}
 	.signature-moment {
 		position: relative;
@@ -1569,6 +1821,11 @@ const homeSchema = {
 		letter-spacing: 0.1em;
 		font-size: 0.72rem;
 	}
+	@media (max-width: 1360px) {
+		.hero {
+			padding-bottom: calc(2.8rem + 4.6rem + env(safe-area-inset-bottom));
+		}
+	}
 	@media (max-width: 980px) {
 		.hero-media-wall {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1587,6 +1844,7 @@ const homeSchema = {
 		.hero-strap,
 		.hero-location,
 		.hero-sub,
+		.hero-price,
 		.hero-actions,
 		.hero-meta {
 			padding-left: 0;
@@ -1630,7 +1888,11 @@ const homeSchema = {
 		.testimonials-grid {
 			grid-template-columns: 1fr;
 		}
-		.final-cta {
+		.final-cta,
+		.model-call {
+			grid-template-columns: 1fr;
+		}
+		.package-grid {
 			grid-template-columns: 1fr;
 		}
 		.case-strip,
@@ -1662,7 +1924,7 @@ const homeSchema = {
 		.hero {
 			min-height: 100svh;
 			padding-top: 4.8rem;
-			padding-bottom: 1.5rem;
+			padding-bottom: calc(1.5rem + 4.6rem + env(safe-area-inset-bottom));
 			display: grid;
 			align-content: center;
 		}
@@ -1710,6 +1972,42 @@ const homeSchema = {
 			width: 100%;
 			min-width: 0;
 			margin: 0;
+		}
+		.hero-price a {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			min-height: 44px;
+		}
+		.packages-more {
+			max-width: none;
+		}
+		.package-card .btn,
+		.model-call-actions,
+		.final-cta-actions,
+		.packages-more a {
+			width: 100%;
+		}
+		.packages-more a {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			min-height: 44px;
+		}
+		.package-card .btn,
+		.model-call-actions .btn,
+		.final-cta-actions .btn,
+		.signature-copy .btn {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 100%;
+			min-height: 48px;
+			text-align: center;
+		}
+		.model-call-actions,
+		.final-cta-actions {
+			display: grid;
 		}
 		.hero-meta {
 			display: none;

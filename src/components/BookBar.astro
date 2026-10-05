@@ -1,0 +1,91 @@
+---
+/**
+ * Mobile and tablet booking bar. The header already shows "Book a Consultation" on wide screens,
+ * so this bar only appears once that button collapses into the menu.
+ */
+const hidden = Astro.url.pathname.startsWith('/booking');
+---
+
+{
+	!hidden && (
+		<aside class="book-bar" aria-label="Book a session">
+			<a class="book-bar-price" href="/pricing">
+				From $495
+			</a>
+			<a class="book-bar-cta" href="/booking">
+				Book a Consultation
+			</a>
+		</aside>
+	)
+}
+
+<style>
+	.book-bar {
+		display: none;
+	}
+	@media (max-width: 1360px) {
+		.book-bar {
+			position: fixed;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			z-index: 45;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 0.75rem;
+			padding: 0.7rem clamp(0.85rem, 3vw, 1.25rem) calc(0.7rem + env(safe-area-inset-bottom));
+			background: rgba(7, 7, 7, 0.94);
+			border-top: 1px solid rgba(213, 190, 150, 0.35);
+			backdrop-filter: blur(10px);
+		}
+		:global(body:has(.book-bar)) {
+			padding-bottom: calc(4.6rem + env(safe-area-inset-bottom));
+		}
+		:global(body.menu-open) .book-bar {
+			display: none;
+		}
+	}
+	.book-bar-price {
+		color: #d5be96;
+		text-decoration: none;
+		font-size: 0.75rem;
+		font-weight: 700;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		padding: 0.55rem 0;
+	}
+	.book-bar-price:hover {
+		color: #f2dec0;
+	}
+	.book-bar-cta {
+		flex: 0 1 auto;
+		color: #0a0a0a;
+		background: #d5be96;
+		text-decoration: none;
+		font-size: 0.72rem;
+		font-weight: 700;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		padding: 0.75rem 1rem;
+		border-radius: 999px;
+		text-align: center;
+	}
+	.book-bar-cta:hover {
+		background: #f1dfbe;
+		color: #0a0a0a;
+	}
+	@media (max-width: 380px) {
+		.book-bar {
+			gap: 0.45rem;
+		}
+		.book-bar-price {
+			letter-spacing: 0.08em;
+		}
+		.book-bar-cta {
+			padding-inline: 0.7rem;
+			letter-spacing: 0.04em;
+			font-size: 0.66rem;
+		}
+	}
+</style>

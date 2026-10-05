@@ -1,0 +1,71 @@
+---
+interface Props {
+	bookElement?: string;
+	priceElement?: string;
+}
+
+const { bookElement = 'section_book', priceElement = 'section_pricing' } = Astro.props;
+---
+
+<p class="section-next">
+	<a href="/booking" data-track data-track-element={bookElement}>Book a Consultation</a>
+	<a href="/pricing" data-track data-track-element={priceElement}>Sessions from $495</a>
+</p>
+
+<style>
+	.section-next {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.35rem 1rem;
+		margin: 1rem 0 0;
+		max-width: none;
+	}
+	.section-next a {
+		color: #d5be96;
+		text-decoration: none;
+		font-size: 0.75rem;
+		font-weight: 700;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+	}
+	.section-next a:hover {
+		color: #f2dec0;
+	}
+	.section-next a + a::before {
+		content: '/';
+		margin-right: 1rem;
+		color: #6f6f6f;
+		font-weight: 400;
+	}
+	@media (max-width: 640px) {
+		.section-next {
+			display: grid;
+			gap: 0.45rem;
+		}
+		.section-next a {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			min-height: 48px;
+			padding: 0.7rem 1rem;
+			text-align: center;
+		}
+		.section-next a + a::before {
+			content: none;
+			margin: 0;
+		}
+		.section-next a[href='/booking'] {
+			background: #d5be96;
+			color: #0e0e0e;
+			border: 1px solid #d5be96;
+		}
+		.section-next a[href='/booking']:hover {
+			background: #e0cda9;
+			color: #0e0e0e;
+		}
+		.section-next a[href='/pricing'] {
+			border: 1px solid rgba(213, 190, 150, 0.4);
+		}
+	}
+</style>

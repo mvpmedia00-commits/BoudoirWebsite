@@ -1,6 +1,6 @@
 export const SITE_TITLE = 'MVP Media';
 export const SITE_DESCRIPTION =
-	'Fine art boudoir, artistic nude, body paint, and editorial portrait photography across the United States, with private, discreet sessions.';
+	'Chicago boudoir photographer for fine art, artistic nude, body paint, and editorial portrait sessions. Private work in the city, across Chicagoland, and throughout the United States.';
 
 /**
  * The site has two versions, chosen with the "Explicit" switch in the menu:

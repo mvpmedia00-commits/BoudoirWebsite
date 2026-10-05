@@ -1,7 +1,9 @@
 ---
 import { getCollection } from 'astro:content';
 import { EXPLICIT_PREF_KEY, SITE_TITLE } from '../consts';
+import { MODEL_APPLY_URL } from '../data/offers';
 import { getStoreItems } from '../lib/store';
+import BookBar from './BookBar.astro';
 import EntryGate from './EntryGate.astro';
 import HeaderLink from './HeaderLink.astro';
 
@@ -10,13 +12,15 @@ const hasJournal = (await getCollection('blog', ({ data }) => !data.draft)).leng
 // The store link appears once there is at least one item to show.
 const hasStore = (await getStoreItems()).length > 0;
 
-const links = [
+const links: { href: string; label: string; external?: boolean }[] = [
 	{ href: '/gallery', label: 'Portfolio' },
 	{ href: '/films', label: 'Films' },
 	...(hasStore ? [{ href: '/store', label: 'Store' }] : []),
+	{ href: '/pricing', label: 'Pricing' },
 	{ href: '/about', label: 'About' },
 	...(hasJournal ? [{ href: '/blog', label: 'Journal' }] : []),
-	{ href: '/vault', label: 'Vault' }
+	{ href: '/vault', label: 'Vault' },
+	{ href: MODEL_APPLY_URL, label: 'Apply to Model', external: true }
 ];
 ---
 
@@ -38,7 +42,16 @@ const links = [
 		<div class="menu" id="site-menu" data-menu>
 			<ul class="internal-links">
 				{links.map((link) => (
-					<li><HeaderLink href={link.href}>{link.label}</HeaderLink></li>
+					<li>
+						<HeaderLink
+							href={link.href}
+							target={link.external ? '_blank' : undefined}
+							rel={link.external ? 'noopener noreferrer' : undefined}
+						>
+							{link.label}
+							{link.external && <span class="sr-only"> (opens in a new tab)</span>}
+						</HeaderLink>
+					</li>
 				))}
 			</ul>
 			<button
@@ -57,6 +70,7 @@ const links = [
 		</div>
 	</nav>
 </header>
+<BookBar />
 
 <script define:vars={{ explicitKey: EXPLICIT_PREF_KEY }}>
 	// Explicit switch: Off = PG-13 version, On = everything. BaseHead.astro sets html.explicit before
@@ -178,7 +192,7 @@ const links = [
 				toggle.focus();
 			}
 		});
-		window.matchMedia('(min-width: 1181px)').addEventListener('change', (event) => {
+		window.matchMedia('(min-width: 1361px)').addEventListener('change', (event) => {
 			if (event.matches) setOpen(false);
 		});
 	}
@@ -354,8 +368,8 @@ const links = [
 		transform: translateY(-5px) rotate(-45deg);
 	}
 
-	/* The full menu (links, 18+ switch, booking button) needs about 1,150px; below that it collapses into the Menu button. */
-	@media (max-width: 1180px) {
+	/* Pricing and Apply to Model sit in the bar with the booking button. Below 1,360px it collapses into the Menu button. */
+	@media (max-width: 1360px) {
 		.menu-toggle {
 			display: inline-flex;
 		}

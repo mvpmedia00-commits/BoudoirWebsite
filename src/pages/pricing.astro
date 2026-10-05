@@ -1,0 +1,283 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import { SITE_TITLE } from '../consts';
+import { faqs, MODEL_APPLY_URL, packages, STARTING_PRICE_AMOUNT } from '../data/offers';
+
+export const prerender = true;
+
+const pricingUrl = new URL('/pricing', Astro.site).href;
+
+const offerSchema = {
+	'@context': 'https://schema.org',
+	'@type': 'OfferCatalog',
+	name: 'MVP Media sessions',
+	url: pricingUrl,
+	itemListElement: [
+		{
+			'@type': 'Offer',
+			name: 'Signature boudoir session',
+			price: String(STARTING_PRICE_AMOUNT),
+			priceCurrency: 'USD',
+			url: pricingUrl,
+			description: 'Starting price for a Signature session. Session time, retouched images, and private delivery are confirmed in consultation.'
+		},
+		{
+			'@type': 'Offer',
+			name: 'Editorial session',
+			priceCurrency: 'USD',
+			url: pricingUrl,
+			description: 'Priced higher than Signature. The rate is confirmed in writing after consultation.'
+		},
+		{
+			'@type': 'Offer',
+			name: 'Custom session',
+			priceCurrency: 'USD',
+			url: pricingUrl,
+			description: 'Quoted individually for destination days, body paint, After Dark, couples, or film.'
+		}
+	]
+};
+
+const faqSchema = {
+	'@context': 'https://schema.org',
+	'@type': 'FAQPage',
+	mainEntity: faqs.map((item) => ({
+		'@type': 'Question',
+		name: item.question,
+		acceptedAnswer: {
+			'@type': 'Answer',
+			text: item.answer
+		}
+	}))
+};
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title={`Pricing | ${SITE_TITLE}`}
+			description="Signature boudoir sessions from $495 in Chicago and Chicagoland. Editorial sittings are a higher investment. Custom projects are quoted. Adults 18+."
+		/>
+		<script type="application/ld+json" set:html={JSON.stringify(offerSchema)} />
+		<script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
+	</head>
+	<body>
+		<Header />
+		<main class="pricing">
+			<header class="pricing-intro">
+				<p class="eyebrow">Packages</p>
+				<h1>Sessions from $495.</h1>
+				<p class="lead">
+					Private boudoir in Chicago and across Chicagoland. Signature is the starting point. Editorial work sits higher.
+					Custom projects are quoted after we talk. These are starting rates, confirmed in writing before a date is held.
+				</p>
+				<div class="pricing-actions">
+					<a class="btn btn-solid" href="/booking">Book a Consultation</a>
+					<a class="btn btn-ghost" href="#packages">View packages</a>
+				</div>
+			</header>
+
+			<section class="tiers" id="packages">
+				{
+					packages.map((tier) => (
+						<article class:list={['tier', { featured: tier.featured }]}>
+							<p class="tier-price">{tier.priceLabel}</p>
+							<h2>{tier.name}</h2>
+							<p>{tier.summary}</p>
+							<h3>Typically included</h3>
+							<ul>
+								{tier.includes.map((item) => (
+									<li>{item}</li>
+								))}
+							</ul>
+							<p class="tier-note">{tier.note}</p>
+							<a class="btn btn-solid" href="/booking">
+								Book a Consultation
+							</a>
+						</article>
+					))
+				}
+			</section>
+			<p class="pricing-note">
+				Inclusions are typical and are confirmed before your date. Nothing is charged on this site. All sessions are for adults 18+.
+			</p>
+
+			<section class="faq" id="faq">
+				<p class="eyebrow">FAQ</p>
+				<h2>Before you book</h2>
+				<div class="faq-list">
+					{
+						faqs.map((item) => (
+							<details>
+								<summary>{item.question}</summary>
+								<p>{item.answer}</p>
+							</details>
+						))
+					}
+				</div>
+			</section>
+
+			<section class="pricing-end">
+				<h2>Ready when you are.</h2>
+				<p>Tell us the session you have in mind. We reply privately with availability.</p>
+				<div class="pricing-actions">
+					<a class="btn btn-solid" href="/booking">Check availability</a>
+					<a class="btn btn-ghost" href={MODEL_APPLY_URL} target="_blank" rel="noopener noreferrer">
+						Apply to Model
+						<span class="sr-only">(opens in a new tab)</span>
+					</a>
+				</div>
+				<p class="direct">
+					Prefer email? Write to <a href="mailto:hello@mvpmedia.studio">hello@mvpmedia.studio</a>.
+				</p>
+			</section>
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<style>
+	.pricing {
+		max-width: 1100px;
+		margin: 0 auto;
+		padding-top: clamp(2.5rem, 6vw, 4.5rem);
+	}
+	.pricing-intro h1 {
+		font-size: clamp(2.6rem, 6vw, 4.4rem);
+	}
+	.lead {
+		font-size: 1.08rem;
+		color: #d8d2cb;
+		max-width: 62ch;
+	}
+	.pricing-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.7rem;
+		margin-top: 1.4rem;
+	}
+	.tiers {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 0.9rem;
+		margin-top: 2.5rem;
+		scroll-margin-top: calc(var(--header-h, 72px) + 0.75rem);
+	}
+	.tier {
+		display: grid;
+		align-content: start;
+		gap: 0.55rem;
+		padding: 1.15rem 1.1rem 1.2rem;
+		background: linear-gradient(145deg, var(--surface), var(--surface-elevated));
+		border: 1px solid var(--stroke);
+		border-radius: var(--radius);
+	}
+	.tier.featured {
+		border-color: rgba(213, 190, 150, 0.5);
+		background: linear-gradient(180deg, rgba(213, 190, 150, 0.08), var(--surface-elevated));
+	}
+	.tier-price {
+		margin: 0;
+		color: var(--brand-strong);
+		font-size: 0.72rem;
+		font-weight: 700;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+	}
+	.tier h2 {
+		margin: 0;
+		font-size: clamp(1.8rem, 3vw, 2.3rem);
+	}
+	.tier p {
+		margin: 0;
+		font-size: 0.95rem;
+	}
+	.tier h3 {
+		margin: 0.4rem 0 0;
+		font-family: 'Atkinson', sans-serif;
+		font-size: 0.72rem;
+		font-weight: 700;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--text-primary);
+	}
+	.tier ul {
+		margin: 0;
+		padding-left: 1.1rem;
+		display: grid;
+		gap: 0.35rem;
+		color: var(--text-muted);
+		font-size: 0.92rem;
+	}
+	.tier-note {
+		color: #cfc6ba;
+	}
+	.tier .btn {
+		margin-top: 0.4rem;
+		justify-self: start;
+		text-align: center;
+	}
+	.pricing-note {
+		margin: 1.25rem 0 0;
+		font-size: 0.9rem;
+		max-width: 68ch;
+	}
+	.faq {
+		margin-top: 3rem;
+		scroll-margin-top: calc(var(--header-h, 72px) + 0.75rem);
+	}
+	.faq h2 {
+		font-size: clamp(2rem, 4vw, 3rem);
+	}
+	.faq-list {
+		display: grid;
+		gap: 0.6rem;
+		margin-top: 1rem;
+	}
+	.faq-list details {
+		border: 1px solid var(--stroke);
+		border-radius: var(--radius);
+		background: rgba(12, 12, 12, 0.72);
+		padding: 0.95rem 1.05rem;
+	}
+	.faq-list summary {
+		cursor: pointer;
+		color: var(--text-primary);
+		font-weight: 700;
+	}
+	.faq-list details p {
+		margin: 0.75rem 0 0;
+		max-width: 68ch;
+	}
+	.pricing-end {
+		margin-top: 3rem;
+		padding-top: 2rem;
+		border-top: 1px solid rgba(255, 255, 255, 0.06);
+	}
+	.pricing-end h2 {
+		font-size: clamp(2rem, 4vw, 3rem);
+	}
+	.direct {
+		margin-top: 1rem;
+		font-size: 0.92rem;
+	}
+	@media (max-width: 900px) {
+		.tiers {
+			grid-template-columns: 1fr;
+		}
+	}
+	@media (max-width: 640px) {
+		.pricing-actions {
+			display: grid;
+		}
+		.pricing-actions .btn,
+		.tier .btn {
+			display: block;
+			width: 100%;
+			text-align: center;
+		}
+	}
+</style>
