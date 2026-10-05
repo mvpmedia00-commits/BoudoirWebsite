@@ -1,5 +1,6 @@
 ---
 import { SITE_TITLE } from '../consts';
+import { MODEL_APPLY_URL } from '../data/offers';
 import { getStoreItems } from '../lib/store';
 
 const hasStore = (await getStoreItems()).length > 0;
@@ -11,7 +12,7 @@ const year = new Date().getFullYear();
 	<div class="footer-shell">
 		<div class="footer-brand">
 			<a class="brand" href="/">{SITE_TITLE}</a>
-			<p>Fine art boudoir, artistic nude, body paint, and editorial portraiture. Photographed with discretion across the United States.</p>
+			<p>Fine art boudoir, artistic nude, body paint, and editorial portraiture. Photographed with discretion in Chicago and across the United States.</p>
 		</div>
 		<nav class="footer-col" aria-label="Footer">
 			<h2>Explore</h2>
@@ -19,6 +20,8 @@ const year = new Date().getFullYear();
 				<li><a href="/gallery">Portfolio</a></li>
 				<li><a href="/films">Films</a></li>
 				{hasStore && <li><a href="/store">Store</a></li>}
+				<li><a href="/pricing">Pricing</a></li>
+				<li><a href="/pricing#faq">FAQ</a></li>
 				<li><a href="/about">About</a></li>
 				<li><a href="/vault">Members Vault</a></li>
 			</ul>
@@ -27,6 +30,12 @@ const year = new Date().getFullYear();
 			<h2>Contact</h2>
 			<ul>
 				<li><a href="/booking">Book a Consultation</a></li>
+				<li>
+					<a href={MODEL_APPLY_URL} target="_blank" rel="noopener noreferrer">
+						Apply to Model
+						<span class="sr-only">(opens in a new tab)</span>
+					</a>
+				</li>
 				<li><a href="mailto:hello@mvpmedia.studio">hello@mvpmedia.studio</a></li>
 			</ul>
 		</div>
