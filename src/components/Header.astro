@@ -192,7 +192,7 @@ const links: { href: string; label: string; external?: boolean }[] = [
 				toggle.focus();
 			}
 		});
-		window.matchMedia('(min-width: 1521px)').addEventListener('change', (event) => {
+		window.matchMedia('(min-width: 1361px)').addEventListener('change', (event) => {
 			if (event.matches) setOpen(false);
 		});
 	}
@@ -368,8 +368,8 @@ const links: { href: string; label: string; external?: boolean }[] = [
 		transform: translateY(-5px) rotate(-45deg);
 	}
 
-	/* Pricing and Apply to Model sit in the bar with the booking button. Below 1,520px it collapses into the Menu button. */
-	@media (max-width: 1520px) {
+	/* Pricing and Apply to Model sit in the bar with the booking button. Below 1,360px it collapses into the Menu button. */
+	@media (max-width: 1360px) {
 		.menu-toggle {
 			display: inline-flex;
 		}
