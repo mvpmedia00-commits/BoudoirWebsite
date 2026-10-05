@@ -238,7 +238,7 @@ const filmsSchema = {
 							></iframe>
 						</div>
 						<div class="film-frame" data-safe>
-							<ExplicitLock label="Explicit film" action />
+							<ExplicitLock label="NSFW film" action />
 						</div>
 					</div>
 				</div>
@@ -267,7 +267,7 @@ const filmsSchema = {
 												style={`aspect-ratio: ${film.videoAspect ?? '16 / 9'};`}
 												data-safe
 											>
-												<ExplicitLock label="Explicit film" action />
+												<ExplicitLock label="NSFW film" action />
 											</div>
 										)}
 										{film.streamVideo || film.driveVideo ? (
